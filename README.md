@@ -1,6 +1,7 @@
 # TEAMYG-SERVER
 
-팀장은 연경이팀 서버 레포지토리입니다~
+<img width="2752" height="1536" alt="KakaoTalk_Photo_2026-05-19-19-30-07" src="https://github.com/user-attachments/assets/d2b2d8dc-ea5e-4d93-a4d4-8f3a7559f111" />
+
 
 ### 👥 구성원
 
