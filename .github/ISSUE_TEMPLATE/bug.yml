@@ -1,0 +1,40 @@
+name: "버그 이슈"
+description: 버그를 제보합니다
+labels: ["Bug"]
+title: "[Bug]: "
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: 버그 요약
+      description: 어떤 버그인지 한 줄로 설명해주세요
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 재현 방법
+      description: 버그를 재현하는 단계를 순서대로 작성해주세요
+      placeholder: |
+        1. 
+        2. 
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 실제 동작
+      description: 실제로는 어떻게 동작하나요?
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: 기타
+      description: 로그, 스크린샷, 관련 이슈 등 (선택)
+    validations:
+      required: false
