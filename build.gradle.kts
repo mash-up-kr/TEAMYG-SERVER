@@ -10,3 +10,32 @@ allprojects {
     group = "teamyg"
     version = "0.0.1-SNAPSHOT"
 }
+
+subprojects {
+    repositories {
+        mavenCentral()
+    }
+
+    afterEvaluate {
+        extensions.findByType<JavaPluginExtension>()?.apply {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(21)
+            }
+        }
+    }
+
+    plugins.withId("org.jetbrains.kotlin.jvm") {
+        dependencies {
+            "implementation"(kotlin("reflect"))
+        }
+        configure<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension> {
+            compilerOptions {
+                freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property")
+            }
+        }
+    }
+
+    tasks.withType<Test> {
+        useJUnitPlatform()
+    }
+}
