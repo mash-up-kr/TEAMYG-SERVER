@@ -1,11 +1,11 @@
-package teamyg.parfait
+package parfait.bootstrap
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = ["parfait"])
 class ParfaitApplication
 
 fun main(args: Array<String>) {
-	runApplication<ParfaitApplication>(*args)
+    runApplication<ParfaitApplication>(*args)
 }
