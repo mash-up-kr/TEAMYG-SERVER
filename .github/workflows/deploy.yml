@@ -10,41 +10,39 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Create .env file
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
         run: |
-          echo "DB_URL=${{ secrets.DB_URL }}" >> .env
-          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
-          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
-          echo "AWS_S3_BUCKET=parfait-s3-teamyg" >> .env
-          echo "AWS_REGION=ap-northeast-2" >> .env
+          docker build -t parfait .
+          docker tag parfait:latest 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com/parfait:latest
+          docker push 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com/parfait:latest
 
-      - name: Copy files to EC2
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "."
-          target: "/home/ubuntu/TEAMYG-SERVER"
-
-      - name: Deploy on EC2
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd /home/ubuntu/TEAMYG-SERVER
-            docker stop parfait || true
-            docker rm parfait || true
-            docker build -t parfait .
-            docker run -d \
-              --name parfait \
-              -p 8080:8080 \
-              --env-file .env \
-              --restart always \
-              parfait
+      - name: Deploy on EC2 via SSM
+        run: |
+          INSTANCE_ID=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=parfait-server" \
+            --query "Reservations[0].Instances[0].InstanceId" \
+            --output text)
+          
+          aws ssm send-command \
+            --instance-ids $INSTANCE_ID \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com",
+              "docker stop parfait || true",
+              "docker rm parfait || true",
+              "docker pull 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com/parfait:latest",
+              "docker run -d --name parfait -p 8080:8080 --env-file /home/ubuntu/TEAMYG-SERVER/.env --restart always 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com/parfait:latest"
+            ]'
