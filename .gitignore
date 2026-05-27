@@ -41,3 +41,6 @@ out/
 
 ### Claude Code ###
 .claude/settings.local.json
+CLAUDE.md
+docs/
+.claude
