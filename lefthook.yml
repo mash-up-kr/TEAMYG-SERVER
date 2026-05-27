@@ -1,0 +1,5 @@
+pre-commit:
+  commands:
+    ktlint:
+      glob: "*.{kt,kts}"
+      run: ./gradlew ktlintCheck
