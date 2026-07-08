@@ -1,0 +1,63 @@
+# Pull Request 컨벤션
+
+본문 스켈레톤은 [`.github/PULL_REQUEST_TEMPLATE.md`](../../.github/PULL_REQUEST_TEMPLATE.md). 이 문서는 작성 규칙·섹션 주체·메타 설정만 정의한다.
+
+## 제목 포맷
+
+`[{Prefix}/#{이슈번호}] {이슈 제목}` 형식. 이슈 제목은 prefix·번호 없이 그대로.
+
+- ✅ `[Chore/#18] ktlint 세팅`
+- ✅ `[Feat/#21] 로그인 API 연동`
+- ❌ `로그인 API 연동` (prefix·번호 없음)
+- ❌ `feat: 로그인 API 연동` (커밋 컨벤션 형식 사용)
+
+Prefix는 이슈 제목의 prefix와 동일하게 사용.
+
+## base 브랜치
+
+- **기본**: `main`
+
+## 이슈 연결
+
+- **모든 PR은 `Closes #N`으로 연결.** 머지 시 이슈 자동 닫힘
+- 이슈 번호는 브랜치 이름에서 자동 추출 (포맷은 [`branch-naming.md`](branch-naming.md) 참조)
+- 여러 이슈: `Closes #12`, `Closes #15` 여러 줄로
+
+## 섹션별 작성 주체
+
+| 섹션 | 작성 주체 | 내용 |
+|---|---|---|
+| 관련 이슈 | **Claude 자동** | `Closes #N` 삽입 |
+| 작업내용 | **Claude 자동** | 커밋 로그 기반. 필요 시 mermaid 자동 삽입(아래) |
+
+"사용자" 섹션은 헤더와 힌트 주석만 유지, Claude가 내용을 채우지 않는다.
+
+## Mermaid 다이어그램
+
+"변경 내용" 섹션 내부 하단에 삽입해 변경의 구조·흐름·상태를 시각화. `/pr`이 diff를 분석해 유용하면 자동 생성한다.
+
+| 타입 | 자동 생성 기준 |
+|---|---|
+| `flowchart` | 조건 분기 3갈래 이상 / UI 네비게이션 변화 |
+| `sequenceDiagram` | API 호출 흐름·비동기 시퀀스 2단계 이상 |
+| `classDiagram` | 새 클래스/인터페이스 2개 이상 / 상속·의존 관계 변경 |
+| `stateDiagram-v2` | sealed class/enum 상태 머신 신규·변경 |
+
+위 4종만 사용. 단순 버그 수정·리네이밍·포맷팅·문서만 변경에는 삽입하지 않음.
+
+**작성 가이드**: 라벨은 간결하게(한국어 가능), 노드 ≤ 15·엣지 ≤ 20, 한 PR당 최대 2개. 초과 시 PR 쪼개기를 권고.
+
+## draft 정책
+
+`/pr` 실행 시 매번 선택. **draft** = 정리 중·셀프 체크 필요, **ready** = 리뷰 요청 준비 완료.
+
+## Assignee / 레이블 / 리뷰어
+
+- **Assignee**: 현재 `gh` 사용자(`@me`) 자동
+- **리뷰어**: [`.github/CODEOWNERS`](../../.github/CODEOWNERS) 기반 GitHub 자동 요청. `/pr`은 `--reviewer` 지정 안 함
+
+## 운영 규칙
+
+- **보호 브랜치(`main`/`develop`)**: `/pr`은 경고만 후 진행 (차단 안 함)
+- **원격 푸시**: 푸시 안 됐거나 뒤처졌으면 `/pr`이 `git push -u origin <branch>` 자동 실행
+- **중복 PR**: 같은 브랜치로 열린 PR 있으면 생성 안 하고 기존 URL만 출력
