@@ -2,7 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
+    types: [ opened, synchronize, reopened ]
+  workflow_dispatch:   # 수동 트리거 추가
 
 jobs:
   ci:
