@@ -1,0 +1,25 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: parfait-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: parfait
+    ports:
+      - "3306:3306"
+    volumes:
+      - parfait-mysql-data:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    container_name: parfait-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - parfait-redis-data:/data
+
+volumes:
+  parfait-mysql-data:
+  parfait-redis-data:
