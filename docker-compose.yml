@@ -4,8 +4,10 @@ services:
     container_name: parfait-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_ROOT_PASSWORD: rootpass
       MYSQL_DATABASE: parfait
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppass
     ports:
       - "3306:3306"
     volumes:
