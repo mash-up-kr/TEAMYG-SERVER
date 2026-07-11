@@ -15,7 +15,8 @@ Prefix는 이슈 제목의 prefix와 동일하게 사용.
 
 ## base 브랜치
 
-- **기본**: `main`
+- **기본**: `develop` (모든 작업 브랜치는 `develop`에서 분기하므로 PR도 `develop`을 대상으로 함 — [`branch-naming.md`](branch-naming.md) 참조)
+- **예외**: `hotfix/*`·`release/*` 브랜치는 `main`을 대상으로 할 수 있음
 
 ## 이슈 연결
 
