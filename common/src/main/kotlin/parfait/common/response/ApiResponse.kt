@@ -8,6 +8,7 @@ data class ApiResponse<T> private constructor(
     val code: String,
     val message: String,
     val data: T?,
+    val errorDetail: Map<String, String>?,
 ) {
     companion object {
         fun <T> ok(data: T): ApiResponse<T> =
@@ -16,6 +17,7 @@ data class ApiResponse<T> private constructor(
                 code = "OK",
                 message = "요청이 성공적으로 처리되었습니다",
                 data = data,
+                errorDetail = null,
             )
 
         fun <T> created(data: T): ApiResponse<T> =
@@ -24,14 +26,19 @@ data class ApiResponse<T> private constructor(
                 code = "CREATED",
                 message = "생성되었습니다",
                 data = data,
+                errorDetail = null,
             )
 
-        fun error(errorCode: BaseErrorCode): ApiResponse<Nothing> =
+        fun error(
+            errorCode: BaseErrorCode,
+            errorDetail: Map<String, String>? = null,
+        ): ApiResponse<Nothing> =
             ApiResponse(
                 success = false,
                 code = errorCode.code,
                 message = errorCode.message,
                 data = null,
+                errorDetail = errorDetail,
             )
     }
 }

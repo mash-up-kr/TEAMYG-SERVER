@@ -9,9 +9,13 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
+import org.hibernate.annotations.SQLDelete
+import org.hibernate.annotations.SQLRestriction
 import java.time.LocalDateTime
 
 @Entity
+@SQLDelete(sql = "UPDATE member SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 @Table(
     name = "member",
     uniqueConstraints = [
@@ -21,20 +25,24 @@ import java.time.LocalDateTime
         ),
     ],
 )
-open class Member(
+class Member(
+    @Enumerated(EnumType.STRING)
+    @Column(name = "login_provider", nullable = false, length = 255)
+    var loginProvider: LoginProvider,
+    @Column(name = "provider_user_id", nullable = false, length = 255)
+    var providerUserId: String,
+    @Column(name = "global_nickname", nullable = false, length = 255)
+    var globalNickname: String,
+    @Column(name = "email", nullable = true, length = 255)
+    var email: String,
+    @Column(name = "created_at", nullable = false)
+    var createdAt: LocalDateTime = LocalDateTime.now(),
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
+    @Column(name = "deleted_at")
+    var deletedAt: LocalDateTime? = null,
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    open var id: Long? = null,
-    @Enumerated(EnumType.STRING)
-    @Column(name = "login_provider", nullable = false, length = 50)
-    open var loginProvider: LoginProvider,
-    @Column(name = "provider_user_id", nullable = false, length = 255)
-    open var providerUserId: String,
-    @Column(name = "global_nickname", nullable = false, length = 50)
-    open var globalNickname: String,
-    @Column(name = "created_at", nullable = false)
-    open var createdAt: LocalDateTime = LocalDateTime.now(),
-    @Column(name = "updated_at", nullable = false)
-    open var updatedAt: LocalDateTime = LocalDateTime.now(),
+    var id: Long? = null,
 )
