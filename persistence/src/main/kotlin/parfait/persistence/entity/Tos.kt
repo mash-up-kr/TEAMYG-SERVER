@@ -28,7 +28,7 @@ class Tos(
     @Column(name = "title", nullable = false, length = 255)
     var title: String,
     @Lob
-    @Column(name = "content", nullable = false)
+    @Column(name = "content", nullable = false, columnDefinition = "LONGTEXT")
     var content: String,
     @Column(name = "required", nullable = false)
     var required: Boolean = true,

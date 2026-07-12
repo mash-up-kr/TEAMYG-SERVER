@@ -17,7 +17,7 @@ class ParfaitGroupReporting(
     @Column(name = "reporter_member_id", nullable = false)
     var reporterMemberId: Long,
     @Lob
-    @Column(name = "reason", nullable = false)
+    @Column(name = "reason", nullable = false, columnDefinition = "TEXT")
     var reason: String,
     @Column(name = "created_at", nullable = false)
     var createdAt: LocalDateTime = LocalDateTime.now(),
