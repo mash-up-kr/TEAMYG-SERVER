@@ -8,3 +8,8 @@ spring:
 logging:
   level:
     org.hibernate.SQL: DEBUG
+
+management:
+  endpoint:
+    health:
+      show-details: always

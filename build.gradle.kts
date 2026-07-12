@@ -35,6 +35,8 @@ subprojects {
     plugins.withId("org.jetbrains.kotlin.jvm") {
         dependencies {
             "implementation"(kotlin("reflect"))
+            "testImplementation"("io.mockk:mockk:1.14.11")
+            "testImplementation"("io.kotest:kotest-assertions-core:6.1.11")
         }
         configure<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension> {
             compilerOptions {

@@ -1,12 +1,12 @@
 ---
-description: 대화형으로 GitHub 이슈를 생성하고 develop에서 작업 브랜치를 분기한다
+description: 대화형으로 GitHub 이슈를 생성하고 main에서 작업 브랜치를 분기한다
 argument-hint: "[선택: 이슈에 대한 간단한 설명]"
 allowed-tools: Bash, AskUserQuestion, Read
 ---
 
 # /issue — 대화형 이슈 생성
 
-사용자와 단계별 대화로 GitHub 이슈를 만들고, `develop`에서 작업 브랜치까지 분기한다.
+사용자와 단계별 대화로 GitHub 이슈를 만들고, `main`에서 작업 브랜치까지 분기한다. (당분간 `develop` 미사용)
 아래 순서대로 따르고, 한 단계라도 실패·취소되면 즉시 중단한다.
 
 > **선행 로드**:
@@ -91,7 +91,7 @@ EOF
 - 라벨: Bug → `--label Bug`, Feature → `--label Feature`, **기타는 `--label` 생략**(폼에 라벨 미선언).
 - 생성된 이슈 번호와 URL을 출력.
 
-## 8. 브랜치 분기 (develop 기준, 승인 없이 바로)
+## 8. 브랜치 분기 (main 기준, 승인 없이 바로)
 
 브랜치 네이밍은 **[`docs/conventions/branch-naming.md`](../../docs/conventions/branch-naming.md)**를 단일 출처로 따른다. 이름 조립:
 - 그 문서의 prefix 가이드로 prefix 결정
@@ -99,14 +99,14 @@ EOF
 
 체크아웃:
 ```sh
-git fetch origin develop
-git checkout -b "<prefix>/#<이슈번호>" origin/develop
+git fetch origin main
+git checkout -b "<prefix>/#<이슈번호>" origin/main
 ```
 
 요약 출력:
 ```
 ✅ 이슈 #<번호> 생성 완료 — <URL>
-✅ 브랜치 <prefix>/#<번호> 체크아웃 완료 (develop 기준)
+✅ 브랜치 <prefix>/#<번호> 체크아웃 완료 (main 기준)
 ```
 
 ## 취소

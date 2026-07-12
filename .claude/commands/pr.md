@@ -22,7 +22,7 @@ allowed-tools: Bash, AskUserQuestion, Read
 - **gh 인증** — `gh auth status` 실패 → `GitHub CLI 인증이 필요합니다. gh auth login 후 다시 시도해주세요.`
 - **보호 브랜치 경고(차단 아님)** — `git branch --show-current` 가 `main`/`develop`이면
   → `⚠️ 보호 브랜치(<브랜치>)에서 PR을 생성합니다. 그대로 진행합니다.`
-- **base 결정** — 기본은 `docs/conventions/pull-request.md`대로 `develop`. 현재 브랜치가 `hotfix/*`·`release/*`면 AskUserQuestion으로 `main`/`develop` 확인.
+- **base 결정** — `docs/conventions/pull-request.md`대로 `main` 고정 (당분간 `develop` 미사용).
 - **커밋 존재** — `git fetch origin <base>` 후 `git rev-list --count origin/<base>..HEAD` 가 0이면
   → `❌ <base> 대비 앞선 커밋이 없습니다.`
 
