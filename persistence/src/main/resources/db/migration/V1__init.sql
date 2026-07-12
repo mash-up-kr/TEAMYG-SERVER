@@ -1,0 +1,1 @@
+-- Flyway baseline. 실제 테이블은 ERD 확정 후 V2 이상에서 추가한다.
