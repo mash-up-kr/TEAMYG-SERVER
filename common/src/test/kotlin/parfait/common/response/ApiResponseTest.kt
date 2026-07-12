@@ -21,6 +21,7 @@ class ApiResponseTest {
         assertTrue(response.success)
         assertEquals("OK", response.code)
         assertEquals("hello", response.data)
+        assertNull(response.errorDetail)
     }
 
     @Test
@@ -30,6 +31,7 @@ class ApiResponseTest {
         assertTrue(response.success)
         assertEquals("CREATED", response.code)
         assertEquals("hello", response.data)
+        assertNull(response.errorDetail)
     }
 
     @Test
@@ -40,5 +42,15 @@ class ApiResponseTest {
         assertEquals("TEST_ERROR", response.code)
         assertEquals("테스트 에러 메시지", response.message)
         assertNull(response.data)
+        assertNull(response.errorDetail)
+    }
+
+    @Test
+    fun `error는 errorDetail을 담을 수 있다`() {
+        val errorDetail = mapOf("field" to "필수 값입니다")
+
+        val response = ApiResponse.error(TestErrorCode, errorDetail)
+
+        assertEquals(errorDetail, response.errorDetail)
     }
 }
