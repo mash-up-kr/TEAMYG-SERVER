@@ -56,4 +56,18 @@ class TraceIdFilterTest {
         assertEquals(2, traceIds.size)
         assertNotEquals(traceIds[0], traceIds[1])
     }
+
+    @Test
+    fun `필터 체인 실행 중에는 MDC에 요청 method와 URI가 있고, 끝나면 정리된다`() {
+        val filter = TraceIdFilter()
+        val request = MockHttpServletRequest("GET", "/health")
+        val response = MockHttpServletResponse()
+        var requestUriDuringChain: String? = null
+        val chain = FilterChain { _, _ -> requestUriDuringChain = MDC.get(TraceIdFilter.REQUEST_URI_MDC_KEY) }
+
+        filter.doFilter(request, response, chain)
+
+        assertEquals("GET /health", requestUriDuringChain)
+        assertNull(MDC.get(TraceIdFilter.REQUEST_URI_MDC_KEY))
+    }
 }
