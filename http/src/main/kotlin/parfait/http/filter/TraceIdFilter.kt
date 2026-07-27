@@ -19,6 +19,7 @@ class TraceIdFilter :
     companion object {
         const val TRACE_ID_HEADER = "X-Trace-Id"
         const val TRACE_ID_MDC_KEY = "traceId"
+        const val REQUEST_URI_MDC_KEY = "requestUri"
     }
 
     override fun getOrder(): Int = Ordered.HIGHEST_PRECEDENCE
@@ -33,6 +34,7 @@ class TraceIdFilter :
 
         try {
             MDC.put(TRACE_ID_MDC_KEY, traceId)
+            MDC.put(REQUEST_URI_MDC_KEY, "${request.method} ${request.requestURI}")
             response.setHeader(TRACE_ID_HEADER, traceId)
             filterChain.doFilter(request, response)
         } finally {
@@ -45,6 +47,7 @@ class TraceIdFilter :
                 elapsed,
             )
             MDC.remove(TRACE_ID_MDC_KEY)
+            MDC.remove(REQUEST_URI_MDC_KEY)
         }
     }
 }

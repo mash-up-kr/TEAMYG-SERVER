@@ -6,7 +6,15 @@
         </encoder>
     </appender>
 
+    <appender name="DISCORD" class="parfait.external.logging.DiscordErrorAppender" />
+
+    <appender name="ASYNC_DISCORD" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="DISCORD" />
+        <neverBlock>true</neverBlock>
+    </appender>
+
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
+        <appender-ref ref="ASYNC_DISCORD" />
     </root>
 </configuration>
