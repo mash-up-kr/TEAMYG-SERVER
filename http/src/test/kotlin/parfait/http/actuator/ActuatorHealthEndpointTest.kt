@@ -3,13 +3,16 @@ package parfait.http.actuator
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
+import org.springframework.context.annotation.Import
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import parfait.http.TestApplication
+import parfait.http.security.TestMemberQueryPortConfig
 import kotlin.test.Test
 
 @SpringBootTest(classes = [TestApplication::class])
 @AutoConfigureMockMvc
+@Import(TestMemberQueryPortConfig::class)
 class ActuatorHealthEndpointTest {
     @Autowired
     lateinit var mockMvc: MockMvc

@@ -1,0 +1,4 @@
+jwt:
+  secret-key: test-only-secret-key-for-http-module-spring-context-32bytes-min
+  access-token-expiration-seconds: 3600
+  refresh-token-expiration-seconds: 1209600
