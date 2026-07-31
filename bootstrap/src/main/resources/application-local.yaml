@@ -4,6 +4,10 @@ spring:
     username: root
     password: rootpass
     driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 logging:
   level:
@@ -13,3 +17,6 @@ management:
   endpoint:
     health:
       show-details: always
+
+jwt:
+  secret-key: local-only-dummy-jwt-secret-key-please-change-32b
