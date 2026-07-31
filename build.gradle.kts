@@ -37,6 +37,8 @@ subprojects {
             "implementation"(kotlin("reflect"))
             "testImplementation"("io.mockk:mockk:1.14.11")
             "testImplementation"("io.kotest:kotest-assertions-core:6.1.11")
+            "testImplementation"("org.jetbrains.kotlin:kotlin-test-junit5")
+            "testRuntimeOnly"("org.junit.platform:junit-platform-launcher")
         }
         configure<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension> {
             compilerOptions {

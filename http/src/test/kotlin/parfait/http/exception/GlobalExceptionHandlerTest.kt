@@ -1,6 +1,7 @@
 package parfait.http.exception
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import parfait.common.error.BaseErrorCode
 import parfait.core.exception.BusinessException
+import parfait.http.security.TestMemberQueryPortConfig
+import parfait.http.security.TestTokenValidatePortConfig
 import kotlin.test.Test
 
 private object DummyErrorCode : BaseErrorCode {
@@ -22,8 +25,18 @@ private object DummyErrorCode : BaseErrorCode {
     override val message = "더미 에러"
 }
 
+// JwtAuthFilter는 Filter 타입이라 @WebMvcTest 슬라이스에 자동 포함되므로, 생성자 의존성
+// 빈(TokenValidatePort, MemberQueryPort)을 스텁으로 채워 컨텍스트 로딩만 성공시킨다.
+// 이 테스트의 목적은 GlobalExceptionHandler 검증이라 인증 필터 자체는 실제로
+// 요청을 가로채지 않도록 addFilters = false로 비활성화한다.
 @WebMvcTest(controllers = [GlobalExceptionHandlerTest.DummyController::class])
-@Import(GlobalExceptionHandler::class, GlobalExceptionHandlerTest.DummyController::class)
+@AutoConfigureMockMvc(addFilters = false)
+@Import(
+    GlobalExceptionHandler::class,
+    GlobalExceptionHandlerTest.DummyController::class,
+    TestMemberQueryPortConfig::class,
+    TestTokenValidatePortConfig::class,
+)
 class GlobalExceptionHandlerTest {
     @Autowired
     lateinit var mockMvc: MockMvc
