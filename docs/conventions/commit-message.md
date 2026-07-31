@@ -43,8 +43,8 @@ docs: 디자인 시스템 KDoc 작성
 ```
 fix: 홈 화면 진입 시 크래시 해결
 
-탭 전환 시 Fragment 재생성 타이밍과 ViewModel 초기화가
-충돌. onViewCreated에서 상태 복원 순서를 조정함.
+탭 전환 시 Fragment 재생성 타이밍과 ViewModel 초기화가 충돌한다.
+onViewCreated에서 상태 복원 순서를 조정함.
 ```
 
 ## BREAKING CHANGE
