@@ -15,6 +15,9 @@ class MemberAdapter(
     MemberCreatePort {
     override fun existsById(memberId: Long): Boolean = memberRepository.existsById(memberId)
 
+    override fun findGlobalNicknameById(memberId: Long): String? =
+        memberRepository.findById(memberId).orElse(null)?.globalNickname
+
     override fun findMemberIdByProvider(
         provider: CoreLoginProvider,
         providerUserId: String,

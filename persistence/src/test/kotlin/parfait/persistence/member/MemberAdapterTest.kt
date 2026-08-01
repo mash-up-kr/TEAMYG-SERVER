@@ -15,6 +15,7 @@ import parfait.persistence.TestApplication
 import parfait.persistence.entity.LoginProvider
 import parfait.persistence.entity.Member
 import parfait.persistence.repository.MemberRepository
+import java.util.Optional
 import parfait.core.auth.domain.LoginProvider as CoreLoginProvider
 
 @Testcontainers
@@ -46,6 +47,31 @@ class MemberAdapterTest {
 
         adapter.existsById(1L) shouldBe true
         adapter.existsById(2L) shouldBe false
+    }
+
+    @Test
+    fun `회원이 존재하면 전역 닉네임을 반환한다`() {
+        val mockRepository = mockk<MemberRepository>()
+        val adapter = MemberAdapter(mockRepository)
+        val member =
+            Member(
+                loginProvider = LoginProvider.KAKAO,
+                providerUserId = "provider-id",
+                globalNickname = "파르페",
+                id = 1L,
+            )
+        every { mockRepository.findById(1L) } returns Optional.of(member)
+
+        adapter.findGlobalNicknameById(1L) shouldBe "파르페"
+    }
+
+    @Test
+    fun `회원이 없으면 전역 닉네임 조회 결과는 null이다`() {
+        val mockRepository = mockk<MemberRepository>()
+        val adapter = MemberAdapter(mockRepository)
+        every { mockRepository.findById(1L) } returns Optional.empty()
+
+        adapter.findGlobalNicknameById(1L) shouldBe null
     }
 
     @Test

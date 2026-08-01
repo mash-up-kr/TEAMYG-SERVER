@@ -17,9 +17,9 @@ import java.time.LocalDateTime
     ],
 )
 class ParfaitGroup(
-    @Column(name = "name", nullable = false, length = 255)
+    @Column(name = "name", nullable = false, length = 10)
     var name: String,
-    @Column(name = "invite_code", nullable = false, length = 255)
+    @Column(name = "invite_code", nullable = false, length = 8)
     var inviteCode: String,
     @Column(name = "member_limit", nullable = false)
     var memberLimit: Int,
