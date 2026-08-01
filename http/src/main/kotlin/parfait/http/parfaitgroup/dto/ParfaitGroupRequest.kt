@@ -1,4 +1,4 @@
-package parfait.http.parfaitgroup
+package parfait.http.parfaitgroup.dto
 
 import parfait.core.parfaitgroup.application.port.`in`.ChangeMyParfaitGroupNicknameCommand
 import parfait.core.parfaitgroup.application.port.`in`.CreateParfaitGroupCommand

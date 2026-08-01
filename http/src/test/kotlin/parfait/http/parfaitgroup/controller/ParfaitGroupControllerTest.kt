@@ -1,4 +1,4 @@
-package parfait.http.parfaitgroup
+package parfait.http.parfaitgroup.controller
 
 import io.mockk.every
 import io.mockk.mockk

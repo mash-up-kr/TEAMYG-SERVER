@@ -1,4 +1,4 @@
-package parfait.http.parfaitgroup
+package parfait.http.parfaitgroup.exception
 
 import parfait.common.error.BaseErrorCode
 import parfait.core.parfaitgroup.domain.ParfaitGroupError

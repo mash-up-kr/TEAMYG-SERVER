@@ -1,4 +1,4 @@
-package parfait.http.api.auth.controller
+package parfait.http.auth.controller
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

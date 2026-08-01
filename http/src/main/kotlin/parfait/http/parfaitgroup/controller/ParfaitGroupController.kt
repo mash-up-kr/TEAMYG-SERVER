@@ -1,4 +1,4 @@
-package parfait.http.parfaitgroup
+package parfait.http.parfaitgroup.controller
 
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.Authentication
@@ -22,6 +22,18 @@ import parfait.core.parfaitgroup.application.port.`in`.LeaveParfaitGroupCommand
 import parfait.core.parfaitgroup.application.port.`in`.LeaveParfaitGroupUseCase
 import parfait.core.parfaitgroup.application.port.`in`.PreviewParfaitGroupJoinUseCase
 import parfait.core.parfaitgroup.application.port.`in`.ReportParfaitGroupUseCase
+import parfait.http.parfaitgroup.dto.ChangeMyParfaitGroupNicknameRequest
+import parfait.http.parfaitgroup.dto.ChangeMyParfaitGroupNicknameResponse
+import parfait.http.parfaitgroup.dto.CreateParfaitGroupRequest
+import parfait.http.parfaitgroup.dto.CreateParfaitGroupResponse
+import parfait.http.parfaitgroup.dto.JoinParfaitGroupRequest
+import parfait.http.parfaitgroup.dto.JoinParfaitGroupResponse
+import parfait.http.parfaitgroup.dto.LeaveParfaitGroupResponse
+import parfait.http.parfaitgroup.dto.MyParfaitGroupDetailResponse
+import parfait.http.parfaitgroup.dto.MyParfaitGroupResponse
+import parfait.http.parfaitgroup.dto.PreviewParfaitGroupJoinResponse
+import parfait.http.parfaitgroup.dto.ReportParfaitGroupRequest
+import parfait.http.parfaitgroup.dto.ReportParfaitGroupResponse
 
 @RestController
 @RequestMapping("/api/parfait-groups")
@@ -37,8 +49,8 @@ class ParfaitGroupController(
 ) {
     @GetMapping
     fun getMyGroups(authentication: Authentication): ApiResponse<List<MyParfaitGroupResponse>> =
-        ApiResponse.ok(
-            getMyParfaitGroupsUseCase.getAll(authentication.memberId()).map(MyParfaitGroupResponse::from),
+        ApiResponse.Companion.ok(
+            getMyParfaitGroupsUseCase.getAll(authentication.memberId()).map(MyParfaitGroupResponse.Companion::from),
         )
 
     @GetMapping("/{groupId}")
@@ -46,8 +58,8 @@ class ParfaitGroupController(
         authentication: Authentication,
         @PathVariable groupId: Long,
     ): ApiResponse<MyParfaitGroupDetailResponse> =
-        ApiResponse.ok(
-            MyParfaitGroupDetailResponse.from(
+        ApiResponse.Companion.ok(
+            MyParfaitGroupDetailResponse.Companion.from(
                 getMyParfaitGroupDetailUseCase.get(authentication.memberId(), groupId),
             ),
         )
@@ -58,7 +70,7 @@ class ParfaitGroupController(
         @RequestParam inviteCode: String,
     ): ApiResponse<PreviewParfaitGroupJoinResponse> {
         val result = previewParfaitGroupJoinUseCase.preview(authentication.memberId(), inviteCode)
-        return ApiResponse.ok(PreviewParfaitGroupJoinResponse.from(result))
+        return ApiResponse.Companion.ok(PreviewParfaitGroupJoinResponse.Companion.from(result))
     }
 
     @PostMapping("/join")
@@ -67,7 +79,7 @@ class ParfaitGroupController(
         @RequestBody request: JoinParfaitGroupRequest,
     ): ApiResponse<JoinParfaitGroupResponse> {
         val result = joinParfaitGroupUseCase.join(request.toCommand(authentication.memberId()))
-        return ApiResponse.ok(JoinParfaitGroupResponse.from(result))
+        return ApiResponse.Companion.ok(JoinParfaitGroupResponse.Companion.from(result))
     }
 
     @PostMapping
@@ -77,7 +89,7 @@ class ParfaitGroupController(
         @RequestBody request: CreateParfaitGroupRequest,
     ): ApiResponse<CreateParfaitGroupResponse> {
         val result = createParfaitGroupUseCase.create(request.toCommand(authentication.memberId()))
-        return ApiResponse.created(CreateParfaitGroupResponse.from(result))
+        return ApiResponse.Companion.created(CreateParfaitGroupResponse.Companion.from(result))
     }
 
     @PatchMapping("/{groupId}/nickname")
@@ -86,8 +98,8 @@ class ParfaitGroupController(
         @PathVariable groupId: Long,
         @RequestBody request: ChangeMyParfaitGroupNicknameRequest,
     ): ApiResponse<ChangeMyParfaitGroupNicknameResponse> =
-        ApiResponse.ok(
-            ChangeMyParfaitGroupNicknameResponse.from(
+        ApiResponse.Companion.ok(
+            ChangeMyParfaitGroupNicknameResponse.Companion.from(
                 changeMyParfaitGroupNicknameUseCase.change(request.toCommand(authentication.memberId(), groupId)),
             ),
         )
@@ -97,8 +109,8 @@ class ParfaitGroupController(
         authentication: Authentication,
         @PathVariable groupId: Long,
     ): ApiResponse<LeaveParfaitGroupResponse> =
-        ApiResponse.ok(
-            LeaveParfaitGroupResponse.from(
+        ApiResponse.Companion.ok(
+            LeaveParfaitGroupResponse.Companion.from(
                 leaveParfaitGroupUseCase.leave(LeaveParfaitGroupCommand(authentication.memberId(), groupId)),
             ),
         )
@@ -110,8 +122,8 @@ class ParfaitGroupController(
         @PathVariable groupId: Long,
         @RequestBody request: ReportParfaitGroupRequest,
     ): ApiResponse<ReportParfaitGroupResponse> =
-        ApiResponse.created(
-            ReportParfaitGroupResponse.from(
+        ApiResponse.Companion.created(
+            ReportParfaitGroupResponse.Companion.from(
                 reportParfaitGroupUseCase.report(request.toCommand(authentication.memberId(), groupId)),
             ),
         )

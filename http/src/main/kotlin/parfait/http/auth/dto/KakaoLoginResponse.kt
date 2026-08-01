@@ -1,4 +1,4 @@
-package parfait.http.api.auth.dto
+package parfait.http.auth.dto
 
 data class KakaoLoginResponse(
     val isNewUser: Boolean,

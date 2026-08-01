@@ -12,7 +12,7 @@ import parfait.common.error.CommonErrorCode
 import parfait.common.response.ApiResponse
 import parfait.core.exception.BusinessException
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
-import parfait.http.parfaitgroup.ParfaitGroupApiErrorCode
+import parfait.http.parfaitgroup.exception.ParfaitGroupApiErrorCode
 
 @RestControllerAdvice
 class GlobalExceptionHandler {

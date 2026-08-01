@@ -1,4 +1,4 @@
-package parfait.http.api.auth.controller
+package parfait.http.auth.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RestController
 import parfait.common.response.ApiResponse
 import parfait.core.auth.port.`in`.SignupUseCase
 import parfait.core.auth.port.`in`.TermsAgreement
-import parfait.http.api.auth.dto.SignupRequest
-import parfait.http.api.auth.dto.SignupResponse
+import parfait.http.auth.dto.SignupRequest
+import parfait.http.auth.dto.SignupResponse
 
 @Tag(name = "Auth")
 @RestController

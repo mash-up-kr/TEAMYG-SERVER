@@ -1,4 +1,4 @@
-package parfait.http.parfaitgroup
+package parfait.http.parfaitgroup.controller
 
 import io.mockk.mockk
 import org.springframework.boot.test.context.TestConfiguration

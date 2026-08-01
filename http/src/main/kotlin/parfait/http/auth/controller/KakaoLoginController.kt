@@ -1,4 +1,4 @@
-package parfait.http.api.auth.controller
+package parfait.http.auth.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RestController
 import parfait.common.response.ApiResponse
 import parfait.core.auth.port.`in`.KakaoLoginResult
 import parfait.core.auth.port.`in`.KakaoLoginUseCase
-import parfait.http.api.auth.dto.KakaoLoginRequest
-import parfait.http.api.auth.dto.KakaoLoginResponse
+import parfait.http.auth.dto.KakaoLoginRequest
+import parfait.http.auth.dto.KakaoLoginResponse
 
 @Tag(name = "Auth")
 @RestController

@@ -1,4 +1,4 @@
-package parfait.http.api.auth.controller
+package parfait.http.auth.controller
 
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
