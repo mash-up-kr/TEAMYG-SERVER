@@ -34,6 +34,28 @@ bootstrap → http / persistence / external / batch → core → common
   - **쓰기(Command) 메서드는 액션별로 쪼갠다** — `{Domain}SavePort`, `{Domain}DeletePort` 등. `save`(생성/수정)와 `delete`(삭제)는 위험도가 다르고, 보통 하나의 유스케이스가 둘 다 필요로 하는 경우는 드물기 때문에, 소비자가 필요한 쓰기 능력만 정확히 갖도록 분리한다.
   - 이렇게 나누면 ① `persistence`의 기존 JPA 인터페이스 이름과 절대 겹치지 않아 리네이밍이 필요 없고, ② 포트를 쓰는 클래스의 생성자 시그니처만 봐도 "정확히 어떤 능력이 필요한지"가 드러나고, ③ 테스트에서 MockK로 목을 만들 때도 해당 포트에 정의된 메서드만 스텁하면 되어 간단해진다.
 
+## 디렉토리 구조 — 도메인 우선
+
+`core`, `http`는 **역할(service, port, controller 등)보다 도메인을 먼저 기준으로 나눈다.** 역할 디렉토리를 최상위에 두고 그 안에 여러 도메인 파일을 섞어 두지 않는다 — 도메인 디렉토리 안에 역할별 하위 디렉토리를 둔다.
+
+```
+core/auth/domain/LoginProvider.kt
+core/auth/exception/AuthErrorCode.kt
+core/auth/port/in/KakaoLoginUseCase.kt
+core/auth/port/out/{KakaoIdTokenVerifyPort,TokenIssuePort,TokenSavePort,TokenValidatePort}.kt
+core/auth/service/KakaoLoginService.kt
+core/member/port/out/MemberQueryPort.kt
+
+http/auth/controller/KakaoLoginController.kt
+http/auth/dto/{KakaoLoginRequest,KakaoLoginResponse}.kt
+```
+
+- **도메인 이름은 `core`·`http` 간에 동일하게 맞춘다.** `auth` 도메인이면 `core/auth`, `http/auth` 모두 같은 이름을 쓴다 — 도메인 하나를 작업할 때 모듈을 넘나들어도 같은 이름으로 찾을 수 있어야 한다.
+- **도메인 디렉토리 안에서도 역할별로 나눈다.** `http`의 경우 Controller와 Request/Response DTO를 같은 곳에 두지 않는다 — Controller는 `{domain}/controller/`, Request/Response는 `{domain}/dto/`에 둔다(예: `http/auth/controller/KakaoLoginController.kt`, `http/auth/dto/KakaoLoginRequest.kt`).
+- **여러 도메인이 공유하는 인프라성 코드는 도메인 디렉토리를 만들지 않고 모듈 루트에 역할 이름 그대로 둔다.** 예: `http/config`(OpenAPI 설정), `http/exception`(GlobalExceptionHandler), `http/filter`(TraceIdFilter), `http/health`, `http/security`(JwtAuthFilter, JwtTokenAdapter, SecurityConfig — 인증 방식과 얽혀 있지만 애플리케이션 전체 요청 파이프라인에 걸리는 설정이므로 `auth` 도메인 폴더에 넣지 않는다), `core/exception`(BusinessException — 도메인에 종속되지 않는 공통 예외 베이스). 특정 도메인 하나에만 쓰이는 것과 여러 도메인이 공유하는 것을 구분하는 게 기준이다 — 판단이 애매하면 "이 코드가 없어도 되는 도메인이 하나라도 있는가"를 물어본다.
+- `persistence`·`external`은 당분간 기존 역할별 구조(`entity`, `repository`, `adapter` 등)를 유지한다 — 도메인별 재구성은 별도로 다룬다.
+- 새 도메인을 추가할 때 `core`·`http`에 도메인 디렉토리를 미리 만들 필요는 없다 — 해당 모듈에 그 도메인 코드가 생기는 시점에 만든다.
+
 ## Port & Adapter — Composition Root(bootstrap)
 
 `bootstrap`이 의존성 그래프를 1회 조립한다. `core`의 in-port는 Service가 구현하고, out-port는 `persistence`·`external` Adapter가 구현한다. **전역 싱글톤·순환 의존 금지** — Spring Bean 등록은 `bootstrap`에서만.
