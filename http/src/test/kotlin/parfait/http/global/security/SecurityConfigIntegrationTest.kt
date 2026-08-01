@@ -22,6 +22,8 @@ import parfait.http.auth.controller.TestLogoutUseCaseConfig
 import parfait.http.auth.controller.TestReissueUseCaseConfig
 import parfait.http.auth.controller.TestSignupUseCaseConfig
 import parfait.http.parfaitgroup.controller.TestParfaitGroupUseCaseConfig
+import parfait.http.api.parfait.controller.TestParfaitUseCaseConfig
+import parfait.http.parfaitgroup.TestParfaitGroupUseCaseConfig
 import kotlin.test.Test
 
 @SpringBootTest(
@@ -42,6 +44,7 @@ import kotlin.test.Test
     TestSignupUseCaseConfig::class,
     TestReissueUseCaseConfig::class,
     TestLogoutUseCaseConfig::class,
+    TestParfaitUseCaseConfig::class,
 )
 class SecurityConfigIntegrationTest {
     @Autowired
