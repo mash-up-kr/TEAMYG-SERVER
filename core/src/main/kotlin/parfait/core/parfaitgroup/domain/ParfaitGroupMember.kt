@@ -8,6 +8,7 @@ class ParfaitGroupMember private constructor(
     val memberId: Long,
     val groupNickname: GroupNickname,
     val joinedAt: LocalDateTime,
+    val leftAt: LocalDateTime?,
 ) {
     fun changeNickname(groupNickname: String): ParfaitGroupMember =
         ParfaitGroupMember(
@@ -16,6 +17,17 @@ class ParfaitGroupMember private constructor(
             memberId = memberId,
             groupNickname = GroupNickname.of(groupNickname),
             joinedAt = joinedAt,
+            leftAt = leftAt,
+        )
+
+    fun leave(leftAt: LocalDateTime = LocalDateTime.now()): ParfaitGroupMember =
+        ParfaitGroupMember(
+            id = id,
+            parfaitGroupId = parfaitGroupId,
+            memberId = memberId,
+            groupNickname = GroupNickname.unknown(),
+            joinedAt = joinedAt,
+            leftAt = leftAt,
         )
 
     companion object {
@@ -31,6 +43,7 @@ class ParfaitGroupMember private constructor(
                 memberId = memberId,
                 groupNickname = GroupNickname.of(groupNickname),
                 joinedAt = joinedAt,
+                leftAt = null,
             )
 
         fun reconstitute(
@@ -39,6 +52,7 @@ class ParfaitGroupMember private constructor(
             memberId: Long,
             groupNickname: String,
             joinedAt: LocalDateTime,
+            leftAt: LocalDateTime? = null,
         ): ParfaitGroupMember =
             ParfaitGroupMember(
                 id = id,
@@ -46,6 +60,7 @@ class ParfaitGroupMember private constructor(
                 memberId = memberId,
                 groupNickname = GroupNickname.of(groupNickname),
                 joinedAt = joinedAt,
+                leftAt = leftAt,
             )
     }
 }

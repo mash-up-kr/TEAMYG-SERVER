@@ -1,6 +1,8 @@
 spring:
   application:
     name: parfait
+  jackson:
+    default-property-inclusion: always
   profiles:
     default: local
   jpa:
