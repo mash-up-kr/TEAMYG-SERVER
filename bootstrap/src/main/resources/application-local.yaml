@@ -20,3 +20,6 @@ management:
 
 jwt:
   secret-key: local-only-dummy-jwt-secret-key-please-change-32b
+
+kakao:
+  app-key: local-only-dummy-kakao-app-key

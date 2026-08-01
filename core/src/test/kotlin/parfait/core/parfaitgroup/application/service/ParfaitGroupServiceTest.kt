@@ -8,6 +8,7 @@ import io.mockk.verify
 import io.mockk.verifySequence
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import parfait.core.member.port.out.MemberQueryPort
 import parfait.core.parfaitgroup.application.port.`in`.ChangeMyParfaitGroupNicknameCommand
 import parfait.core.parfaitgroup.application.port.`in`.CreateParfaitGroupCommand
 import parfait.core.parfaitgroup.application.port.`in`.JoinParfaitGroupCommand
@@ -28,7 +29,6 @@ import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 import parfait.core.parfaitgroup.domain.ParfaitGroupReport
-import parfait.core.port.out.MemberQueryPort
 import java.time.LocalDateTime
 import kotlin.test.assertFailsWith
 

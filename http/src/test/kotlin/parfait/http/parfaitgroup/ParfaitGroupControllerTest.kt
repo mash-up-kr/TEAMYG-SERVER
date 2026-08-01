@@ -36,9 +36,9 @@ import parfait.core.parfaitgroup.application.port.`in`.ReportParfaitGroupResult
 import parfait.core.parfaitgroup.application.port.`in`.ReportParfaitGroupUseCase
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
-import parfait.http.exception.GlobalExceptionHandler
-import parfait.http.security.TestMemberQueryPortConfig
-import parfait.http.security.TestTokenValidatePortConfig
+import parfait.http.global.exception.GlobalExceptionHandler
+import parfait.http.global.security.TestMemberQueryPortConfig
+import parfait.http.global.security.TestTokenValidatePortConfig
 import java.time.LocalDateTime
 
 @WebMvcTest(controllers = [ParfaitGroupController::class])

@@ -16,3 +16,6 @@ management:
 
 jwt:
   secret-key: ${JWT_SECRET_KEY}
+
+kakao:
+  app-key: ${KAKAO_APP_KEY}

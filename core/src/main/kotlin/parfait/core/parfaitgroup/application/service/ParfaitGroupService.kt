@@ -2,6 +2,7 @@ package parfait.core.parfaitgroup.application.service
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import parfait.core.member.port.out.MemberQueryPort
 import parfait.core.parfaitgroup.application.port.`in`.ChangeMyParfaitGroupNicknameCommand
 import parfait.core.parfaitgroup.application.port.`in`.ChangeMyParfaitGroupNicknameResult
 import parfait.core.parfaitgroup.application.port.`in`.ChangeMyParfaitGroupNicknameUseCase
@@ -39,7 +40,6 @@ import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 import parfait.core.parfaitgroup.domain.ParfaitGroupReport
-import parfait.core.port.out.MemberQueryPort
 
 @Service
 class ParfaitGroupService(
