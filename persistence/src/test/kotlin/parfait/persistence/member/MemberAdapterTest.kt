@@ -64,7 +64,6 @@ class MemberAdapterTest {
                     loginProvider = LoginProvider.KAKAO,
                     providerUserId = "active-user-1",
                     globalNickname = "닉네임",
-                    email = "active1@example.com",
                 ),
             )
 
@@ -80,11 +79,19 @@ class MemberAdapterTest {
                     loginProvider = LoginProvider.KAKAO,
                     providerUserId = "withdrawn-user-1",
                     globalNickname = "탈퇴회원",
-                    email = "withdrawn1@example.com",
                 ),
             )
         memberRepository.deleteById(saved.id!!)
 
         adapter.findMemberIdByProvider(CoreLoginProvider.KAKAO, "withdrawn-user-1") shouldBe null
+    }
+
+    @Test
+    fun `회원을 생성하면 저장된 회원의 id를 반환하고 조회 가능해진다`() {
+        val adapter = MemberAdapter(memberRepository)
+
+        val memberId = adapter.create(CoreLoginProvider.KAKAO, "new-user-1", "말랑한커스터드")
+
+        adapter.findMemberIdByProvider(CoreLoginProvider.KAKAO, "new-user-1") shouldBe memberId
     }
 }

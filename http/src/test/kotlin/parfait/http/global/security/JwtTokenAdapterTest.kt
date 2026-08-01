@@ -152,4 +152,43 @@ class JwtTokenAdapterTest {
             }
         assertEquals(true, exception.message!!.contains("expired"))
     }
+
+    @Test
+    fun `registrationToken을 검증하면 provider와 providerUserId를 반환한다`() {
+        val token = adapter.createRegistrationToken(LoginProvider.KAKAO, "kakao-sub-1")
+
+        val claims = adapter.validateRegistrationToken(token)
+
+        assertEquals(LoginProvider.KAKAO, claims.provider)
+        assertEquals("kakao-sub-1", claims.providerUserId)
+    }
+
+    @Test
+    fun `액세스 토큰을 validateRegistrationToken에 넣으면 INVALID_TOKEN 예외를 던진다`() {
+        val accessToken = adapter.createAccessToken(memberId = 42L)
+
+        val exception =
+            assertFailsWith<BusinessException> {
+                adapter.validateRegistrationToken(accessToken)
+            }
+        assertEquals(AuthErrorCode.INVALID_TOKEN, exception.errorCode)
+    }
+
+    @Test
+    fun `만료된 registrationToken을 validateRegistrationToken에 넣으면 EXPIRED_TOKEN 예외를 던진다`() {
+        val expiredAdapter =
+            JwtTokenAdapter(
+                secretKey = TEST_SECRET_KEY,
+                accessTokenExpirationSeconds = 3600,
+                refreshTokenExpirationSeconds = 1_209_600,
+                registrationTokenExpirationSeconds = -5,
+            )
+        val expiredToken = expiredAdapter.createRegistrationToken(LoginProvider.KAKAO, "kakao-sub-1")
+
+        val exception =
+            assertFailsWith<BusinessException> {
+                adapter.validateRegistrationToken(expiredToken)
+            }
+        assertEquals(AuthErrorCode.EXPIRED_TOKEN, exception.errorCode)
+    }
 }

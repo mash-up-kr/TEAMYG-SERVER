@@ -8,12 +8,13 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import parfait.http.TestApplication
 import parfait.http.api.auth.controller.TestKakaoLoginUseCaseConfig
+import parfait.http.api.auth.controller.TestSignupUseCaseConfig
 import parfait.http.global.security.TestMemberQueryPortConfig
 import kotlin.test.Test
 
 @SpringBootTest(classes = [TestApplication::class])
 @AutoConfigureMockMvc
-@Import(TestMemberQueryPortConfig::class, TestKakaoLoginUseCaseConfig::class)
+@Import(TestMemberQueryPortConfig::class, TestKakaoLoginUseCaseConfig::class, TestSignupUseCaseConfig::class)
 class ActuatorHealthEndpointTest {
     @Autowired
     lateinit var mockMvc: MockMvc

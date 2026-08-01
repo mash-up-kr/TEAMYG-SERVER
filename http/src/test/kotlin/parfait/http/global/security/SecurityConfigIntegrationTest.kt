@@ -18,6 +18,7 @@ import parfait.core.auth.port.out.TokenIssuePort
 import parfait.core.member.port.out.MemberQueryPort
 import parfait.http.TestApplication
 import parfait.http.api.auth.controller.TestKakaoLoginUseCaseConfig
+import parfait.http.api.auth.controller.TestSignupUseCaseConfig
 import kotlin.test.Test
 
 @SpringBootTest(
@@ -34,6 +35,7 @@ import kotlin.test.Test
     SecurityConfigIntegrationTest.MemberOneOnlyExistsConfig::class,
     SecurityConfigIntegrationTest.DummyProtectedController::class,
     TestKakaoLoginUseCaseConfig::class,
+    TestSignupUseCaseConfig::class,
 )
 class SecurityConfigIntegrationTest {
     @Autowired
@@ -134,6 +136,17 @@ class SecurityConfigIntegrationTest {
                 content = """{"idToken":"dummy","nonce":"dummy"}"""
             }.andExpect {
                 status { isOk() }
+            }
+    }
+
+    @Test
+    fun `회원가입 엔드포인트는 화이트리스트에 포함되어 토큰 없이 통과한다`() {
+        mockMvc
+            .post("/api/v1/auth/signup") {
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"registrationToken":"dummy","agreements":[{"termsId":1,"agreed":true}]}"""
+            }.andExpect {
+                status { isCreated() }
             }
     }
 }
