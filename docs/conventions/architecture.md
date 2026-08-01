@@ -23,7 +23,7 @@ bootstrap → http / persistence / external / batch → core → common
 
 - `core`는 `http`, `persistence`, `external`, `batch`를 모른다. 외부 연동이 필요하면 `core`의 out-port 인터페이스를 정의하고, 구현체는 `persistence`·`external`이 담당한다.
 - `common`은 Spring 포함 외부 프레임워크 의존 금지 — `build.gradle.kts`에 외부 패키지 추가 금지.
-- 새 API 엔드포인트 → `http/controller/` + `core`의 in-port(UseCase) 호출.
+- 새 API 엔드포인트 → `http/api/{domain}/controller/` + `core`의 in-port(UseCase) 호출.
 - 새 비즈니스 로직 → `core/service/` + `core/port/in·out/` 인터페이스 정의.
 - 새 외부 연동 → `external/adapter/`가 `core`의 out-port를 구현.
 - 새 DB 접근 → `persistence/adapter/`가 `core`의 out-port를 구현.
@@ -45,16 +45,32 @@ core/auth/port/in/KakaoLoginUseCase.kt
 core/auth/port/out/{KakaoIdTokenVerifyPort,TokenIssuePort,TokenSavePort,TokenValidatePort}.kt
 core/auth/service/KakaoLoginService.kt
 core/member/port/out/MemberQueryPort.kt
-
-http/auth/controller/KakaoLoginController.kt
-http/auth/dto/{KakaoLoginRequest,KakaoLoginResponse}.kt
 ```
 
-- **도메인 이름은 `core`·`http` 간에 동일하게 맞춘다.** `auth` 도메인이면 `core/auth`, `http/auth` 모두 같은 이름을 쓴다 — 도메인 하나를 작업할 때 모듈을 넘나들어도 같은 이름으로 찾을 수 있어야 한다.
-- **도메인 디렉토리 안에서도 역할별로 나눈다.** `http`의 경우 Controller와 Request/Response DTO를 같은 곳에 두지 않는다 — Controller는 `{domain}/controller/`, Request/Response는 `{domain}/dto/`에 둔다(예: `http/auth/controller/KakaoLoginController.kt`, `http/auth/dto/KakaoLoginRequest.kt`).
-- **여러 도메인이 공유하는 인프라성 코드는 도메인 디렉토리를 만들지 않고 모듈 루트에 역할 이름 그대로 둔다.** 예: `http/config`(OpenAPI 설정), `http/exception`(GlobalExceptionHandler), `http/filter`(TraceIdFilter), `http/health`, `http/security`(JwtAuthFilter, JwtTokenAdapter, SecurityConfig — 인증 방식과 얽혀 있지만 애플리케이션 전체 요청 파이프라인에 걸리는 설정이므로 `auth` 도메인 폴더에 넣지 않는다), `core/exception`(BusinessException — 도메인에 종속되지 않는 공통 예외 베이스). 특정 도메인 하나에만 쓰이는 것과 여러 도메인이 공유하는 것을 구분하는 게 기준이다 — 판단이 애매하면 "이 코드가 없어도 되는 도메인이 하나라도 있는가"를 물어본다.
-- `persistence`·`external`은 당분간 기존 역할별 구조(`entity`, `repository`, `adapter` 등)를 유지한다 — 도메인별 재구성은 별도로 다룬다.
+- **도메인 이름은 `core`·`http` 간에 동일하게 맞춘다.** `auth` 도메인이면 `core/auth`, `http/api/auth` 모두 같은 이름을 쓴다 — 도메인 하나를 작업할 때 모듈을 넘나들어도 같은 이름으로 찾을 수 있어야 한다.
+- **여러 도메인이 공유하는 인프라성 코드는 도메인 디렉토리를 만들지 않는다.** 예: `core/exception`(BusinessException — 도메인에 종속되지 않는 공통 예외 베이스). 특정 도메인 하나에만 쓰이는 것과 여러 도메인이 공유하는 것을 구분하는 게 기준이다 — 판단이 애매하면 "이 코드가 없어도 되는 도메인이 하나라도 있는가"를 물어본다.
+- **`persistence`·`external`은 out-port 구현체(Adapter)만 도메인 우선으로 둔다.** 예: `persistence/member/MemberAdapter.kt`, `persistence/auth/RefreshTokenAdapter.kt`, `external/kakao/KakaoIdTokenVerifyAdapter.kt`. 도메인 폴더 안에 파일이 하나뿐이면 `adapter/` 같은 역할 하위 디렉토리를 따로 만들지 않는다. `entity`·`repository`는 당분간 기존 역할별 구조(`persistence/entity`, `persistence/repository`)를 유지한다 — DB 테이블 매핑은 도메인 경계보다 스키마를 따라가고, 아직 대응하는 out-port/Adapter가 없는 엔티티(`Parfait*`, `Tos*` 등)까지 미리 도메인을 추측해 나눌 필요는 없다. 해당 엔티티의 out-port·Adapter가 생기는 시점에 entity·repository도 함께 도메인 폴더로 옮긴다.
 - 새 도메인을 추가할 때 `core`·`http`에 도메인 디렉토리를 미리 만들 필요는 없다 — 해당 모듈에 그 도메인 코드가 생기는 시점에 만든다.
+
+## `http` 디렉토리 구조 — global / api
+
+`http`는 도메인 우선 원칙 위에 **`global`(요청 파이프라인 전역에 걸리는 인프라)과 `api`(클라이언트가 직접 호출하는 엔드포인트)** 상위 구분을 하나 더 둔다. `api` 아래에서는 다시 도메인 우선 원칙을 그대로 적용한다.
+
+```
+http/global/config/OpenApiConfig.kt
+http/global/exception/GlobalExceptionHandler.kt
+http/global/filter/TraceIdFilter.kt
+http/global/security/{JwtAuthFilter,JwtTokenAdapter,SecurityConfig}.kt
+
+http/api/health/HealthController.kt
+http/api/auth/controller/KakaoLoginController.kt
+http/api/auth/dto/{KakaoLoginRequest,KakaoLoginResponse}.kt
+```
+
+- **`global`**: 특정 도메인 하나가 아니라 애플리케이션 전체 요청에 걸리는 설정·필터·예외 처리. 도메인 폴더를 만들지 않고 역할 이름 그대로 최상위에 둔다(`config`, `exception`, `filter`, `security`).
+- **`api`**: 클라이언트가 실제로 호출하는 엔드포인트. 도메인 폴더 안에 `controller/`, `dto/` 같은 역할별 하위 디렉토리를 둔다(`http/api/auth/controller/KakaoLoginController.kt`, `http/api/auth/dto/KakaoLoginRequest.kt`). DTO가 없는 단순 엔드포인트(예: `HealthController`)는 역할 하위 디렉토리 없이 도메인 폴더 바로 아래 둬도 된다.
+- **`auth`가 `global`과 `api` 양쪽에 걸치는 이유**: `JwtAuthFilter`·`JwtTokenAdapter`·`SecurityConfig`는 카카오 로그인이라는 특정 기능이 아니라 애플리케이션 전체 요청 파이프라인에 적용되는 인증 방식 자체이므로 `global/security`에 둔다. 반면 `KakaoLoginController`와 그 요청/응답 DTO는 클라이언트가 실제로 호출하는 엔드포인트이므로 `api/auth`에 둔다. 판단 기준은 "이 코드가 모든 요청/여러 도메인에 적용되는 인프라인가, 아니면 클라이언트가 호출하는 특정 엔드포인트인가"이다.
+- `core`에는 이 구분이 없다 — `core`는 클라이언트가 직접 호출하는 대상도, 매 요청마다 걸리는 파이프라인도 없이 전부 비즈니스 로직 한 층이기 때문이다.
 
 ## Port & Adapter — Composition Root(bootstrap)
 
