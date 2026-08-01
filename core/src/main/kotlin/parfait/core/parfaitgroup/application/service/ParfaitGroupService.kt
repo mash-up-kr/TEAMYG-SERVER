@@ -26,7 +26,7 @@ import parfait.core.parfaitgroup.application.port.`in`.ReportParfaitGroupCommand
 import parfait.core.parfaitgroup.application.port.`in`.ReportParfaitGroupResult
 import parfait.core.parfaitgroup.application.port.`in`.ReportParfaitGroupUseCase
 import parfait.core.parfaitgroup.application.port.out.MyParfaitGroupQueryPort
-import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberDeletePort
+import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberLeavePort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberSavePort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupQueryPort
@@ -47,7 +47,7 @@ class ParfaitGroupService(
     private val parfaitGroupSavePort: ParfaitGroupSavePort,
     private val parfaitGroupMemberQueryPort: ParfaitGroupMemberQueryPort,
     private val parfaitGroupMemberSavePort: ParfaitGroupMemberSavePort,
-    private val parfaitGroupMemberDeletePort: ParfaitGroupMemberDeletePort,
+    private val parfaitGroupMemberLeavePort: ParfaitGroupMemberLeavePort,
     private val parfaitGroupReportSavePort: ParfaitGroupReportSavePort,
     private val myParfaitGroupQueryPort: MyParfaitGroupQueryPort,
     private val memberQueryPort: MemberQueryPort,
@@ -169,7 +169,7 @@ class ParfaitGroupService(
     @Transactional
     override fun leave(command: LeaveParfaitGroupCommand): LeaveParfaitGroupResult {
         findGroupByIdForUpdate(command.groupId)
-        parfaitGroupMemberDeletePort.delete(findMembership(command.groupId, command.memberId))
+        parfaitGroupMemberLeavePort.leave(findMembership(command.groupId, command.memberId).leave())
         return LeaveParfaitGroupResult(groupId = command.groupId)
     }
 
@@ -184,7 +184,7 @@ class ParfaitGroupService(
         findGroupByIdForUpdate(command.groupId)
         val membership = findMembership(command.groupId, command.memberId)
         val savedReport = parfaitGroupReportSavePort.save(report)
-        parfaitGroupMemberDeletePort.delete(membership)
+        parfaitGroupMemberLeavePort.leave(membership.leave())
         return ReportParfaitGroupResult(
             groupId = command.groupId,
             reportId = requireNotNull(savedReport.id),

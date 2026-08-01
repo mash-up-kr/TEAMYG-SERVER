@@ -17,10 +17,6 @@ import java.time.LocalDateTime
             name = "uk_parfait_group_member_group_member",
             columnNames = ["parfait_group_id", "member_id"],
         ),
-        UniqueConstraint(
-            name = "uk_parfait_group_member_group_nickname",
-            columnNames = ["parfait_group_id", "group_nickname"],
-        ),
     ],
 )
 class ParfaitGroupMember(
@@ -32,6 +28,8 @@ class ParfaitGroupMember(
     var groupNickname: String,
     @Column(name = "joined_at", nullable = false)
     var joinedAt: LocalDateTime = LocalDateTime.now(),
+    @Column(name = "left_at")
+    var leftAt: LocalDateTime? = null,
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
