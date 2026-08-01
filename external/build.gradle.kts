@@ -12,5 +12,7 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":common"))
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.7")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 }
