@@ -2,9 +2,7 @@ package parfait.persistence.adapter
 
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import parfait.core.parfaitgroup.application.port.out.MyParfaitGroupSummary
@@ -78,8 +76,8 @@ class ParfaitGroupAdapterTest {
     fun `멤버십 조회와 저장을 그룹 멤버 리포지토리에 위임한다`() {
         val member = ParfaitGroupMember.join(1L, 10L, "내 닉네임", now)
         every { groupMemberRepository.existsByParfaitGroupIdAndMemberId(1L, 10L) } returns true
-        every { groupMemberRepository.existsByParfaitGroupIdAndGroupNickname(1L, "내 닉네임") } returns true
-        every { groupMemberRepository.countByParfaitGroupId(1L) } returns 3L
+        every { groupMemberRepository.existsByParfaitGroupIdAndGroupNicknameAndLeftAtIsNull(1L, "내 닉네임") } returns true
+        every { groupMemberRepository.countByParfaitGroupIdAndLeftAtIsNull(1L) } returns 3L
         every { groupMemberRepository.save(any()) } answers {
             firstArg<ParfaitGroupMemberEntity>().apply { id = 2L }
         }
@@ -111,7 +109,7 @@ class ParfaitGroupAdapterTest {
     }
 
     @Test
-    fun `멤버십 단건 조회와 삭제는 JPA 엔티티를 노출하지 않는다`() {
+    fun `멤버십 단건 조회와 탈퇴 이력 저장은 JPA 엔티티를 노출하지 않는다`() {
         val entity =
             ParfaitGroupMemberEntity(
                 parfaitGroupId = 1L,
@@ -120,14 +118,18 @@ class ParfaitGroupAdapterTest {
                 joinedAt = now,
                 id = 2L,
             )
-        every { groupMemberRepository.findByParfaitGroupIdAndMemberId(1L, 10L) } returns entity
-        every { groupMemberRepository.deleteById(2L) } just runs
+        every { groupMemberRepository.findByParfaitGroupIdAndMemberIdAndLeftAtIsNull(1L, 10L) } returns entity
+        every { groupMemberRepository.save(any()) } answers { firstArg<ParfaitGroupMemberEntity>() }
 
         val membership = adapter.findByGroupIdAndMemberId(1L, 10L)!!
-        adapter.delete(membership)
+        adapter.leave(membership.leave(now))
 
         membership.groupNickname.value shouldBe "내 닉네임"
-        verify { groupMemberRepository.deleteById(2L) }
+        verify {
+            groupMemberRepository.save(
+                match { it.id == 2L && it.groupNickname == "(알수없음)" && it.leftAt == now },
+            )
+        }
     }
 
     private fun groupEntity(): ParfaitGroupEntity =

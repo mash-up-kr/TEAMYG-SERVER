@@ -3,6 +3,7 @@ package parfait.http.parfaitgroup
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.hamcrest.Matchers.nullValue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.TestConfiguration
@@ -118,6 +119,28 @@ class ParfaitGroupControllerTest {
                 jsonPath("$.data[0].groupName") { value("우리 그룹") }
                 jsonPath("$.data[0].recentImageUrl") { value("https://image.example/latest") }
                 jsonPath("$.data[0].recentImageUploadedAt") { value("2026-08-01T12:00:00") }
+            }
+    }
+
+    @Test
+    fun `최근 이미지가 없는 그룹도 nullable 필드를 생략하지 않고 null로 응답한다`() {
+        every { getMyGroupsUseCase.getAll(42L) } returns
+            listOf(
+                MyParfaitGroupResult(
+                    groupId = 1L,
+                    groupName = "이미지 없는 그룹",
+                    recentImageUrl = null,
+                    recentImageUploadedAt = null,
+                ),
+            )
+
+        mockMvc
+            .get("/api/parfait-groups") {
+                principal = authentication
+            }.andExpect {
+                status { isOk() }
+                jsonPath("$.data[0].recentImageUrl") { value(nullValue()) }
+                jsonPath("$.data[0].recentImageUploadedAt") { value(nullValue()) }
             }
     }
 

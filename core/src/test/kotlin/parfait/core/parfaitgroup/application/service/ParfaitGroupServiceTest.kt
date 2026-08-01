@@ -16,7 +16,7 @@ import parfait.core.parfaitgroup.application.port.`in`.LeaveParfaitGroupCommand
 import parfait.core.parfaitgroup.application.port.`in`.ReportParfaitGroupCommand
 import parfait.core.parfaitgroup.application.port.out.MyParfaitGroupQueryPort
 import parfait.core.parfaitgroup.application.port.out.MyParfaitGroupSummary
-import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberDeletePort
+import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberLeavePort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberSavePort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupQueryPort
@@ -37,7 +37,7 @@ class ParfaitGroupServiceTest {
     private val groupSavePort = mockk<ParfaitGroupSavePort>()
     private val groupMemberQueryPort = mockk<ParfaitGroupMemberQueryPort>()
     private val groupMemberSavePort = mockk<ParfaitGroupMemberSavePort>(relaxed = true)
-    private val groupMemberDeletePort = mockk<ParfaitGroupMemberDeletePort>(relaxed = true)
+    private val groupMemberLeavePort = mockk<ParfaitGroupMemberLeavePort>(relaxed = true)
     private val groupReportSavePort = mockk<ParfaitGroupReportSavePort>(relaxed = true)
     private val myGroupQueryPort = mockk<MyParfaitGroupQueryPort>(relaxed = true)
     private val memberQueryPort = mockk<MemberQueryPort>()
@@ -48,7 +48,7 @@ class ParfaitGroupServiceTest {
             parfaitGroupSavePort = groupSavePort,
             parfaitGroupMemberQueryPort = groupMemberQueryPort,
             parfaitGroupMemberSavePort = groupMemberSavePort,
-            parfaitGroupMemberDeletePort = groupMemberDeletePort,
+            parfaitGroupMemberLeavePort = groupMemberLeavePort,
             parfaitGroupReportSavePort = groupReportSavePort,
             myParfaitGroupQueryPort = myGroupQueryPort,
             memberQueryPort = memberQueryPort,
@@ -233,22 +233,27 @@ class ParfaitGroupServiceTest {
     }
 
     @Test
-    fun `그룹 나가기는 멤버십만 삭제한다`() {
+    fun `그룹 나가기는 알수없음 닉네임의 탈퇴 이력으로 멤버십을 남긴다`() {
         val membership = membership(memberId = 10L, nickname = "내 닉네임")
+        val leftMemberSlot = slot<ParfaitGroupMember>()
         every { groupQueryPort.findByIdForUpdate(1L) } returns group
         every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 10L) } returns membership
+        every { groupMemberLeavePort.leave(capture(leftMemberSlot)) } returns Unit
 
         val result = service.leave(LeaveParfaitGroupCommand(memberId = 10L, groupId = 1L))
 
         result.groupId shouldBe 1L
-        verify { groupMemberDeletePort.delete(membership) }
+        leftMemberSlot.captured.groupNickname.value shouldBe "(알수없음)"
+        (leftMemberSlot.captured.leftAt != null) shouldBe true
     }
 
     @Test
-    fun `그룹 신고는 신고를 저장한 뒤 같은 트랜잭션에서 멤버십을 삭제한다`() {
+    fun `그룹 신고는 신고를 저장한 뒤 같은 트랜잭션에서 탈퇴 이력을 남긴다`() {
         val membership = membership(memberId = 10L, nickname = "내 닉네임")
+        val leftMemberSlot = slot<ParfaitGroupMember>()
         every { groupQueryPort.findByIdForUpdate(1L) } returns group
         every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 10L) } returns membership
+        every { groupMemberLeavePort.leave(capture(leftMemberSlot)) } returns Unit
         every { groupReportSavePort.save(any()) } answers {
             val report = firstArg<ParfaitGroupReport>()
             ParfaitGroupReport.reconstitute(
@@ -266,8 +271,10 @@ class ParfaitGroupServiceTest {
         result.reportId shouldBe 99L
         verifySequence {
             groupReportSavePort.save(any())
-            groupMemberDeletePort.delete(membership)
+            groupMemberLeavePort.leave(any())
         }
+        leftMemberSlot.captured.groupNickname.value shouldBe "(알수없음)"
+        (leftMemberSlot.captured.leftAt != null) shouldBe true
     }
 
     @Test
@@ -275,7 +282,7 @@ class ParfaitGroupServiceTest {
         assertError(ParfaitGroupError.INVALID_GROUP_REPORT_REASON) {
             service.report(ReportParfaitGroupCommand(10L, 1L, "  "))
         }
-        verify(exactly = 0) { groupMemberDeletePort.delete(any()) }
+        verify(exactly = 0) { groupMemberLeavePort.leave(any()) }
         verify(exactly = 0) { groupReportSavePort.save(any()) }
     }
 

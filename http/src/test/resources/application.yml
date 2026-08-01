@@ -3,3 +3,7 @@ jwt:
   access-token-expiration-seconds: 3600
   refresh-token-expiration-seconds: 1209600
   registration-token-expiration-seconds: 600
+
+spring:
+  jackson:
+    default-property-inclusion: always

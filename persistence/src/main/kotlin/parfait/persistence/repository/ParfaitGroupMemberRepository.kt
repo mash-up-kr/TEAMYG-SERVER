@@ -7,24 +7,24 @@ import parfait.persistence.entity.ParfaitGroupMember
 import java.time.LocalDateTime
 
 interface ParfaitGroupMemberRepository : JpaRepository<ParfaitGroupMember, Long> {
-    fun findByParfaitGroupIdAndMemberId(
+    fun findByParfaitGroupIdAndMemberIdAndLeftAtIsNull(
         parfaitGroupId: Long,
         memberId: Long,
     ): ParfaitGroupMember?
 
-    fun findAllByParfaitGroupIdOrderByJoinedAtAscIdAsc(parfaitGroupId: Long): List<ParfaitGroupMember>
+    fun findAllByParfaitGroupIdAndLeftAtIsNullOrderByJoinedAtAscIdAsc(parfaitGroupId: Long): List<ParfaitGroupMember>
 
     fun existsByParfaitGroupIdAndMemberId(
         parfaitGroupId: Long,
         memberId: Long,
     ): Boolean
 
-    fun existsByParfaitGroupIdAndGroupNickname(
+    fun existsByParfaitGroupIdAndGroupNicknameAndLeftAtIsNull(
         parfaitGroupId: Long,
         groupNickname: String,
     ): Boolean
 
-    fun countByParfaitGroupId(parfaitGroupId: Long): Long
+    fun countByParfaitGroupIdAndLeftAtIsNull(parfaitGroupId: Long): Long
 
     @Query(
         value =
@@ -51,6 +51,7 @@ interface ParfaitGroupMemberRepository : JpaRepository<ParfaitGroupMember, Long>
             FROM parfait_group_member gm
             INNER JOIN parfait_group g ON g.id = gm.parfait_group_id
             WHERE gm.member_id = :memberId
+              AND gm.left_at IS NULL
             ORDER BY COALESCE(
                 (
                     SELECT pi.created_at
