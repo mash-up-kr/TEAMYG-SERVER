@@ -53,4 +53,30 @@ class RefreshTokenAdapterTest {
         ttl shouldBeGreaterThan 0L
         ttl shouldBeLessThanOrEqual 60L
     }
+
+    @Test
+    fun `저장된 refresh token을 memberId와 sessionId로 조회할 수 있다`() {
+        adapter.save(memberId = 2L, sessionId = "session-3", refreshToken = "refresh-token-value", ttlSeconds = 60)
+
+        adapter.findRefreshToken(memberId = 2L, sessionId = "session-3") shouldBe "refresh-token-value"
+    }
+
+    @Test
+    fun `저장된 값이 없으면 조회시 null을 반환한다`() {
+        adapter.findRefreshToken(memberId = 999L, sessionId = "no-such-session") shouldBe null
+    }
+
+    @Test
+    fun `삭제하면 더 이상 조회되지 않는다`() {
+        adapter.save(memberId = 3L, sessionId = "session-4", refreshToken = "refresh-token-value", ttlSeconds = 60)
+
+        adapter.delete(memberId = 3L, sessionId = "session-4")
+
+        adapter.findRefreshToken(memberId = 3L, sessionId = "session-4") shouldBe null
+    }
+
+    @Test
+    fun `저장된 적 없는 세션을 삭제해도 예외가 발생하지 않는다`() {
+        adapter.delete(memberId = 999L, sessionId = "no-such-session")
+    }
 }

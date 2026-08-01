@@ -7,10 +7,12 @@ import org.springframework.context.annotation.Import
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import parfait.http.TestApplication
-import parfait.http.api.auth.controller.TestKakaoLoginUseCaseConfig
-import parfait.http.api.auth.controller.TestSignupUseCaseConfig
+import parfait.http.auth.controller.TestKakaoLoginUseCaseConfig
+import parfait.http.auth.controller.TestLogoutUseCaseConfig
+import parfait.http.auth.controller.TestReissueUseCaseConfig
+import parfait.http.auth.controller.TestSignupUseCaseConfig
 import parfait.http.global.security.TestMemberQueryPortConfig
-import parfait.http.parfaitgroup.TestParfaitGroupUseCaseConfig
+import parfait.http.parfaitgroup.controller.TestParfaitGroupUseCaseConfig
 import kotlin.test.Test
 
 @SpringBootTest(classes = [TestApplication::class])
@@ -20,6 +22,8 @@ import kotlin.test.Test
     TestKakaoLoginUseCaseConfig::class,
     TestParfaitGroupUseCaseConfig::class,
     TestSignupUseCaseConfig::class,
+    TestReissueUseCaseConfig::class,
+    TestLogoutUseCaseConfig::class,
 )
 class ActuatorHealthEndpointTest {
     @Autowired
