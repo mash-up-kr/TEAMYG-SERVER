@@ -28,7 +28,7 @@ class ParfaitGroupMember(
     var parfaitGroupId: Long,
     @Column(name = "member_id", nullable = false)
     var memberId: Long,
-    @Column(name = "group_nickname", nullable = false, length = 255)
+    @Column(name = "group_nickname", nullable = false, length = 15)
     var groupNickname: String,
     @Column(name = "joined_at", nullable = false)
     var joinedAt: LocalDateTime = LocalDateTime.now(),

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 import parfait.core.port.out.MemberQueryPort
 import parfait.core.port.out.TokenIssuePort
 import parfait.http.TestApplication
+import parfait.http.parfaitgroup.TestParfaitGroupUseCaseConfig
 import kotlin.test.Test
 
 @SpringBootTest(
@@ -28,6 +29,7 @@ import kotlin.test.Test
 @Import(
     SecurityConfigIntegrationTest.MemberOneOnlyExistsConfig::class,
     SecurityConfigIntegrationTest.DummyProtectedController::class,
+    TestParfaitGroupUseCaseConfig::class,
 )
 class SecurityConfigIntegrationTest {
     @Autowired
@@ -46,6 +48,8 @@ class SecurityConfigIntegrationTest {
         fun memberQueryPort(): MemberQueryPort =
             object : MemberQueryPort {
                 override fun existsById(memberId: Long): Boolean = memberId == 1L
+
+                override fun findGlobalNicknameById(memberId: Long): String? = if (memberId == 1L) "테스트" else null
             }
     }
 

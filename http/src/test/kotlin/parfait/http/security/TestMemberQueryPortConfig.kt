@@ -19,5 +19,7 @@ class TestMemberQueryPortConfig {
     fun memberQueryPort(): MemberQueryPort =
         object : MemberQueryPort {
             override fun existsById(memberId: Long): Boolean = true
+
+            override fun findGlobalNicknameById(memberId: Long): String = "테스트"
         }
 }
