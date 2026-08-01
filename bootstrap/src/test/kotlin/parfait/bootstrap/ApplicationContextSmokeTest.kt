@@ -12,7 +12,7 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
 import parfait.core.member.port.out.MemberQueryPort
-import parfait.persistence.adapter.MemberAdapter
+import parfait.persistence.member.MemberAdapter
 
 /**
  * `bootstrap`이 core/http/persistence/external/batch 전체를 실제로 조립했을 때

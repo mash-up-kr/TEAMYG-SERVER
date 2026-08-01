@@ -1,4 +1,4 @@
-package parfait.persistence.adapter
+package parfait.persistence.member
 
 import io.kotest.matchers.shouldBe
 import io.mockk.every

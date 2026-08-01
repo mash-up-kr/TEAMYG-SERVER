@@ -1,4 +1,4 @@
-package parfait.persistence.redis
+package parfait.persistence.auth
 
 import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.longs.shouldBeLessThanOrEqual

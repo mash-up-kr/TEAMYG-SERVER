@@ -1,4 +1,4 @@
-package parfait.persistence.redis
+package parfait.persistence.auth
 
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component

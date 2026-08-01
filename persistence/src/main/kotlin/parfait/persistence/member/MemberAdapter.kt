@@ -1,4 +1,4 @@
-package parfait.persistence.adapter
+package parfait.persistence.member
 
 import org.springframework.stereotype.Component
 import parfait.core.member.port.out.MemberQueryPort
