@@ -10,7 +10,7 @@ import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.web.servlet.HandlerExceptionResolver
-import parfait.core.exception.AuthErrorCode
+import parfait.core.auth.exception.AuthErrorCode
 import parfait.core.exception.BusinessException
 
 @Configuration
@@ -26,7 +26,7 @@ class SecurityConfig(
                 "/swagger-ui.html",
                 "/swagger-ui/**",
                 "/v3/api-docs/**",
-                "/api/auth/**",
+                "/api/v1/auth/**",
             )
     }
 

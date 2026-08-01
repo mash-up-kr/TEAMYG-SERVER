@@ -1,4 +1,4 @@
-package parfait.core.port.out
+package parfait.core.auth.port.out
 
 interface TokenSavePort {
     fun save(

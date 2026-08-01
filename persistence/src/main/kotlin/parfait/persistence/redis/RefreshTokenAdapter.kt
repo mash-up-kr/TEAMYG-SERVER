@@ -2,7 +2,7 @@ package parfait.persistence.redis
 
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
-import parfait.core.port.out.TokenSavePort
+import parfait.core.auth.port.out.TokenSavePort
 import java.time.Duration
 
 @Component

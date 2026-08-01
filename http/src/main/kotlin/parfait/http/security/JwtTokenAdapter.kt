@@ -7,11 +7,12 @@ import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import parfait.core.exception.AuthErrorCode
+import parfait.core.auth.domain.LoginProvider
+import parfait.core.auth.exception.AuthErrorCode
+import parfait.core.auth.port.out.RefreshTokenClaims
+import parfait.core.auth.port.out.TokenIssuePort
+import parfait.core.auth.port.out.TokenValidatePort
 import parfait.core.exception.BusinessException
-import parfait.core.port.out.RefreshTokenClaims
-import parfait.core.port.out.TokenIssuePort
-import parfait.core.port.out.TokenValidatePort
 import java.util.Date
 import javax.crypto.SecretKey
 
@@ -20,6 +21,7 @@ class JwtTokenAdapter(
     @Value("\${jwt.secret-key}") secretKey: String,
     @Value("\${jwt.access-token-expiration-seconds}") private val accessTokenExpirationSeconds: Long,
     @Value("\${jwt.refresh-token-expiration-seconds}") private val refreshTokenExpirationSeconds: Long,
+    @Value("\${jwt.registration-token-expiration-seconds}") private val registrationTokenExpirationSeconds: Long,
 ) : TokenIssuePort,
     TokenValidatePort {
     private val key: SecretKey = Keys.hmacShaKeyFor(secretKey.toByteArray())
@@ -45,6 +47,20 @@ class JwtTokenAdapter(
             .claim(CLAIM_TYPE, TOKEN_TYPE_REFRESH)
             .issuedAt(Date())
             .expiration(Date(System.currentTimeMillis() + refreshTokenExpirationSeconds * 1000))
+            .signWith(key, Jwts.SIG.HS256)
+            .compact()
+
+    override fun createRegistrationToken(
+        provider: LoginProvider,
+        providerUserId: String,
+    ): String =
+        Jwts
+            .builder()
+            .claim(CLAIM_PROVIDER, provider.name)
+            .claim(CLAIM_PROVIDER_USER_ID, providerUserId)
+            .claim(CLAIM_PURPOSE, PURPOSE_REGISTRATION)
+            .issuedAt(Date())
+            .expiration(Date(System.currentTimeMillis() + registrationTokenExpirationSeconds * 1000))
             .signWith(key, Jwts.SIG.HS256)
             .compact()
 
@@ -88,5 +104,9 @@ class JwtTokenAdapter(
         private const val TOKEN_TYPE_ACCESS = "ACCESS"
         private const val TOKEN_TYPE_REFRESH = "REFRESH"
         private const val CLAIM_SESSION_ID = "sessionId"
+        private const val CLAIM_PROVIDER = "provider"
+        private const val CLAIM_PROVIDER_USER_ID = "providerUserId"
+        private const val CLAIM_PURPOSE = "purpose"
+        private const val PURPOSE_REGISTRATION = "REGISTRATION"
     }
 }
