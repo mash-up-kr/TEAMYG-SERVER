@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.get
 import parfait.http.TestApplication
 import parfait.http.api.auth.controller.TestKakaoLoginUseCaseConfig
 import parfait.http.api.auth.controller.TestSignupUseCaseConfig
+import parfait.http.api.parfait.controller.TestParfaitUseCaseConfig
 import parfait.http.global.security.TestMemberQueryPortConfig
 import parfait.http.parfaitgroup.TestParfaitGroupUseCaseConfig
 import kotlin.test.Test
@@ -20,6 +21,7 @@ import kotlin.test.Test
     TestKakaoLoginUseCaseConfig::class,
     TestSignupUseCaseConfig::class,
     TestParfaitGroupUseCaseConfig::class,
+    TestParfaitUseCaseConfig::class,
 )
 class OpenApiEndpointTest {
     @Autowired

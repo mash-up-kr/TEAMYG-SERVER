@@ -19,6 +19,7 @@ import parfait.core.member.port.out.MemberQueryPort
 import parfait.http.TestApplication
 import parfait.http.api.auth.controller.TestKakaoLoginUseCaseConfig
 import parfait.http.api.auth.controller.TestSignupUseCaseConfig
+import parfait.http.api.parfait.controller.TestParfaitUseCaseConfig
 import parfait.http.parfaitgroup.TestParfaitGroupUseCaseConfig
 import kotlin.test.Test
 
@@ -38,6 +39,7 @@ import kotlin.test.Test
     TestParfaitGroupUseCaseConfig::class,
     TestKakaoLoginUseCaseConfig::class,
     TestSignupUseCaseConfig::class,
+    TestParfaitUseCaseConfig::class,
 )
 class SecurityConfigIntegrationTest {
     @Autowired
