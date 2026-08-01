@@ -17,10 +17,12 @@ import parfait.core.auth.domain.LoginProvider
 import parfait.core.auth.port.out.TokenIssuePort
 import parfait.core.member.port.out.MemberQueryPort
 import parfait.http.TestApplication
-import parfait.http.api.auth.controller.TestKakaoLoginUseCaseConfig
-import parfait.http.api.auth.controller.TestSignupUseCaseConfig
-import parfait.http.api.parfait.controller.TestParfaitUseCaseConfig
-import parfait.http.parfaitgroup.TestParfaitGroupUseCaseConfig
+import parfait.http.auth.controller.TestKakaoLoginUseCaseConfig
+import parfait.http.auth.controller.TestLogoutUseCaseConfig
+import parfait.http.auth.controller.TestReissueUseCaseConfig
+import parfait.http.auth.controller.TestSignupUseCaseConfig
+import parfait.http.parfait.controller.TestParfaitUseCaseConfig
+import parfait.http.parfaitgroup.controller.TestParfaitGroupUseCaseConfig
 import kotlin.test.Test
 
 @SpringBootTest(
@@ -39,6 +41,8 @@ import kotlin.test.Test
     TestParfaitGroupUseCaseConfig::class,
     TestKakaoLoginUseCaseConfig::class,
     TestSignupUseCaseConfig::class,
+    TestReissueUseCaseConfig::class,
+    TestLogoutUseCaseConfig::class,
     TestParfaitUseCaseConfig::class,
 )
 class SecurityConfigIntegrationTest {
@@ -153,6 +157,56 @@ class SecurityConfigIntegrationTest {
                 content = """{"registrationToken":"dummy","agreements":[{"termsId":1,"agreed":true}]}"""
             }.andExpect {
                 status { isCreated() }
+            }
+    }
+
+    @Test
+    fun `재발급 엔드포인트는 화이트리스트에 포함되어 토큰 없이 통과한다`() {
+        mockMvc
+            .post("/api/v1/auth/reissue") {
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"refreshToken":"dummy"}"""
+            }.andExpect {
+                status { isOk() }
+            }
+    }
+
+    @Test
+    fun `로그아웃 엔드포인트는 화이트리스트가 아니라 유효한 토큰이 있어야 204를 응답한다`() {
+        val token = tokenIssuePort.createAccessToken(memberId = 1L)
+
+        mockMvc
+            .post("/api/v1/auth/logout") {
+                header("Authorization", "Bearer $token")
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"refreshToken":"refresh-token"}"""
+            }.andExpect {
+                status { isNoContent() }
+            }
+    }
+
+    @Test
+    fun `로그아웃 엔드포인트는 위조된 토큰이면 401과 INVALID_TOKEN으로 응답한다`() {
+        mockMvc
+            .post("/api/v1/auth/logout") {
+                header("Authorization", "Bearer not-a-valid-jwt")
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"refreshToken":"refresh-token"}"""
+            }.andExpect {
+                status { isUnauthorized() }
+                jsonPath("$.code") { value("INVALID_TOKEN") }
+            }
+    }
+
+    @Test
+    fun `로그아웃 엔드포인트는 Authorization 헤더가 없으면 401과 UNAUTHORIZED로 응답한다`() {
+        mockMvc
+            .post("/api/v1/auth/logout") {
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"refreshToken":"refresh-token"}"""
+            }.andExpect {
+                status { isUnauthorized() }
+                jsonPath("$.code") { value("UNAUTHORIZED") }
             }
     }
 }
