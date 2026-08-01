@@ -1,4 +1,4 @@
-package parfait.http.api.parfait.controller
+package parfait.http.parfait.controller
 
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.GetMapping
@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import parfait.common.response.ApiResponse
 import parfait.core.parfait.port.`in`.GetParfaitYearsUseCase
-import parfait.http.api.parfait.dto.ParfaitYearsResponse
+import parfait.http.parfait.dto.ParfaitYearsResponse
 
 @RestController
 @RequestMapping("/api/v1/groups/{groupId}/parfaits")

@@ -11,8 +11,8 @@ import parfait.http.auth.controller.TestKakaoLoginUseCaseConfig
 import parfait.http.auth.controller.TestLogoutUseCaseConfig
 import parfait.http.auth.controller.TestReissueUseCaseConfig
 import parfait.http.auth.controller.TestSignupUseCaseConfig
-import parfait.http.api.parfait.controller.TestParfaitUseCaseConfig
 import parfait.http.global.security.TestMemberQueryPortConfig
+import parfait.http.parfait.controller.TestParfaitUseCaseConfig
 import parfait.http.parfaitgroup.controller.TestParfaitGroupUseCaseConfig
 import kotlin.test.Test
 

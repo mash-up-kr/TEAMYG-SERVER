@@ -21,9 +21,8 @@ import parfait.http.auth.controller.TestKakaoLoginUseCaseConfig
 import parfait.http.auth.controller.TestLogoutUseCaseConfig
 import parfait.http.auth.controller.TestReissueUseCaseConfig
 import parfait.http.auth.controller.TestSignupUseCaseConfig
+import parfait.http.parfait.controller.TestParfaitUseCaseConfig
 import parfait.http.parfaitgroup.controller.TestParfaitGroupUseCaseConfig
-import parfait.http.api.parfait.controller.TestParfaitUseCaseConfig
-import parfait.http.parfaitgroup.TestParfaitGroupUseCaseConfig
 import kotlin.test.Test
 
 @SpringBootTest(
