@@ -18,6 +18,7 @@ import parfait.core.auth.port.out.TokenIssuePort
 import parfait.core.member.port.out.MemberQueryPort
 import parfait.http.TestApplication
 import parfait.http.api.auth.controller.TestKakaoLoginUseCaseConfig
+import parfait.http.parfaitgroup.TestParfaitGroupUseCaseConfig
 import kotlin.test.Test
 
 @SpringBootTest(
@@ -33,6 +34,7 @@ import kotlin.test.Test
 @Import(
     SecurityConfigIntegrationTest.MemberOneOnlyExistsConfig::class,
     SecurityConfigIntegrationTest.DummyProtectedController::class,
+    TestParfaitGroupUseCaseConfig::class,
     TestKakaoLoginUseCaseConfig::class,
 )
 class SecurityConfigIntegrationTest {
@@ -57,6 +59,8 @@ class SecurityConfigIntegrationTest {
                     provider: LoginProvider,
                     providerUserId: String,
                 ): Long? = null
+
+                override fun findGlobalNicknameById(memberId: Long): String? = if (memberId == 1L) "테스트" else null
             }
     }
 

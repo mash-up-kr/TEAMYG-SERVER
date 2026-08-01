@@ -11,6 +11,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import parfait.common.error.CommonErrorCode
 import parfait.common.response.ApiResponse
 import parfait.core.exception.BusinessException
+import parfait.core.parfaitgroup.domain.ParfaitGroupException
+import parfait.http.parfaitgroup.ParfaitGroupApiErrorCode
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -22,6 +24,15 @@ class GlobalExceptionHandler {
         return ResponseEntity
             .status(e.errorCode.status)
             .body(ApiResponse.error(e.errorCode))
+    }
+
+    @ExceptionHandler(ParfaitGroupException::class)
+    fun handleParfaitGroupException(e: ParfaitGroupException): ResponseEntity<ApiResponse<Nothing>> {
+        val errorCode = ParfaitGroupApiErrorCode.from(e.error)
+        log.info("ParfaitGroupException: {}", errorCode.code, e)
+        return ResponseEntity
+            .status(errorCode.status)
+            .body(ApiResponse.error(errorCode))
     }
 
     @ExceptionHandler(
