@@ -2,6 +2,7 @@ package parfait.core.auth.service
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import parfait.core.auth.domain.LoginProvider
 import parfait.core.auth.exception.AuthErrorCode
 import parfait.core.auth.port.`in`.SignupResult
@@ -29,6 +30,7 @@ class SignupService(
     @Value("\${jwt.access-token-expiration-seconds}") private val accessTokenExpiresInSeconds: Long,
     @Value("\${jwt.refresh-token-expiration-seconds}") private val refreshTokenTtlSeconds: Long,
 ) : SignupUseCase {
+    @Transactional
     override fun signup(
         registrationToken: String,
         agreements: List<TermsAgreement>,
