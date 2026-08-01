@@ -18,7 +18,7 @@ spring:
         order_inserts: true
         order_updates: true
   flyway:
-    enabled: true
+    enabled: false
     locations: classpath:db/migration
 
 jwt:
