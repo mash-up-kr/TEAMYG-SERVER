@@ -19,6 +19,10 @@ import parfait.http.security.TestMemberQueryPortConfig
 import parfait.http.security.TestTokenValidatePortConfig
 import kotlin.test.Test
 
+data class ValidationTestRequest(
+    @field:jakarta.validation.constraints.NotBlank val name: String,
+)
+
 private object DummyErrorCode : BaseErrorCode {
     override val status = 400
     override val code = "DUMMY_ERROR"
@@ -58,6 +62,11 @@ class GlobalExceptionHandlerTest {
         fun malformedBody(
             @RequestBody body: Map<String, Any>,
         ): Map<String, Any> = body
+
+        @PostMapping("/test/valid-body")
+        fun validBody(
+            @jakarta.validation.Valid @RequestBody body: ValidationTestRequest,
+        ): ValidationTestRequest = body
 
         @GetMapping("/test/type-mismatch")
         fun typeMismatch(
@@ -110,6 +119,19 @@ class GlobalExceptionHandlerTest {
         mockMvc
             .get("/test/type-mismatch") {
                 param("id", "not-a-number")
+            }.andExpect {
+                status { isBadRequest() }
+                jsonPath("$.success") { value(false) }
+                jsonPath("$.code") { value("INVALID_REQUEST") }
+            }
+    }
+
+    @Test
+    fun `Bean Validation에 실패하면 400과 INVALID_REQUEST로 응답한다`() {
+        mockMvc
+            .post("/test/valid-body") {
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"name":""}"""
             }.andExpect {
                 status { isBadRequest() }
                 jsonPath("$.success") { value(false) }

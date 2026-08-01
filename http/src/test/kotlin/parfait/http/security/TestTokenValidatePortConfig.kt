@@ -2,8 +2,8 @@ package parfait.http.security
 
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
-import parfait.core.port.out.RefreshTokenClaims
-import parfait.core.port.out.TokenValidatePort
+import parfait.core.auth.port.out.RefreshTokenClaims
+import parfait.core.auth.port.out.TokenValidatePort
 
 /**
  * `@WebMvcTest` 슬라이스 테스트는 `JwtAuthFilter`(Filter 타입)는 자동으로 슬라이스에 포함시키지만

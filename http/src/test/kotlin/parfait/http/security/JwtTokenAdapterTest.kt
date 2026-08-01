@@ -2,7 +2,8 @@ package parfait.http.security
 
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
-import parfait.core.exception.AuthErrorCode
+import parfait.core.auth.domain.LoginProvider
+import parfait.core.auth.exception.AuthErrorCode
 import parfait.core.exception.BusinessException
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -17,6 +18,7 @@ class JwtTokenAdapterTest {
             secretKey = TEST_SECRET_KEY,
             accessTokenExpirationSeconds = 3600,
             refreshTokenExpirationSeconds = 1_209_600,
+            registrationTokenExpirationSeconds = 600,
         )
 
     @Test
@@ -61,6 +63,7 @@ class JwtTokenAdapterTest {
                 secretKey = TEST_SECRET_KEY,
                 accessTokenExpirationSeconds = -5,
                 refreshTokenExpirationSeconds = -5,
+                registrationTokenExpirationSeconds = -5,
             )
         val expiredToken = expiredAdapter.createAccessToken(memberId = 42L)
 
@@ -109,5 +112,44 @@ class JwtTokenAdapterTest {
                 adapter.validateAccessToken("not-a-valid-jwt-token")
             }
         assertEquals(AuthErrorCode.INVALID_TOKEN, exception.errorCode)
+    }
+
+    @Test
+    fun `registrationToken을 발급하면 provider, providerUserId, purpose 클레임을 담는다`() {
+        val token = adapter.createRegistrationToken(LoginProvider.KAKAO, "kakao-sub-1")
+
+        val claims =
+            Jwts
+                .parser()
+                .verifyWith(Keys.hmacShaKeyFor(TEST_SECRET_KEY.toByteArray()))
+                .build()
+                .parseSignedClaims(token)
+                .payload
+
+        assertEquals("KAKAO", claims.get("provider", String::class.java))
+        assertEquals("kakao-sub-1", claims.get("providerUserId", String::class.java))
+        assertEquals("REGISTRATION", claims.get("purpose", String::class.java))
+    }
+
+    @Test
+    fun `만료된 registrationToken은 검증 시 EXPIRED_TOKEN 예외를 던진다`() {
+        val expiredAdapter =
+            JwtTokenAdapter(
+                secretKey = TEST_SECRET_KEY,
+                accessTokenExpirationSeconds = 3600,
+                refreshTokenExpirationSeconds = 1_209_600,
+                registrationTokenExpirationSeconds = -5,
+            )
+        val expiredToken = expiredAdapter.createRegistrationToken(LoginProvider.KAKAO, "kakao-sub-1")
+
+        val exception =
+            assertFailsWith<io.jsonwebtoken.ExpiredJwtException> {
+                Jwts
+                    .parser()
+                    .verifyWith(Keys.hmacShaKeyFor(TEST_SECRET_KEY.toByteArray()))
+                    .build()
+                    .parseSignedClaims(expiredToken)
+            }
+        assertEquals(true, exception.message!!.contains("expired"))
     }
 }

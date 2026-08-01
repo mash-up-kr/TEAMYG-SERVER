@@ -10,10 +10,10 @@ import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.servlet.HandlerExceptionResolver
-import parfait.core.exception.AuthErrorCode
+import parfait.core.auth.exception.AuthErrorCode
+import parfait.core.auth.port.out.TokenValidatePort
 import parfait.core.exception.BusinessException
-import parfait.core.port.out.MemberQueryPort
-import parfait.core.port.out.TokenValidatePort
+import parfait.core.member.port.out.MemberQueryPort
 import kotlin.test.assertEquals
 
 class JwtAuthFilterTest {

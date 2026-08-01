@@ -11,7 +11,7 @@ import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
-import parfait.core.port.out.MemberQueryPort
+import parfait.core.member.port.out.MemberQueryPort
 import parfait.persistence.adapter.MemberAdapter
 
 /**

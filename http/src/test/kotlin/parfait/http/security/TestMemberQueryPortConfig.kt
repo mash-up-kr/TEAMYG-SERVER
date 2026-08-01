@@ -2,7 +2,8 @@ package parfait.http.security
 
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
-import parfait.core.port.out.MemberQueryPort
+import parfait.core.auth.domain.LoginProvider
+import parfait.core.member.port.out.MemberQueryPort
 
 /**
  * `JwtAuthFilter`의 생성자 의존성인 [MemberQueryPort]의 실제 구현체(`MemberAdapter`)는
@@ -19,5 +20,10 @@ class TestMemberQueryPortConfig {
     fun memberQueryPort(): MemberQueryPort =
         object : MemberQueryPort {
             override fun existsById(memberId: Long): Boolean = true
+
+            override fun findMemberIdByProvider(
+                provider: LoginProvider,
+                providerUserId: String,
+            ): Long? = null
         }
 }

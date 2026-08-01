@@ -6,14 +6,18 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
+import org.springframework.http.MediaType
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
-import parfait.core.port.out.MemberQueryPort
-import parfait.core.port.out.TokenIssuePort
+import parfait.core.auth.domain.LoginProvider
+import parfait.core.auth.port.out.TokenIssuePort
+import parfait.core.member.port.out.MemberQueryPort
 import parfait.http.TestApplication
+import parfait.http.auth.controller.TestKakaoLoginUseCaseConfig
 import kotlin.test.Test
 
 @SpringBootTest(
@@ -22,12 +26,14 @@ import kotlin.test.Test
         "jwt.secret-key=integration-test-jwt-secret-key-32-bytes-min!!",
         "jwt.access-token-expiration-seconds=3600",
         "jwt.refresh-token-expiration-seconds=1209600",
+        "jwt.registration-token-expiration-seconds=600",
     ],
 )
 @AutoConfigureMockMvc
 @Import(
     SecurityConfigIntegrationTest.MemberOneOnlyExistsConfig::class,
     SecurityConfigIntegrationTest.DummyProtectedController::class,
+    TestKakaoLoginUseCaseConfig::class,
 )
 class SecurityConfigIntegrationTest {
     @Autowired
@@ -46,6 +52,11 @@ class SecurityConfigIntegrationTest {
         fun memberQueryPort(): MemberQueryPort =
             object : MemberQueryPort {
                 override fun existsById(memberId: Long): Boolean = memberId == 1L
+
+                override fun findMemberIdByProvider(
+                    provider: LoginProvider,
+                    providerUserId: String,
+                ): Long? = null
             }
     }
 
@@ -112,6 +123,17 @@ class SecurityConfigIntegrationTest {
             }.andExpect {
                 status { isOk() }
                 content { string("1") }
+            }
+    }
+
+    @Test
+    fun `카카오 로그인 엔드포인트는 화이트리스트에 포함되어 토큰 없이 통과한다`() {
+        mockMvc
+            .post("/api/v1/auth/kakao") {
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"idToken":"dummy","nonce":"dummy"}"""
+            }.andExpect {
+                status { isOk() }
             }
     }
 }
