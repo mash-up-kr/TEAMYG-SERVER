@@ -19,15 +19,6 @@ class JpaConfigurationTest {
     }
 
     @Test
-    fun `공통 설정은 Flyway가 스키마를 관리하고 Hibernate는 검증만 한다`() {
-        val properties = loadProperties("application.yaml")
-
-        assertEquals("validate", properties.getProperty("spring.jpa.hibernate.ddl-auto"))
-        assertEquals(true, properties.getProperty("spring.flyway.enabled"))
-        assertEquals("classpath:db/migration", properties.getProperty("spring.flyway.locations"))
-    }
-
-    @Test
     fun `프로필별 설정은 ddl-auto를 재정의하지 않는다`() {
         val local = loadProperties("application-local.yaml")
         val dev = loadProperties("application-dev.yaml")

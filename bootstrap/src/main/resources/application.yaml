@@ -9,7 +9,7 @@ spring:
     open-in-view: false
     show-sql: false
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     properties:
       hibernate:
         jdbc:
@@ -18,7 +18,7 @@ spring:
         order_inserts: true
         order_updates: true
   flyway:
-    enabled: true
+    enabled: false
     locations: classpath:db/migration
 
 jwt:

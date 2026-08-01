@@ -33,8 +33,6 @@ class Member(
     var providerUserId: String,
     @Column(name = "global_nickname", nullable = false, length = 255)
     var globalNickname: String,
-    @Column(name = "email", nullable = true, length = 255)
-    var email: String,
     @Column(name = "created_at", nullable = false)
     var createdAt: LocalDateTime = LocalDateTime.now(),
     @Column(name = "updated_at", nullable = false)

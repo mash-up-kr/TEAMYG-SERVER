@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component
 import parfait.core.auth.domain.LoginProvider
 import parfait.core.auth.exception.AuthErrorCode
 import parfait.core.auth.port.out.RefreshTokenClaims
+import parfait.core.auth.port.out.RegistrationTokenClaims
 import parfait.core.auth.port.out.TokenIssuePort
 import parfait.core.auth.port.out.TokenValidatePort
 import parfait.core.exception.BusinessException
@@ -80,6 +81,17 @@ class JwtTokenAdapter(
         return RefreshTokenClaims(
             memberId = claims.subject.toLong(),
             sessionId = claims.get(CLAIM_SESSION_ID, String::class.java),
+        )
+    }
+
+    override fun validateRegistrationToken(token: String): RegistrationTokenClaims {
+        val claims = parseClaims(token)
+        if (claims.get(CLAIM_PURPOSE, String::class.java) != PURPOSE_REGISTRATION) {
+            throw BusinessException(AuthErrorCode.INVALID_TOKEN)
+        }
+        return RegistrationTokenClaims(
+            provider = LoginProvider.valueOf(claims.get(CLAIM_PROVIDER, String::class.java)),
+            providerUserId = claims.get(CLAIM_PROVIDER_USER_ID, String::class.java),
         )
     }
 

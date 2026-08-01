@@ -2,7 +2,9 @@ package parfait.http.global.security
 
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
+import parfait.core.auth.domain.LoginProvider
 import parfait.core.auth.port.out.RefreshTokenClaims
+import parfait.core.auth.port.out.RegistrationTokenClaims
 import parfait.core.auth.port.out.TokenValidatePort
 
 /**
@@ -21,5 +23,8 @@ class TestTokenValidatePortConfig {
             override fun validateAccessToken(token: String): Long = 0L
 
             override fun validateRefreshToken(token: String): RefreshTokenClaims = RefreshTokenClaims(0L, "")
+
+            override fun validateRegistrationToken(token: String): RegistrationTokenClaims =
+                RegistrationTokenClaims(LoginProvider.KAKAO, "")
         }
 }
