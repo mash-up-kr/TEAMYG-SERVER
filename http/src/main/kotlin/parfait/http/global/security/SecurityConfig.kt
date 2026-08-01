@@ -25,8 +25,11 @@ class SecurityConfig(
                 "/actuator/health",
                 "/swagger-ui.html",
                 "/swagger-ui/**",
+                "/favicon.ico",
                 "/v3/api-docs/**",
-                "/api/v1/auth/**",
+                "/api/v1/auth/kakao",
+                "/api/v1/auth/signup",
+                "/api/v1/auth/reissue",
             )
     }
 
