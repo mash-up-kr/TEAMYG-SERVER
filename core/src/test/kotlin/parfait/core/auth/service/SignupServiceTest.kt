@@ -6,6 +6,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import parfait.core.auth.domain.LoginProvider
+import parfait.core.auth.domain.TosType
 import parfait.core.auth.exception.AuthErrorCode
 import parfait.core.auth.port.`in`.SignupResult
 import parfait.core.auth.port.`in`.TermsAgreement
@@ -41,8 +42,22 @@ class SignupServiceTest {
             refreshTokenTtlSeconds = 1_209_600,
         )
 
-    private val requiredTerms = CurrentTerms(id = 1L, required = true)
-    private val optionalTerms = CurrentTerms(id = 2L, required = false)
+    private val requiredTerms =
+        CurrentTerms(
+            id = 1L,
+            type = TosType.TERMS_OF_SERVICE,
+            title = "서비스 이용약관",
+            url = "https://parfait.app/policies/terms",
+            required = true,
+        )
+    private val optionalTerms =
+        CurrentTerms(
+            id = 2L,
+            type = TosType.PRIVACY_POLICY,
+            title = "개인정보 처리방침",
+            url = "https://parfait.app/policies/privacy",
+            required = false,
+        )
 
     private fun stubHappyPath() {
         every { tokenValidatePort.validateRegistrationToken("reg-token") } returns
