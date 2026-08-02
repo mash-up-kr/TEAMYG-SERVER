@@ -30,6 +30,7 @@ class SecurityConfig(
                 "/api/v1/auth/kakao",
                 "/api/v1/auth/signup",
                 "/api/v1/auth/reissue",
+                "/api/v1/policies",
             )
     }
 

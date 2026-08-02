@@ -19,6 +19,7 @@ import parfait.core.member.port.out.MemberQueryPort
 import parfait.http.TestApplication
 import parfait.http.auth.controller.TestKakaoLoginUseCaseConfig
 import parfait.http.auth.controller.TestLogoutUseCaseConfig
+import parfait.http.auth.controller.TestPolicyQueryUseCaseConfig
 import parfait.http.auth.controller.TestReissueUseCaseConfig
 import parfait.http.auth.controller.TestSignupUseCaseConfig
 import parfait.http.parfait.controller.TestParfaitUseCaseConfig
@@ -44,6 +45,7 @@ import kotlin.test.Test
     TestReissueUseCaseConfig::class,
     TestLogoutUseCaseConfig::class,
     TestParfaitUseCaseConfig::class,
+    TestPolicyQueryUseCaseConfig::class,
 )
 class SecurityConfigIntegrationTest {
     @Autowired
@@ -169,6 +171,13 @@ class SecurityConfigIntegrationTest {
             }.andExpect {
                 status { isOk() }
             }
+    }
+
+    @Test
+    fun `약관 목록 엔드포인트는 화이트리스트에 포함되어 토큰 없이 통과한다`() {
+        mockMvc.get("/api/v1/policies").andExpect {
+            status { isOk() }
+        }
     }
 
     @Test
