@@ -15,6 +15,7 @@ import parfait.persistence.entity.Tos
 import parfait.persistence.entity.TosType
 import parfait.persistence.repository.TosRepository
 import java.time.LocalDateTime
+import parfait.core.auth.domain.TosType as CoreTosType
 
 @Testcontainers
 @SpringBootTest(classes = [TestApplication::class])
@@ -78,8 +79,20 @@ class TosAdapterTest {
 
         currentTerms shouldContainExactlyInAnyOrder
             listOf(
-                CurrentTerms(id = latestTermsOfService.id!!, required = true),
-                CurrentTerms(id = privacyPolicy.id!!, required = false),
+                CurrentTerms(
+                    id = latestTermsOfService.id!!,
+                    type = CoreTosType.TERMS_OF_SERVICE,
+                    title = "이용약관 v2",
+                    url = "내용 v2",
+                    required = true,
+                ),
+                CurrentTerms(
+                    id = privacyPolicy.id!!,
+                    type = CoreTosType.PRIVACY_POLICY,
+                    title = "개인정보처리방침 v1",
+                    url = "내용",
+                    required = false,
+                ),
             )
     }
 
@@ -112,6 +125,14 @@ class TosAdapterTest {
         val currentTerms = adapter.findCurrentTerms()
 
         currentTerms shouldContainExactlyInAnyOrder
-            listOf(CurrentTerms(id = laterInsertedSameTimestamp.id!!, required = true))
+            listOf(
+                CurrentTerms(
+                    id = laterInsertedSameTimestamp.id!!,
+                    type = CoreTosType.TERMS_OF_SERVICE,
+                    title = "이용약관 v4",
+                    url = "내용 v4",
+                    required = true,
+                ),
+            )
     }
 }
