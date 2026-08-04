@@ -17,6 +17,7 @@ import parfait.http.image.controller.TestConfirmImageUploadUseCaseConfig
 import parfait.http.image.controller.TestIssueImageUploadUrlUseCaseConfig
 import parfait.http.parfait.controller.TestParfaitUseCaseConfig
 import parfait.http.parfaitgroup.controller.TestParfaitGroupUseCaseConfig
+import parfait.http.parfaitimage.controller.TestPlaceParfaitImageUseCaseConfig
 import kotlin.test.Test
 
 @SpringBootTest(classes = [TestApplication::class])
@@ -32,6 +33,7 @@ import kotlin.test.Test
     TestPolicyQueryUseCaseConfig::class,
     TestIssueImageUploadUrlUseCaseConfig::class,
     TestConfirmImageUploadUseCaseConfig::class,
+    TestPlaceParfaitImageUseCaseConfig::class,
 )
 class ActuatorHealthEndpointTest {
     @Autowired
