@@ -15,6 +15,10 @@ class ImageMeta(
     var url: String,
     @Column(name = "uploaded_by_member_id", nullable = false)
     var uploadedByMemberId: Long,
+    @Column(name = "image_type", nullable = false, length = 50)
+    var imageType: String,
+    @Column(name = "status", nullable = false, length = 50)
+    var status: String,
     @Column(name = "reference_count", nullable = false)
     var referenceCount: Long = 0,
     @Column(name = "created_at", nullable = false)

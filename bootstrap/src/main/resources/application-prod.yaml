@@ -19,3 +19,7 @@ jwt:
 
 kakao:
   app-key: ${KAKAO_APP_KEY}
+
+aws:
+  s3:
+    bucket: ${AWS_S3_BUCKET}
