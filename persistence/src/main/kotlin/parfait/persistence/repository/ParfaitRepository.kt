@@ -12,4 +12,9 @@ interface ParfaitRepository : JpaRepository<Parfait, Long> {
     fun findDistinctYearsByParfaitGroupId(
         @Param("groupId") groupId: Long,
     ): List<Int>
+
+    fun existsByIdAndParfaitGroupId(
+        id: Long,
+        parfaitGroupId: Long,
+    ): Boolean
 }

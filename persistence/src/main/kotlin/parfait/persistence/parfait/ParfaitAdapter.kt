@@ -10,4 +10,9 @@ class ParfaitAdapter(
 ) : ParfaitQueryPort {
     override fun findDistinctYearsByGroupId(groupId: Long): List<Int> =
         parfaitRepository.findDistinctYearsByParfaitGroupId(groupId)
+
+    override fun existsByIdAndGroupId(
+        parfaitId: Long,
+        groupId: Long,
+    ): Boolean = parfaitRepository.existsByIdAndParfaitGroupId(parfaitId, groupId)
 }
