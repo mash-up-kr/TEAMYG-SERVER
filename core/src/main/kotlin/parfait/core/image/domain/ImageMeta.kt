@@ -1,5 +1,7 @@
 package parfait.core.image.domain
 
+import parfait.core.exception.BusinessException
+import parfait.core.image.exception.ImageErrorCode
 import java.time.LocalDateTime
 
 class ImageMeta private constructor(
@@ -13,6 +15,22 @@ class ImageMeta private constructor(
     val updatedAt: LocalDateTime,
 ) {
     fun requireId(): Long = requireNotNull(id) { "저장된 이미지의 id가 필요합니다" }
+
+    fun confirm(now: LocalDateTime = LocalDateTime.now()): ImageMeta {
+        if (status != ImageStatus.PENDING) {
+            throw BusinessException(ImageErrorCode.IMAGE_ALREADY_CONFIRMED)
+        }
+        return ImageMeta(
+            id = id,
+            url = url,
+            uploadedByMemberId = uploadedByMemberId,
+            imageType = imageType,
+            status = ImageStatus.COMPLETED,
+            referenceCount = referenceCount,
+            createdAt = createdAt,
+            updatedAt = now,
+        )
+    }
 
     companion object {
         fun createPending(

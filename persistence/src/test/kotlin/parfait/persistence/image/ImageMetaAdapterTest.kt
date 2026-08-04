@@ -67,4 +67,34 @@ class ImageMetaAdapterTest {
         saved.status shouldBe ImageStatus.PENDING
         saved.referenceCount shouldBe 0
     }
+
+    @Test
+    fun `저장된 id로 조회하면 같은 내용의 도메인 객체를 반환한다`() {
+        val member =
+            memberRepository.save(
+                Member(
+                    loginProvider = LoginProvider.KAKAO,
+                    providerUserId = "image-adapter-test-user-2",
+                    globalNickname = "이미지테스터2",
+                ),
+            )
+        val saved =
+            imageMetaAdapter.save(
+                ImageMeta.createPending(
+                    url = "https://s3.example/background/user2/uuid.jpg",
+                    uploadedByMemberId = requireNotNull(member.id),
+                    imageType = ImageType.BACKGROUND,
+                ),
+            )
+
+        val found = imageMetaAdapter.findById(saved.requireId())
+
+        found?.id shouldBe saved.id
+        found?.status shouldBe ImageStatus.PENDING
+    }
+
+    @Test
+    fun `존재하지 않는 id로 조회하면 null을 반환한다`() {
+        imageMetaAdapter.findById(-1L) shouldBe null
+    }
 }

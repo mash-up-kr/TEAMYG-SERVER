@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component
 import parfait.core.image.domain.ImageMeta
 import parfait.core.image.domain.ImageStatus
 import parfait.core.image.domain.ImageType
+import parfait.core.image.port.out.ImageMetaQueryPort
 import parfait.core.image.port.out.ImageMetaSavePort
 import parfait.persistence.repository.ImageMetaRepository
 import parfait.persistence.entity.ImageMeta as ImageMetaEntity
@@ -11,8 +12,11 @@ import parfait.persistence.entity.ImageMeta as ImageMetaEntity
 @Component
 class ImageMetaAdapter(
     private val imageMetaRepository: ImageMetaRepository,
-) : ImageMetaSavePort {
+) : ImageMetaSavePort,
+    ImageMetaQueryPort {
     override fun save(imageMeta: ImageMeta): ImageMeta = imageMetaRepository.save(imageMeta.toEntity()).toDomain()
+
+    override fun findById(imageId: Long): ImageMeta? = imageMetaRepository.findById(imageId).orElse(null)?.toDomain()
 
     private fun ImageMeta.toEntity(): ImageMetaEntity =
         ImageMetaEntity(
