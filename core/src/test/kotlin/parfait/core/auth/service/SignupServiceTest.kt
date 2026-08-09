@@ -18,6 +18,7 @@ import parfait.core.auth.port.out.TokenValidatePort
 import parfait.core.auth.port.out.TosQueryPort
 import parfait.core.exception.BusinessException
 import parfait.core.member.domain.RandomNicknameGenerator
+import parfait.core.member.port.out.MemberAppleRefreshTokenSavePort
 import parfait.core.member.port.out.MemberQueryPort
 import kotlin.test.assertFailsWith
 
@@ -26,6 +27,7 @@ class SignupServiceTest {
     private val memberQueryPort = mockk<MemberQueryPort>()
     private val tosQueryPort = mockk<TosQueryPort>()
     private val memberRegistrar = mockk<MemberRegistrar>()
+    private val memberAppleRefreshTokenSavePort = mockk<MemberAppleRefreshTokenSavePort>(relaxed = true)
     private val tokenIssuePort = mockk<TokenIssuePort>()
     private val tokenSavePort = mockk<TokenSavePort>(relaxed = true)
     private val nicknameGenerator = mockk<RandomNicknameGenerator>()
@@ -35,6 +37,7 @@ class SignupServiceTest {
             memberQueryPort = memberQueryPort,
             tosQueryPort = tosQueryPort,
             memberRegistrar = memberRegistrar,
+            memberAppleRefreshTokenSavePort = memberAppleRefreshTokenSavePort,
             tokenIssuePort = tokenIssuePort,
             tokenSavePort = tokenSavePort,
             nicknameGenerator = nicknameGenerator,
@@ -177,5 +180,23 @@ class SignupServiceTest {
                 service.signup("bad-token", listOf(TermsAgreement(1L, true)))
             }
         exception.errorCode shouldBe AuthErrorCode.EXPIRED_TOKEN
+    }
+
+    @Test
+    fun `애플 회원가입이면 registrationToken의 appleRefreshToken을 Member에 저장한다`() {
+        every { tokenValidatePort.validateRegistrationToken("apple-reg-token") } returns
+            RegistrationTokenClaims(LoginProvider.APPLE, "apple-sub-1", "apple-refresh-1")
+        every { memberQueryPort.findMemberIdByProvider(LoginProvider.APPLE, "apple-sub-1") } returns null
+        every { tosQueryPort.findCurrentTerms() } returns listOf(requiredTerms)
+        every { nicknameGenerator.generate() } returns "상큼한자두"
+        every {
+            memberRegistrar.register(LoginProvider.APPLE, "apple-sub-1", "상큼한자두", listOf(1L))
+        } returns 99L
+        every { tokenIssuePort.createAccessToken(99L) } returns "access-token"
+        every { tokenIssuePort.createRefreshToken(99L, any()) } returns "refresh-token"
+
+        service.signup("apple-reg-token", listOf(TermsAgreement(1L, true)))
+
+        verify { memberAppleRefreshTokenSavePort.saveRefreshToken(99L, "apple-refresh-1") }
     }
 }

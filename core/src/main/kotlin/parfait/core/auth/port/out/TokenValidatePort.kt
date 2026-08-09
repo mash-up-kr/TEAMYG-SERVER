@@ -18,4 +18,5 @@ data class RefreshTokenClaims(
 data class RegistrationTokenClaims(
     val provider: LoginProvider,
     val providerUserId: String,
+    val appleRefreshToken: String? = null,
 )

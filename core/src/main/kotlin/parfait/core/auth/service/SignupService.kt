@@ -9,12 +9,14 @@ import parfait.core.auth.port.`in`.SignupResult
 import parfait.core.auth.port.`in`.SignupUseCase
 import parfait.core.auth.port.`in`.TermsAgreement
 import parfait.core.auth.port.out.CurrentTerms
+import parfait.core.auth.port.out.RegistrationTokenClaims
 import parfait.core.auth.port.out.TokenIssuePort
 import parfait.core.auth.port.out.TokenSavePort
 import parfait.core.auth.port.out.TokenValidatePort
 import parfait.core.auth.port.out.TosQueryPort
 import parfait.core.exception.BusinessException
 import parfait.core.member.domain.RandomNicknameGenerator
+import parfait.core.member.port.out.MemberAppleRefreshTokenSavePort
 import parfait.core.member.port.out.MemberQueryPort
 import java.util.UUID
 
@@ -24,6 +26,7 @@ class SignupService(
     private val memberQueryPort: MemberQueryPort,
     private val tosQueryPort: TosQueryPort,
     private val memberRegistrar: MemberRegistrar,
+    private val memberAppleRefreshTokenSavePort: MemberAppleRefreshTokenSavePort,
     private val tokenIssuePort: TokenIssuePort,
     private val tokenSavePort: TokenSavePort,
     private val nicknameGenerator: RandomNicknameGenerator,
@@ -48,7 +51,7 @@ class SignupService(
         val agreedTosIds = agreements.filter { it.agreed }.map { it.termsId }
         val memberId = memberRegistrar.register(claims.provider, claims.providerUserId, nickname, agreedTosIds)
 
-        handleProviderSpecificRegistration(claims.provider, memberId)
+        handleProviderSpecificRegistration(claims, memberId)
 
         val sessionId = UUID.randomUUID().toString()
         val accessToken = tokenIssuePort.createAccessToken(memberId)
@@ -59,17 +62,18 @@ class SignupService(
     }
 
     private fun handleProviderSpecificRegistration(
-        provider: LoginProvider,
+        claims: RegistrationTokenClaims,
         memberId: Long,
     ) {
-        when (provider) {
+        when (claims.provider) {
             LoginProvider.KAKAO -> {
                 // 카카오는 회원가입 시점에 별도로 저장할 provider 전용 데이터가 없다.
             }
             LoginProvider.APPLE -> {
-                // TODO(#50): registrationToken에 담겨 온 애플 revoke용 refreshToken을 여기서 저장해야 한다.
-                // 현재 RegistrationTokenClaims는 provider/providerUserId만 가지고 있어 처리할 데이터가 없다 —
-                // #50에서 애플 로그인을 구현하며 클레임 구조를 확장하고 이 분기를 채운다.
+                val appleRefreshToken =
+                    claims.appleRefreshToken
+                        ?: throw BusinessException(AuthErrorCode.INVALID_TOKEN)
+                memberAppleRefreshTokenSavePort.saveRefreshToken(memberId, appleRefreshToken)
             }
         }
     }
