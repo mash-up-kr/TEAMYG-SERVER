@@ -97,6 +97,13 @@ class SecurityConfigIntegrationTest {
     }
 
     @Test
+    fun `헬스체크 엔드포인트는 화이트리스트에 포함되어 토큰 없이 통과한다`() {
+        mockMvc.get("/health").andExpect {
+            status { isOk() }
+        }
+    }
+
+    @Test
     fun `Authorization 헤더가 없으면 401과 UNAUTHORIZED로 응답한다`() {
         mockMvc.get("/test/protected").andExpect {
             status { isUnauthorized() }
