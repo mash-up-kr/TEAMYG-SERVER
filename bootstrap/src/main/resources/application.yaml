@@ -30,6 +30,11 @@ kakao:
   issuer: https://kauth.kakao.com
   jwks-uri: https://kauth.kakao.com/.well-known/jwks.json
 
+aws:
+  s3:
+    region: ap-northeast-2
+    presigned-url-expiration-seconds: 900
+
 springdoc:
   api-docs:
     path: /v3/api-docs

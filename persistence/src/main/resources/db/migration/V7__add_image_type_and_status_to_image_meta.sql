@@ -1,0 +1,3 @@
+ALTER TABLE image_meta
+    ADD COLUMN image_type VARCHAR(50) NOT NULL DEFAULT 'BACKGROUND' AFTER uploaded_by_member_id,
+    ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'PENDING' AFTER image_type;
