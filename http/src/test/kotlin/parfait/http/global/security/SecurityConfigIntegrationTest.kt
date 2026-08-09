@@ -17,6 +17,7 @@ import parfait.core.auth.domain.LoginProvider
 import parfait.core.auth.port.out.TokenIssuePort
 import parfait.core.member.port.out.MemberQueryPort
 import parfait.http.TestApplication
+import parfait.http.auth.controller.TestAppleLoginUseCaseConfig
 import parfait.http.auth.controller.TestKakaoLoginUseCaseConfig
 import parfait.http.auth.controller.TestLogoutUseCaseConfig
 import parfait.http.auth.controller.TestPolicyQueryUseCaseConfig
@@ -43,6 +44,7 @@ import kotlin.test.Test
     SecurityConfigIntegrationTest.DummyProtectedController::class,
     TestParfaitGroupUseCaseConfig::class,
     TestKakaoLoginUseCaseConfig::class,
+    TestAppleLoginUseCaseConfig::class,
     TestSignupUseCaseConfig::class,
     TestReissueUseCaseConfig::class,
     TestLogoutUseCaseConfig::class,
@@ -150,6 +152,17 @@ class SecurityConfigIntegrationTest {
             .post("/api/v1/auth/kakao") {
                 contentType = MediaType.APPLICATION_JSON
                 content = """{"idToken":"dummy","nonce":"dummy"}"""
+            }.andExpect {
+                status { isOk() }
+            }
+    }
+
+    @Test
+    fun `애플 로그인 엔드포인트는 화이트리스트에 포함되어 토큰 없이 통과한다`() {
+        mockMvc
+            .post("/api/v1/auth/apple") {
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"identityToken":"dummy","nonce":"dummy","authorizationCode":"dummy"}"""
             }.andExpect {
                 status { isOk() }
             }
