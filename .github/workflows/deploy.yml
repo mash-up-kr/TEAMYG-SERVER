@@ -30,13 +30,14 @@ jobs:
           docker push 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com/parfait:latest
 
       - name: Deploy on EC2 via SSM
+        id: deploy
         run: |
           INSTANCE_ID=$(aws ec2 describe-instances \
             --filters "Name=tag:Name,Values=parfait-server" \
             --query "Reservations[0].Instances[0].InstanceId" \
             --output text)
-          
-          aws ssm send-command \
+
+          COMMAND_ID=$(aws ssm send-command \
             --instance-ids $INSTANCE_ID \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
@@ -44,5 +45,28 @@ jobs:
               "sudo docker stop parfait || true",
               "sudo docker rm parfait || true",
               "sudo docker pull 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com/parfait:latest",
-              "sudo docker run -d --name parfait --network host --env-file /home/ubuntu/TEAMYG-SERVER/.env --restart always 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com/parfait:latest"
-            ]'
+              "sudo docker run -d --name parfait --network host --env-file /home/ubuntu/TEAMYG-SERVER/.env --restart always 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com/parfait:latest",
+              "for i in $(seq 1 10); do curl -sf --max-time 2 http://localhost:8080/health && exit 0; [ $i -lt 10 ] && sleep 3; done; echo Health check failed; exit 1"
+            ]' \
+            --query "Command.CommandId" \
+            --output text)
+
+          echo "instance_id=$INSTANCE_ID" >> "$GITHUB_OUTPUT"
+          echo "command_id=$COMMAND_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Check deploy result
+        run: |
+          aws ssm wait command-executed \
+            --command-id ${{ steps.deploy.outputs.command_id }} \
+            --instance-id ${{ steps.deploy.outputs.instance_id }} || true
+
+          aws ssm get-command-invocation \
+            --command-id ${{ steps.deploy.outputs.command_id }} \
+            --instance-id ${{ steps.deploy.outputs.instance_id }} \
+            --query "{Status:Status, Out:StandardOutputContent, Err:StandardErrorContent}"
+
+          STATUS=$(aws ssm get-command-invocation \
+            --command-id ${{ steps.deploy.outputs.command_id }} \
+            --instance-id ${{ steps.deploy.outputs.instance_id }} \
+            --query "Status" --output text)
+          [ "$STATUS" = "Success" ]
