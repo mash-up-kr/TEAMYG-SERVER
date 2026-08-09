@@ -20,6 +20,12 @@ jwt:
 kakao:
   app-key: ${KAKAO_APP_KEY}
 
+apple:
+  client-id: ${APPLE_CLIENT_ID}
+  team-id: ${APPLE_TEAM_ID}
+  key-id: ${APPLE_KEY_ID}
+  private-key-path: file:/app/apple-private-key.p8
+
 aws:
   s3:
     bucket: ${AWS_S3_BUCKET}
