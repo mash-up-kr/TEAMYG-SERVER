@@ -120,4 +120,22 @@ class MemberAdapterTest {
 
         adapter.findMemberIdByProvider(CoreLoginProvider.KAKAO, "new-user-1") shouldBe memberId
     }
+
+    @Test
+    fun `saveRefreshToken을 호출하면 apple_refresh_token 컬럼이 갱신된다`() {
+        val adapter = MemberAdapter(memberRepository)
+        val saved =
+            memberRepository.save(
+                Member(
+                    loginProvider = LoginProvider.APPLE,
+                    providerUserId = "apple-user-1",
+                    globalNickname = "애플회원",
+                ),
+            )
+
+        adapter.saveRefreshToken(saved.id!!, "apple-refresh-token-1")
+
+        val updated = memberRepository.findById(saved.id!!).get()
+        updated.appleRefreshToken shouldBe "apple-refresh-token-1"
+    }
 }
