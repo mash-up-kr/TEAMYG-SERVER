@@ -11,11 +11,14 @@ import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import parfait.core.exception.BusinessException
+import parfait.core.member.exception.MemberErrorCode
 import parfait.persistence.TestApplication
 import parfait.persistence.entity.LoginProvider
 import parfait.persistence.entity.Member
 import parfait.persistence.repository.MemberRepository
 import java.util.Optional
+import kotlin.test.assertFailsWith
 import parfait.core.auth.domain.LoginProvider as CoreLoginProvider
 
 @Testcontainers
@@ -119,5 +122,34 @@ class MemberAdapterTest {
         val memberId = adapter.create(CoreLoginProvider.KAKAO, "new-user-1", "말랑한커스터드")
 
         adapter.findMemberIdByProvider(CoreLoginProvider.KAKAO, "new-user-1") shouldBe memberId
+    }
+
+    @Test
+    fun `전역 닉네임을 변경하면 저장된 값이 갱신된다`() {
+        val adapter = MemberAdapter(memberRepository)
+        val saved =
+            memberRepository.save(
+                Member(
+                    loginProvider = LoginProvider.KAKAO,
+                    providerUserId = "nickname-update-user-1",
+                    globalNickname = "이전 닉네임",
+                ),
+            )
+
+        adapter.updateGlobalNickname(saved.id!!, "새 닉네임")
+
+        memberRepository.findById(saved.id!!).get().globalNickname shouldBe "새 닉네임"
+    }
+
+    @Test
+    fun `존재하지 않는 회원의 닉네임을 변경하려 하면 MEMBER_NOT_FOUND 예외를 던진다`() {
+        val adapter = MemberAdapter(memberRepository)
+
+        val exception =
+            assertFailsWith<BusinessException> {
+                adapter.updateGlobalNickname(999_999L, "아무 닉네임")
+            }
+
+        exception.errorCode shouldBe MemberErrorCode.MEMBER_NOT_FOUND
     }
 }
