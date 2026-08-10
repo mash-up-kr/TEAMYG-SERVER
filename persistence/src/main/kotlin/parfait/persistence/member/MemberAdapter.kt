@@ -1,8 +1,11 @@
 package parfait.persistence.member
 
 import org.springframework.stereotype.Component
+import parfait.core.exception.BusinessException
+import parfait.core.member.exception.MemberErrorCode
 import parfait.core.member.port.out.MemberAppleRefreshTokenSavePort
 import parfait.core.member.port.out.MemberCreatePort
+import parfait.core.member.port.out.MemberNicknameUpdatePort
 import parfait.core.member.port.out.MemberQueryPort
 import parfait.persistence.entity.LoginProvider
 import parfait.persistence.entity.Member
@@ -14,7 +17,8 @@ class MemberAdapter(
     private val memberRepository: MemberRepository,
 ) : MemberQueryPort,
     MemberCreatePort,
-    MemberAppleRefreshTokenSavePort {
+    MemberAppleRefreshTokenSavePort,
+    MemberNicknameUpdatePort {
     override fun existsById(memberId: Long): Boolean = memberRepository.existsById(memberId)
 
     override fun findGlobalNicknameById(memberId: Long): String? =
@@ -48,6 +52,18 @@ class MemberAdapter(
     ) {
         val member = memberRepository.findById(memberId).get()
         member.appleRefreshToken = appleRefreshToken
+        memberRepository.save(member)
+    }
+
+    override fun updateGlobalNickname(
+        memberId: Long,
+        nickname: String,
+    ) {
+        val member =
+            memberRepository.findById(memberId).orElseThrow {
+                BusinessException(MemberErrorCode.MEMBER_NOT_FOUND)
+            }
+        member.globalNickname = nickname
         memberRepository.save(member)
     }
 
