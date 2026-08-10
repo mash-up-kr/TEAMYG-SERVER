@@ -24,6 +24,7 @@ import parfait.http.auth.controller.TestReissueUseCaseConfig
 import parfait.http.auth.controller.TestSignupUseCaseConfig
 import parfait.http.image.controller.TestConfirmImageUploadUseCaseConfig
 import parfait.http.image.controller.TestIssueImageUploadUrlUseCaseConfig
+import parfait.http.member.controller.TestChangeGlobalNicknameUseCaseConfig
 import parfait.http.parfait.controller.TestParfaitUseCaseConfig
 import parfait.http.parfaitgroup.controller.TestParfaitGroupUseCaseConfig
 import kotlin.test.Test
@@ -48,6 +49,7 @@ import kotlin.test.Test
     TestLogoutUseCaseConfig::class,
     TestParfaitUseCaseConfig::class,
     TestPolicyQueryUseCaseConfig::class,
+    TestChangeGlobalNicknameUseCaseConfig::class,
     TestIssueImageUploadUrlUseCaseConfig::class,
     TestConfirmImageUploadUseCaseConfig::class,
 )
@@ -95,6 +97,13 @@ class SecurityConfigIntegrationTest {
     fun `swagger-ui html 경로는 토큰 없이 통과한다`() {
         mockMvc.get("/swagger-ui.html").andExpect {
             status { is3xxRedirection() }
+        }
+    }
+
+    @Test
+    fun `헬스체크 엔드포인트는 화이트리스트에 포함되어 토큰 없이 통과한다`() {
+        mockMvc.get("/health").andExpect {
+            status { isOk() }
         }
     }
 
