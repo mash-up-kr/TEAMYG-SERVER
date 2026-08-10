@@ -11,4 +11,11 @@ interface MemberQueryPort {
         provider: LoginProvider,
         providerUserId: String,
     ): Long?
+
+    fun findAccountById(memberId: Long): MemberAccount?
 }
+
+data class MemberAccount(
+    val provider: LoginProvider,
+    val nickname: String,
+)
