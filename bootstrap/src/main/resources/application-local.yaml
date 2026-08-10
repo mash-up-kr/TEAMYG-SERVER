@@ -28,7 +28,7 @@ apple:
   client-id: local-only-dummy-apple-client-id
   team-id: local-only-dummy-apple-team-id
   key-id: local-only-dummy-apple-key-id
-  private-key-path: classpath:apple/local-test-private-key.pem
+  private-key-path: classpath:apple/local-test-private-key.p8
 
 aws:
   s3:

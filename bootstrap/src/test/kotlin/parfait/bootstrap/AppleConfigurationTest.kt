@@ -20,7 +20,7 @@ class AppleConfigurationTest {
         val local = loadProperties("application-local.yaml")
 
         assertEquals(
-            "classpath:apple/local-test-private-key.pem",
+            "classpath:apple/local-test-private-key.p8",
             local.getProperty("apple.private-key-path"),
         )
     }
