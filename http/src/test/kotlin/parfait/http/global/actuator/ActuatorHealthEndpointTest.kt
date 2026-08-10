@@ -13,9 +13,9 @@ import parfait.http.auth.controller.TestPolicyQueryUseCaseConfig
 import parfait.http.auth.controller.TestReissueUseCaseConfig
 import parfait.http.auth.controller.TestSignupUseCaseConfig
 import parfait.http.global.security.TestMemberQueryPortConfig
-import parfait.http.member.controller.TestChangeGlobalNicknameUseCaseConfig
 import parfait.http.image.controller.TestConfirmImageUploadUseCaseConfig
 import parfait.http.image.controller.TestIssueImageUploadUrlUseCaseConfig
+import parfait.http.member.controller.TestChangeGlobalNicknameUseCaseConfig
 import parfait.http.parfait.controller.TestParfaitUseCaseConfig
 import parfait.http.parfaitgroup.controller.TestParfaitGroupUseCaseConfig
 import kotlin.test.Test
