@@ -27,6 +27,7 @@ import parfait.http.image.controller.TestIssueImageUploadUrlUseCaseConfig
 import parfait.http.member.controller.TestChangeGlobalNicknameUseCaseConfig
 import parfait.http.parfait.controller.TestParfaitUseCaseConfig
 import parfait.http.parfaitgroup.controller.TestParfaitGroupUseCaseConfig
+import parfait.http.parfaitimage.controller.TestPlaceParfaitImageUseCaseConfig
 import kotlin.test.Test
 
 @SpringBootTest(
@@ -52,6 +53,7 @@ import kotlin.test.Test
     TestChangeGlobalNicknameUseCaseConfig::class,
     TestIssueImageUploadUrlUseCaseConfig::class,
     TestConfirmImageUploadUseCaseConfig::class,
+    TestPlaceParfaitImageUseCaseConfig::class,
 )
 class SecurityConfigIntegrationTest {
     @Autowired
