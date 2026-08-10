@@ -41,11 +41,12 @@ jobs:
             --instance-ids $INSTANCE_ID \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
+              "test -f /home/ubuntu/TEAMYG-SERVER/apple-private-key.p8 || { echo '"'"'ERROR: /home/ubuntu/TEAMYG-SERVER/apple-private-key.p8 not found on host — aborting deploy before touching the running container. Upload the real .p8 key file to this path first.'"'"' >&2; exit 1; }",
               "sudo aws ecr get-login-password --region ap-northeast-2 | sudo docker login --username AWS --password-stdin 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com",
               "sudo docker stop parfait || true",
               "sudo docker rm parfait || true",
               "sudo docker pull 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com/parfait:latest",
-              "sudo docker run -d --name parfait --network host --env-file /home/ubuntu/TEAMYG-SERVER/.env --restart always 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com/parfait:latest",
+              "sudo docker run -d --name parfait --network host --env-file /home/ubuntu/TEAMYG-SERVER/.env -v /home/ubuntu/TEAMYG-SERVER/apple-private-key.p8:/app/apple-private-key.p8:ro --restart always 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com/parfait:latest",
               "for i in $(seq 1 30); do curl -sf --max-time 2 http://localhost:8080/health && exit 0; [ $i -lt 30 ] && sleep 5; done; echo Health check failed; exit 1"
             ]' \
             --query "Command.CommandId" \

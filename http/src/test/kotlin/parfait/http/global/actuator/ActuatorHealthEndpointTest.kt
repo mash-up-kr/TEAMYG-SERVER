@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import parfait.http.TestApplication
+import parfait.http.auth.controller.TestAppleLoginUseCaseConfig
 import parfait.http.auth.controller.TestKakaoLoginUseCaseConfig
 import parfait.http.auth.controller.TestLogoutUseCaseConfig
 import parfait.http.auth.controller.TestPolicyQueryUseCaseConfig
@@ -27,6 +28,7 @@ import kotlin.test.Test
 @Import(
     TestMemberQueryPortConfig::class,
     TestKakaoLoginUseCaseConfig::class,
+    TestAppleLoginUseCaseConfig::class,
     TestParfaitGroupUseCaseConfig::class,
     TestSignupUseCaseConfig::class,
     TestReissueUseCaseConfig::class,

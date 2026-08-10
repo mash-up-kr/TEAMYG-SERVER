@@ -30,6 +30,11 @@ kakao:
   issuer: https://kauth.kakao.com
   jwks-uri: https://kauth.kakao.com/.well-known/jwks.json
 
+apple:
+  issuer: https://appleid.apple.com
+  jwks-uri: https://appleid.apple.com/auth/keys
+  token-uri: https://appleid.apple.com/auth/token
+
 aws:
   s3:
     region: ap-northeast-2

@@ -1,3 +1,4 @@
+// http/src/test/kotlin/parfait/http/global/security/JwtTokenAdapterTest.kt
 package parfait.http.global.security
 
 import io.jsonwebtoken.Jwts
@@ -116,7 +117,7 @@ class JwtTokenAdapterTest {
 
     @Test
     fun `registrationToken을 발급하면 provider, providerUserId, purpose 클레임을 담는다`() {
-        val token = adapter.createRegistrationToken(LoginProvider.KAKAO, "kakao-sub-1")
+        val token = adapter.createRegistrationToken(LoginProvider.KAKAO, "kakao-sub-1", null)
 
         val claims =
             Jwts
@@ -140,7 +141,7 @@ class JwtTokenAdapterTest {
                 refreshTokenExpirationSeconds = 1_209_600,
                 registrationTokenExpirationSeconds = -5,
             )
-        val expiredToken = expiredAdapter.createRegistrationToken(LoginProvider.KAKAO, "kakao-sub-1")
+        val expiredToken = expiredAdapter.createRegistrationToken(LoginProvider.KAKAO, "kakao-sub-1", null)
 
         val exception =
             assertFailsWith<io.jsonwebtoken.ExpiredJwtException> {
@@ -155,7 +156,7 @@ class JwtTokenAdapterTest {
 
     @Test
     fun `registrationToken을 검증하면 provider와 providerUserId를 반환한다`() {
-        val token = adapter.createRegistrationToken(LoginProvider.KAKAO, "kakao-sub-1")
+        val token = adapter.createRegistrationToken(LoginProvider.KAKAO, "kakao-sub-1", null)
 
         val claims = adapter.validateRegistrationToken(token)
 
@@ -183,12 +184,32 @@ class JwtTokenAdapterTest {
                 refreshTokenExpirationSeconds = 1_209_600,
                 registrationTokenExpirationSeconds = -5,
             )
-        val expiredToken = expiredAdapter.createRegistrationToken(LoginProvider.KAKAO, "kakao-sub-1")
+        val expiredToken = expiredAdapter.createRegistrationToken(LoginProvider.KAKAO, "kakao-sub-1", null)
 
         val exception =
             assertFailsWith<BusinessException> {
                 adapter.validateRegistrationToken(expiredToken)
             }
         assertEquals(AuthErrorCode.EXPIRED_TOKEN, exception.errorCode)
+    }
+
+    @Test
+    fun `애플 registrationToken을 발급하면 appleRefreshToken 클레임도 함께 담는다`() {
+        val token = adapter.createRegistrationToken(LoginProvider.APPLE, "apple-sub-1", "apple-refresh-1")
+
+        val claims = adapter.validateRegistrationToken(token)
+
+        assertEquals(LoginProvider.APPLE, claims.provider)
+        assertEquals("apple-sub-1", claims.providerUserId)
+        assertEquals("apple-refresh-1", claims.appleRefreshToken)
+    }
+
+    @Test
+    fun `카카오 registrationToken을 발급하면 appleRefreshToken 클레임은 없다`() {
+        val token = adapter.createRegistrationToken(LoginProvider.KAKAO, "kakao-sub-1", null)
+
+        val claims = adapter.validateRegistrationToken(token)
+
+        assertEquals(null, claims.appleRefreshToken)
     }
 }

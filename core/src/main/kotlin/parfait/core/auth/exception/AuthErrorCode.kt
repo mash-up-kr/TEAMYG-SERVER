@@ -19,4 +19,6 @@ enum class AuthErrorCode(
     TERMS_NOT_FOUND(400, "TERMS_NOT_FOUND", "존재하지 않는 약관입니다"),
     REQUIRED_TERMS_NOT_AGREED(400, "REQUIRED_TERMS_NOT_AGREED", "필수 약관에 모두 동의해야 합니다"),
     FORBIDDEN_REFRESH_TOKEN(403, "FORBIDDEN_REFRESH_TOKEN", "다른 회원의 Refresh Token입니다"),
+    APPLE_SERVER_ERROR(502, "APPLE_SERVER_ERROR", "애플 서버 응답 오류입니다"),
+    APPLE_SERVER_UNAVAILABLE(503, "APPLE_SERVER_UNAVAILABLE", "애플 서버에 연결할 수 없습니다"),
 }
