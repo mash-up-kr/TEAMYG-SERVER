@@ -7,4 +7,6 @@ interface ParfaitImageQueryPort {
         parfaitId: Long,
         imageMetaId: Long,
     ): ParfaitImage?
+
+    fun findById(parfaitImageId: Long): ParfaitImage?
 }

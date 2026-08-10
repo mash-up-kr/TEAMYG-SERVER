@@ -171,4 +171,38 @@ class ParfaitImageAdapterTest {
     fun `존재하지 않는 조합으로 조회하면 null을 반환한다`() {
         parfaitImageAdapter.findByParfaitIdAndImageMetaId(-1L, -1L) shouldBe null
     }
+
+    @Test
+    fun `id로 조회하면 저장된 배치를 반환한다`() {
+        val (memberId, groupMemberId) = setUpGroupMember("C")
+        val parfaitId = setUpParfait(groupMemberId)
+        val imageMetaId = setUpConfirmedImageMeta(memberId, "C")
+        val saved =
+            parfaitImageAdapter.save(
+                ParfaitImage.place(
+                    parfaitId = parfaitId,
+                    imageMetaId = imageMetaId,
+                    placedByGroupMemberId = groupMemberId,
+                    imageUrl = "https://s3.example/nukki/user1/uuid3.png",
+                    positionX = 10.0,
+                    positionY = 20.0,
+                    positionZ = 0,
+                    scale = 1.0,
+                    rotation = 0.0,
+                    borderType = BorderType.NONE,
+                    borderColor = null,
+                    borderWidth = null,
+                ),
+            )
+
+        val found = parfaitImageAdapter.findById(saved.requireId())
+
+        found?.id shouldBe saved.id
+        found?.positionX shouldBe 10.0
+    }
+
+    @Test
+    fun `존재하지 않는 id로 조회하면 null을 반환한다`() {
+        parfaitImageAdapter.findById(-1L) shouldBe null
+    }
 }
