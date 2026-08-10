@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 import parfait.core.auth.domain.LoginProvider
 import parfait.core.auth.port.out.TokenIssuePort
+import parfait.core.member.port.out.MemberAccount
 import parfait.core.member.port.out.MemberQueryPort
 import parfait.http.TestApplication
 import parfait.http.auth.controller.TestAppleLoginUseCaseConfig
@@ -26,6 +27,7 @@ import parfait.http.auth.controller.TestSignupUseCaseConfig
 import parfait.http.image.controller.TestConfirmImageUploadUseCaseConfig
 import parfait.http.image.controller.TestIssueImageUploadUrlUseCaseConfig
 import parfait.http.member.controller.TestChangeGlobalNicknameUseCaseConfig
+import parfait.http.member.controller.TestGetMyAccountUseCaseConfig
 import parfait.http.parfait.controller.TestParfaitUseCaseConfig
 import parfait.http.parfaitgroup.controller.TestParfaitGroupUseCaseConfig
 import parfait.http.parfaitimage.controller.TestPlaceParfaitImageUseCaseConfig
@@ -54,6 +56,7 @@ import kotlin.test.Test
     TestParfaitUseCaseConfig::class,
     TestPolicyQueryUseCaseConfig::class,
     TestChangeGlobalNicknameUseCaseConfig::class,
+    TestGetMyAccountUseCaseConfig::class,
     TestIssueImageUploadUrlUseCaseConfig::class,
     TestConfirmImageUploadUseCaseConfig::class,
     TestPlaceParfaitImageUseCaseConfig::class,
@@ -83,6 +86,9 @@ class SecurityConfigIntegrationTest {
                 ): Long? = null
 
                 override fun findGlobalNicknameById(memberId: Long): String? = if (memberId == 1L) "테스트" else null
+
+                override fun findAccountById(memberId: Long): MemberAccount? =
+                    if (memberId == 1L) MemberAccount(LoginProvider.KAKAO, "테스트") else null
             }
     }
 
