@@ -55,6 +55,32 @@ class ParfaitImage private constructor(
         )
     }
 
+    fun update(
+        positionX: Double? = null,
+        positionY: Double? = null,
+        positionZ: Int? = null,
+        scale: Double? = null,
+        rotation: Double? = null,
+        now: LocalDateTime = LocalDateTime.now(),
+    ): ParfaitImage =
+        ParfaitImage(
+            id = id,
+            parfaitId = parfaitId,
+            imageMetaId = imageMetaId,
+            placedByGroupMemberId = placedByGroupMemberId,
+            imageUrl = imageUrl,
+            positionX = positionX ?: this.positionX,
+            positionY = positionY ?: this.positionY,
+            positionZ = positionZ ?: this.positionZ,
+            scale = scale ?: this.scale,
+            rotation = rotation ?: this.rotation,
+            borderType = borderType,
+            borderColor = borderColor,
+            borderWidth = borderWidth,
+            createdAt = createdAt,
+            updatedAt = now,
+        )
+
     companion object {
         fun place(
             parfaitId: Long,
