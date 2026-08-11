@@ -3,20 +3,17 @@ package parfait.core.auth.service
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import parfait.core.auth.domain.LoginProvider
 import parfait.core.auth.exception.AuthErrorCode
 import parfait.core.auth.port.`in`.SignupResult
 import parfait.core.auth.port.`in`.SignupUseCase
 import parfait.core.auth.port.`in`.TermsAgreement
 import parfait.core.auth.port.out.CurrentTerms
-import parfait.core.auth.port.out.RegistrationTokenClaims
 import parfait.core.auth.port.out.TokenIssuePort
 import parfait.core.auth.port.out.TokenSavePort
 import parfait.core.auth.port.out.TokenValidatePort
 import parfait.core.auth.port.out.TosQueryPort
 import parfait.core.exception.BusinessException
 import parfait.core.member.domain.RandomNicknameGenerator
-import parfait.core.member.port.out.MemberAppleRefreshTokenSavePort
 import parfait.core.member.port.out.MemberQueryPort
 import java.util.UUID
 
@@ -26,7 +23,6 @@ class SignupService(
     private val memberQueryPort: MemberQueryPort,
     private val tosQueryPort: TosQueryPort,
     private val memberRegistrar: MemberRegistrar,
-    private val memberAppleRefreshTokenSavePort: MemberAppleRefreshTokenSavePort,
     private val tokenIssuePort: TokenIssuePort,
     private val tokenSavePort: TokenSavePort,
     private val nicknameGenerator: RandomNicknameGenerator,
@@ -51,31 +47,12 @@ class SignupService(
         val agreedTosIds = agreements.filter { it.agreed }.map { it.termsId }
         val memberId = memberRegistrar.register(claims.provider, claims.providerUserId, nickname, agreedTosIds)
 
-        handleProviderSpecificRegistration(claims, memberId)
-
         val sessionId = UUID.randomUUID().toString()
         val accessToken = tokenIssuePort.createAccessToken(memberId)
         val refreshToken = tokenIssuePort.createRefreshToken(memberId, sessionId)
         tokenSavePort.save(memberId, sessionId, refreshToken, refreshTokenTtlSeconds)
 
         return SignupResult(accessToken, refreshToken, accessTokenExpiresInSeconds)
-    }
-
-    private fun handleProviderSpecificRegistration(
-        claims: RegistrationTokenClaims,
-        memberId: Long,
-    ) {
-        when (claims.provider) {
-            LoginProvider.KAKAO -> {
-                // 카카오는 회원가입 시점에 별도로 저장할 provider 전용 데이터가 없다.
-            }
-            LoginProvider.APPLE -> {
-                val appleRefreshToken =
-                    claims.appleRefreshToken
-                        ?: throw BusinessException(AuthErrorCode.INVALID_TOKEN)
-                memberAppleRefreshTokenSavePort.saveRefreshToken(memberId, appleRefreshToken)
-            }
-        }
     }
 
     private fun validateAgreements(

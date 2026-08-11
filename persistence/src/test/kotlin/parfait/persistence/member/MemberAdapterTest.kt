@@ -126,24 +126,6 @@ class MemberAdapterTest {
     }
 
     @Test
-    fun `saveRefreshToken을 호출하면 apple_refresh_token 컬럼이 갱신된다`() {
-        val adapter = MemberAdapter(memberRepository)
-        val saved =
-            memberRepository.save(
-                Member(
-                    loginProvider = LoginProvider.APPLE,
-                    providerUserId = "apple-user-1",
-                    globalNickname = "애플회원",
-                ),
-            )
-
-        adapter.saveRefreshToken(saved.id!!, "apple-refresh-token-1")
-
-        val updated = memberRepository.findById(saved.id!!).get()
-        updated.appleRefreshToken shouldBe "apple-refresh-token-1"
-    }
-
-    @Test
     fun `전역 닉네임을 변경하면 저장된 값이 갱신된다`() {
         val adapter = MemberAdapter(memberRepository)
         val saved =

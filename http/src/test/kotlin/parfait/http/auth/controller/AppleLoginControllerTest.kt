@@ -53,7 +53,6 @@ class AppleLoginControllerTest {
         override fun login(
             identityToken: String,
             nonce: String,
-            authorizationCode: String,
         ): AppleLoginResult {
             exception?.let { throw it }
             return result ?: error("설정된 result가 없습니다")
@@ -63,8 +62,7 @@ class AppleLoginControllerTest {
     private fun requestBody(
         identityToken: String = "identity-token",
         nonce: String = "nonce",
-        authorizationCode: String = "auth-code",
-    ) = """{"identityToken":"$identityToken","nonce":"$nonce","authorizationCode":"$authorizationCode"}"""
+    ) = """{"identityToken":"$identityToken","nonce":"$nonce"}"""
 
     @Test
     fun `기존 회원이면 200과 액세스-리프레시 토큰을 응답한다`() {
@@ -106,18 +104,6 @@ class AppleLoginControllerTest {
             .post("/api/v1/auth/apple") {
                 contentType = MediaType.APPLICATION_JSON
                 content = requestBody(identityToken = "")
-            }.andExpect {
-                status { isBadRequest() }
-                jsonPath("$.code") { value("INVALID_REQUEST") }
-            }
-    }
-
-    @Test
-    fun `authorizationCode가 비어 있으면 400과 INVALID_REQUEST로 응답한다`() {
-        mockMvc
-            .post("/api/v1/auth/apple") {
-                contentType = MediaType.APPLICATION_JSON
-                content = requestBody(authorizationCode = "")
             }.andExpect {
                 status { isBadRequest() }
                 jsonPath("$.code") { value("INVALID_REQUEST") }
