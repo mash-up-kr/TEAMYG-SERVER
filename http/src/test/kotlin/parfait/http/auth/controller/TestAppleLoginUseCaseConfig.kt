@@ -21,7 +21,6 @@ class TestAppleLoginUseCaseConfig {
             override fun login(
                 identityToken: String,
                 nonce: String,
-                authorizationCode: String,
             ): AppleLoginResult = AppleLoginResult.NewUser("stub-registration-token")
         }
 }

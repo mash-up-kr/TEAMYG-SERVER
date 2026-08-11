@@ -183,7 +183,7 @@ class SecurityConfigIntegrationTest {
         mockMvc
             .post("/api/v1/auth/apple") {
                 contentType = MediaType.APPLICATION_JSON
-                content = """{"identityToken":"dummy","nonce":"dummy","authorizationCode":"dummy"}"""
+                content = """{"identityToken":"dummy","nonce":"dummy"}"""
             }.andExpect {
                 status { isOk() }
             }

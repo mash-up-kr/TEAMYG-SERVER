@@ -6,7 +6,6 @@ interface AppleLoginUseCase {
     fun login(
         identityToken: String,
         nonce: String,
-        authorizationCode: String,
     ): AppleLoginResult
 }
 

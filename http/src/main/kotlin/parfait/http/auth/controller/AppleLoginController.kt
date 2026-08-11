@@ -27,7 +27,7 @@ class AppleLoginController(
         ApiResponse.ok(
             when (
                 val result =
-                    appleLoginUseCase.login(request.identityToken, request.nonce, request.authorizationCode)
+                    appleLoginUseCase.login(request.identityToken, request.nonce)
             ) {
                 is AppleLoginResult.ExistingMember ->
                     AppleLoginResponse(

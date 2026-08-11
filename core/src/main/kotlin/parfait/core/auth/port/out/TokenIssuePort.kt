@@ -13,6 +13,5 @@ interface TokenIssuePort {
     fun createRegistrationToken(
         provider: LoginProvider,
         providerUserId: String,
-        appleRefreshToken: String? = null,
     ): String
 }
