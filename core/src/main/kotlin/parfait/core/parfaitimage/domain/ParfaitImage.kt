@@ -81,6 +81,32 @@ class ParfaitImage private constructor(
             updatedAt = now,
         )
 
+    fun updateBorder(
+        borderType: BorderType,
+        borderColor: String?,
+        borderWidth: Double?,
+        now: LocalDateTime = LocalDateTime.now(),
+    ): ParfaitImage {
+        validateBorder(borderType, borderColor, borderWidth)
+        return ParfaitImage(
+            id = id,
+            parfaitId = parfaitId,
+            imageMetaId = imageMetaId,
+            placedByGroupMemberId = placedByGroupMemberId,
+            imageUrl = imageUrl,
+            positionX = positionX,
+            positionY = positionY,
+            positionZ = positionZ,
+            scale = scale,
+            rotation = rotation,
+            borderType = borderType,
+            borderColor = borderColor,
+            borderWidth = borderWidth,
+            createdAt = createdAt,
+            updatedAt = now,
+        )
+    }
+
     companion object {
         fun place(
             parfaitId: Long,

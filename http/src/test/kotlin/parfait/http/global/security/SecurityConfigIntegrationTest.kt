@@ -31,6 +31,7 @@ import parfait.http.member.controller.TestGetMyAccountUseCaseConfig
 import parfait.http.parfait.controller.TestParfaitUseCaseConfig
 import parfait.http.parfaitgroup.controller.TestParfaitGroupUseCaseConfig
 import parfait.http.parfaitimage.controller.TestPlaceParfaitImageUseCaseConfig
+import parfait.http.parfaitimage.controller.TestUpdateParfaitImageBorderUseCaseConfig
 import parfait.http.parfaitimage.controller.TestUpdateParfaitImageUseCaseConfig
 import kotlin.test.Test
 
@@ -61,6 +62,7 @@ import kotlin.test.Test
     TestConfirmImageUploadUseCaseConfig::class,
     TestPlaceParfaitImageUseCaseConfig::class,
     TestUpdateParfaitImageUseCaseConfig::class,
+    TestUpdateParfaitImageBorderUseCaseConfig::class,
 )
 class SecurityConfigIntegrationTest {
     @Autowired
