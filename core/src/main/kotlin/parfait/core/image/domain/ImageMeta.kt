@@ -32,6 +32,30 @@ class ImageMeta private constructor(
         )
     }
 
+    fun incrementReferenceCount(now: LocalDateTime = LocalDateTime.now()): ImageMeta =
+        ImageMeta(
+            id = id,
+            url = url,
+            uploadedByMemberId = uploadedByMemberId,
+            imageType = imageType,
+            status = status,
+            referenceCount = referenceCount + 1,
+            createdAt = createdAt,
+            updatedAt = now,
+        )
+
+    fun decrementReferenceCount(now: LocalDateTime = LocalDateTime.now()): ImageMeta =
+        ImageMeta(
+            id = id,
+            url = url,
+            uploadedByMemberId = uploadedByMemberId,
+            imageType = imageType,
+            status = status,
+            referenceCount = (referenceCount - 1).coerceAtLeast(0),
+            createdAt = createdAt,
+            updatedAt = now,
+        )
+
     companion object {
         fun createPending(
             url: String,
