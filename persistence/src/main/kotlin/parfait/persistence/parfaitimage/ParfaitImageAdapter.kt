@@ -3,6 +3,7 @@ package parfait.persistence.parfaitimage
 import org.springframework.stereotype.Component
 import parfait.core.parfaitimage.domain.BorderType
 import parfait.core.parfaitimage.domain.ParfaitImage
+import parfait.core.parfaitimage.port.out.ParfaitImageDeletePort
 import parfait.core.parfaitimage.port.out.ParfaitImageQueryPort
 import parfait.core.parfaitimage.port.out.ParfaitImageSavePort
 import parfait.persistence.repository.ParfaitImageRepository
@@ -12,7 +13,8 @@ import parfait.persistence.entity.ParfaitImage as ParfaitImageEntity
 class ParfaitImageAdapter(
     private val parfaitImageRepository: ParfaitImageRepository,
 ) : ParfaitImageQueryPort,
-    ParfaitImageSavePort {
+    ParfaitImageSavePort,
+    ParfaitImageDeletePort {
     override fun findByParfaitIdAndImageMetaId(
         parfaitId: Long,
         imageMetaId: Long,
@@ -23,6 +25,10 @@ class ParfaitImageAdapter(
 
     override fun save(parfaitImage: ParfaitImage): ParfaitImage =
         parfaitImageRepository.save(parfaitImage.toEntity()).toDomain()
+
+    override fun deleteById(parfaitImageId: Long) {
+        parfaitImageRepository.deleteById(parfaitImageId)
+    }
 
     private fun ParfaitImage.toEntity(): ParfaitImageEntity =
         ParfaitImageEntity(

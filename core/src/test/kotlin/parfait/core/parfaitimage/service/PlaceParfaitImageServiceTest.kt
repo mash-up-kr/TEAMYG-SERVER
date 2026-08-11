@@ -3,6 +3,7 @@ package parfait.core.parfaitimage.service
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.Test
 import parfait.core.exception.BusinessException
 import parfait.core.image.domain.ImageMeta
@@ -10,6 +11,7 @@ import parfait.core.image.domain.ImageStatus
 import parfait.core.image.domain.ImageType
 import parfait.core.image.exception.ImageErrorCode
 import parfait.core.image.port.out.ImageMetaQueryPort
+import parfait.core.image.port.out.ImageMetaSavePort
 import parfait.core.parfait.port.out.ParfaitQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
@@ -28,6 +30,7 @@ class PlaceParfaitImageServiceTest {
     private val parfaitGroupMemberQueryPort = mockk<ParfaitGroupMemberQueryPort>()
     private val parfaitQueryPort = mockk<ParfaitQueryPort>()
     private val imageMetaQueryPort = mockk<ImageMetaQueryPort>()
+    private val imageMetaSavePort = mockk<ImageMetaSavePort>()
     private val parfaitImageQueryPort = mockk<ParfaitImageQueryPort>()
     private val parfaitImageSavePort = mockk<ParfaitImageSavePort>()
     private val service =
@@ -35,6 +38,7 @@ class PlaceParfaitImageServiceTest {
             parfaitGroupMemberQueryPort = parfaitGroupMemberQueryPort,
             parfaitQueryPort = parfaitQueryPort,
             imageMetaQueryPort = imageMetaQueryPort,
+            imageMetaSavePort = imageMetaSavePort,
             parfaitImageQueryPort = parfaitImageQueryPort,
             parfaitImageSavePort = parfaitImageSavePort,
         )
@@ -83,6 +87,7 @@ class PlaceParfaitImageServiceTest {
         every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns groupMember
         every { parfaitQueryPort.existsByIdAndGroupId(5L, 1L) } returns true
         every { imageMetaQueryPort.findById(77L) } returns confirmedImage()
+        every { imageMetaSavePort.save(any()) } answers { firstArg() }
         every { parfaitImageSavePort.save(any()) } answers {
             val saved = firstArg<ParfaitImage>()
             if (saved.id != null) {
@@ -121,6 +126,7 @@ class PlaceParfaitImageServiceTest {
         result.positionX shouldBe 120.5
         result.placedBy.groupMemberId shouldBe 10L
         result.placedBy.nickname shouldBe "연경이"
+        verify { imageMetaSavePort.save(match { it.referenceCount == 1L }) }
     }
 
     @Test
@@ -151,6 +157,7 @@ class PlaceParfaitImageServiceTest {
         result.parfaitImageId shouldBe 201L
         result.positionX shouldBe 120.5
         result.placedBy.groupMemberId shouldBe 10L
+        verify(exactly = 0) { imageMetaSavePort.save(any()) }
     }
 
     @Test
