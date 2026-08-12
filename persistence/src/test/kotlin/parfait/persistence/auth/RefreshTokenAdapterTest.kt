@@ -79,4 +79,30 @@ class RefreshTokenAdapterTest {
     fun `저장된 적 없는 세션을 삭제해도 예외가 발생하지 않는다`() {
         adapter.delete(memberId = 999L, sessionId = "no-such-session")
     }
+
+    @Test
+    fun `memberId 기준으로 삭제하면 해당 회원의 모든 세션 키가 삭제된다`() {
+        adapter.save(memberId = 10L, sessionId = "session-a", refreshToken = "token-a", ttlSeconds = 60)
+        adapter.save(memberId = 10L, sessionId = "session-b", refreshToken = "token-b", ttlSeconds = 60)
+
+        adapter.deleteAllByMemberId(10L)
+
+        adapter.findRefreshToken(memberId = 10L, sessionId = "session-a") shouldBe null
+        adapter.findRefreshToken(memberId = 10L, sessionId = "session-b") shouldBe null
+    }
+
+    @Test
+    fun `memberId 기준 삭제는 다른 회원의 세션 키에 영향을 주지 않는다`() {
+        adapter.save(memberId = 11L, sessionId = "session-c", refreshToken = "token-c", ttlSeconds = 60)
+        adapter.save(memberId = 12L, sessionId = "session-d", refreshToken = "token-d", ttlSeconds = 60)
+
+        adapter.deleteAllByMemberId(11L)
+
+        adapter.findRefreshToken(memberId = 12L, sessionId = "session-d") shouldBe "token-d"
+    }
+
+    @Test
+    fun `삭제할 세션이 없어도 예외가 발생하지 않는다`() {
+        adapter.deleteAllByMemberId(999L)
+    }
 }

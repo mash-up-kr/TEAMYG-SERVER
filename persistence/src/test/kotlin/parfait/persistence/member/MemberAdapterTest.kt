@@ -155,6 +155,55 @@ class MemberAdapterTest {
     }
 
     @Test
+    fun `탈퇴시키면 provider_user_id가 tombstone 값으로 바뀌고 소프트 삭제된다`() {
+        val adapter = MemberAdapter(memberRepository)
+        val saved =
+            memberRepository.save(
+                Member(
+                    loginProvider = LoginProvider.KAKAO,
+                    providerUserId = "delete-target-user-1",
+                    globalNickname = "탈퇴대상회원",
+                ),
+            )
+
+        adapter.deleteById(saved.id!!)
+
+        memberRepository.findById(saved.id!!).isPresent shouldBe false
+        adapter.findMemberIdByProvider(CoreLoginProvider.KAKAO, "delete-target-user-1") shouldBe null
+    }
+
+    @Test
+    fun `탈퇴 후 동일한 provider_user_id로 재가입할 수 있다`() {
+        val adapter = MemberAdapter(memberRepository)
+        val saved =
+            memberRepository.save(
+                Member(
+                    loginProvider = LoginProvider.KAKAO,
+                    providerUserId = "rejoin-user-1",
+                    globalNickname = "재가입전회원",
+                ),
+            )
+
+        adapter.deleteById(saved.id!!)
+        val newMemberId = adapter.create(CoreLoginProvider.KAKAO, "rejoin-user-1", "재가입후닉네임")
+
+        adapter.findMemberIdByProvider(CoreLoginProvider.KAKAO, "rejoin-user-1") shouldBe newMemberId
+        (newMemberId == saved.id) shouldBe false
+    }
+
+    @Test
+    fun `존재하지 않는 회원을 탈퇴시키려 하면 MEMBER_NOT_FOUND 예외를 던진다`() {
+        val adapter = MemberAdapter(memberRepository)
+
+        val exception =
+            assertFailsWith<BusinessException> {
+                adapter.deleteById(999_999L)
+            }
+
+        exception.errorCode shouldBe MemberErrorCode.MEMBER_NOT_FOUND
+    }
+
+    @Test
     fun `회원이 존재하면 provider와 닉네임을 담은 계정 정보를 반환한다`() {
         val mockRepository = mockk<MemberRepository>()
         val adapter = MemberAdapter(mockRepository)

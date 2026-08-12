@@ -28,6 +28,7 @@ import parfait.http.image.controller.TestConfirmImageUploadUseCaseConfig
 import parfait.http.image.controller.TestIssueImageUploadUrlUseCaseConfig
 import parfait.http.member.controller.TestChangeGlobalNicknameUseCaseConfig
 import parfait.http.member.controller.TestGetMyAccountUseCaseConfig
+import parfait.http.member.controller.TestWithdrawUseCaseConfig
 import parfait.http.parfait.controller.TestParfaitUseCaseConfig
 import parfait.http.parfaitgroup.controller.TestParfaitGroupUseCaseConfig
 import parfait.http.parfaitimage.controller.TestDeleteParfaitImageUseCaseConfig
@@ -58,6 +59,7 @@ import kotlin.test.Test
     TestParfaitUseCaseConfig::class,
     TestPolicyQueryUseCaseConfig::class,
     TestChangeGlobalNicknameUseCaseConfig::class,
+    TestWithdrawUseCaseConfig::class,
     TestGetMyAccountUseCaseConfig::class,
     TestIssueImageUploadUrlUseCaseConfig::class,
     TestConfirmImageUploadUseCaseConfig::class,

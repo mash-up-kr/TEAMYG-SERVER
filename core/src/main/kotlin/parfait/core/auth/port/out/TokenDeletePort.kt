@@ -5,4 +5,6 @@ interface TokenDeletePort {
         memberId: Long,
         sessionId: String,
     )
+
+    fun deleteAllByMemberId(memberId: Long)
 }

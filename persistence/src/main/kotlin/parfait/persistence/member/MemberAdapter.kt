@@ -5,6 +5,7 @@ import parfait.core.exception.BusinessException
 import parfait.core.member.exception.MemberErrorCode
 import parfait.core.member.port.out.MemberAccount
 import parfait.core.member.port.out.MemberCreatePort
+import parfait.core.member.port.out.MemberDeletePort
 import parfait.core.member.port.out.MemberNicknameUpdatePort
 import parfait.core.member.port.out.MemberQueryPort
 import parfait.persistence.entity.LoginProvider
@@ -17,7 +18,8 @@ class MemberAdapter(
     private val memberRepository: MemberRepository,
 ) : MemberQueryPort,
     MemberCreatePort,
-    MemberNicknameUpdatePort {
+    MemberNicknameUpdatePort,
+    MemberDeletePort {
     override fun existsById(memberId: Long): Boolean = memberRepository.existsById(memberId)
 
     override fun findGlobalNicknameById(memberId: Long): String? =
@@ -60,6 +62,16 @@ class MemberAdapter(
             }
         member.globalNickname = nickname
         memberRepository.save(member)
+    }
+
+    override fun deleteById(memberId: Long) {
+        val member =
+            memberRepository.findById(memberId).orElseThrow {
+                BusinessException(MemberErrorCode.MEMBER_NOT_FOUND)
+            }
+        member.providerUserId = "withdrawn_$memberId"
+        memberRepository.save(member)
+        memberRepository.delete(member)
     }
 
     private fun CoreLoginProvider.toPersistenceProvider(): LoginProvider =

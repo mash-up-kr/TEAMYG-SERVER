@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
 import parfait.core.auth.domain.LoginProvider
@@ -22,6 +23,7 @@ import parfait.core.member.port.`in`.ChangeGlobalNicknameResult
 import parfait.core.member.port.`in`.ChangeGlobalNicknameUseCase
 import parfait.core.member.port.`in`.GetMyAccountUseCase
 import parfait.core.member.port.`in`.MyAccountResult
+import parfait.core.member.port.`in`.WithdrawUseCase
 import parfait.http.global.exception.GlobalExceptionHandler
 import parfait.http.global.security.TestMemberQueryPortConfig
 import parfait.http.global.security.TestTokenValidatePortConfig
@@ -40,6 +42,9 @@ class MemberControllerTest {
 
     @Autowired
     private lateinit var changeGlobalNicknameUseCase: ChangeGlobalNicknameUseCase
+
+    @Autowired
+    private lateinit var withdrawUseCase: WithdrawUseCase
 
     @Autowired
     private lateinit var getMyAccountUseCase: GetMyAccountUseCase
@@ -107,6 +112,20 @@ class MemberControllerTest {
     }
 
     @Test
+    fun `탈퇴는 인증 회원 id를 그대로 유스케이스에 전달하고 204를 반환한다`() {
+        every { withdrawUseCase.withdraw(any()) } returns Unit
+
+        mockMvc
+            .delete("/api/v1/users/me") {
+                principal = authentication
+            }.andExpect {
+                status { isNoContent() }
+            }
+
+        verify { withdrawUseCase.withdraw(42L) }
+    }
+
+    @Test
     fun `내 계정 정보를 조회하면 인증 회원 id로 조회한 결과를 그대로 응답한다`() {
         every { getMyAccountUseCase.getMyAccount(42L) } returns MyAccountResult(42L, LoginProvider.KAKAO, "행복한 판다")
 
@@ -140,6 +159,9 @@ class MemberControllerTest {
     class UseCaseConfig {
         @Bean
         fun changeGlobalNicknameUseCase(): ChangeGlobalNicknameUseCase = mockk()
+
+        @Bean
+        fun withdrawUseCase(): WithdrawUseCase = mockk()
 
         @Bean
         fun getMyAccountUseCase(): GetMyAccountUseCase = mockk()

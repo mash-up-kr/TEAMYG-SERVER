@@ -1,5 +1,6 @@
 package parfait.persistence.auth
 
+import org.springframework.data.redis.core.ScanOptions
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
 import parfait.core.auth.port.out.TokenDeletePort
@@ -36,6 +37,25 @@ class RefreshTokenAdapter(
         sessionId: String,
     ) {
         redisTemplate.delete(key(memberId, sessionId))
+    }
+
+    override fun deleteAllByMemberId(memberId: Long) {
+        val options =
+            ScanOptions
+                .scanOptions()
+                .match("refresh:$memberId:*")
+                .count(100)
+                .build()
+        val keysToDelete = mutableListOf<String>()
+        redisTemplate.execute { connection ->
+            connection.keyCommands().scan(options).use { cursor ->
+                cursor.forEachRemaining { keyBytes -> keysToDelete.add(String(keyBytes, Charsets.UTF_8)) }
+            }
+            null
+        }
+        if (keysToDelete.isNotEmpty()) {
+            redisTemplate.delete(keysToDelete)
+        }
     }
 
     private fun key(
