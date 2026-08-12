@@ -11,6 +11,8 @@ interface ParfaitGroupMemberQueryPort {
 
     fun findAllByGroupId(groupId: Long): List<ParfaitGroupMember>
 
+    fun findAllMembershipsByMemberId(memberId: Long): List<ParfaitGroupMember>
+
     fun existsByGroupIdAndMemberId(
         groupId: Long,
         memberId: Long,

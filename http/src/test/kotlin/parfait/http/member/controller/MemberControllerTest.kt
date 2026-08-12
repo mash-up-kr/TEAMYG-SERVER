@@ -13,11 +13,13 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.patch
 import parfait.core.exception.BusinessException
 import parfait.core.member.exception.MemberErrorCode
 import parfait.core.member.port.`in`.ChangeGlobalNicknameResult
 import parfait.core.member.port.`in`.ChangeGlobalNicknameUseCase
+import parfait.core.member.port.`in`.WithdrawUseCase
 import parfait.http.global.exception.GlobalExceptionHandler
 import parfait.http.global.security.TestMemberQueryPortConfig
 import parfait.http.global.security.TestTokenValidatePortConfig
@@ -36,6 +38,9 @@ class MemberControllerTest {
 
     @Autowired
     private lateinit var changeGlobalNicknameUseCase: ChangeGlobalNicknameUseCase
+
+    @Autowired
+    private lateinit var withdrawUseCase: WithdrawUseCase
 
     private val authentication = UsernamePasswordAuthenticationToken("42", null, emptyList())
 
@@ -99,9 +104,26 @@ class MemberControllerTest {
             }
     }
 
+    @Test
+    fun `탈퇴는 인증 회원 id를 그대로 유스케이스에 전달하고 204를 반환한다`() {
+        every { withdrawUseCase.withdraw(any()) } returns Unit
+
+        mockMvc
+            .delete("/api/v1/users/me") {
+                principal = authentication
+            }.andExpect {
+                status { isNoContent() }
+            }
+
+        verify { withdrawUseCase.withdraw(42L) }
+    }
+
     @TestConfiguration
     class UseCaseConfig {
         @Bean
         fun changeGlobalNicknameUseCase(): ChangeGlobalNicknameUseCase = mockk()
+
+        @Bean
+        fun withdrawUseCase(): WithdrawUseCase = mockk()
     }
 }

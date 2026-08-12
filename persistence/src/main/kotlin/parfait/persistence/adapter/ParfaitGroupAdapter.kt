@@ -76,6 +76,11 @@ class ParfaitGroupAdapter(
         parfaitGroupMemberRepository.save(groupMember.toEntity())
     }
 
+    override fun findAllMembershipsByMemberId(memberId: Long): List<ParfaitGroupMember> =
+        parfaitGroupMemberRepository.findAllByMemberIdAndLeftAtIsNullOrderByJoinedAtAscIdAsc(memberId).map {
+            it.toDomain()
+        }
+
     override fun findAllByMemberId(memberId: Long): List<MyParfaitGroupSummary> =
         parfaitGroupMemberRepository.findMyGroupSummaries(memberId).map {
             MyParfaitGroupSummary(

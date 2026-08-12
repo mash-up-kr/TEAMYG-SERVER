@@ -132,6 +132,26 @@ class ParfaitGroupAdapterTest {
         }
     }
 
+    @Test
+    fun `회원의 활성 그룹 멤버십 전체를 도메인으로 변환해 반환한다`() {
+        val entity =
+            ParfaitGroupMemberEntity(
+                parfaitGroupId = 1L,
+                memberId = 10L,
+                groupNickname = "내 닉네임",
+                joinedAt = now,
+                id = 2L,
+            )
+        every {
+            groupMemberRepository.findAllByMemberIdAndLeftAtIsNullOrderByJoinedAtAscIdAsc(10L)
+        } returns listOf(entity)
+
+        val result = adapter.findAllMembershipsByMemberId(10L)
+
+        result.single().id shouldBe 2L
+        result.single().parfaitGroupId shouldBe 1L
+    }
+
     private fun groupEntity(): ParfaitGroupEntity =
         ParfaitGroupEntity(
             name = "우리 그룹",
