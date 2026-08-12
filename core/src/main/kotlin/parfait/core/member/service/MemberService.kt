@@ -6,9 +6,13 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionSynchronization
 import org.springframework.transaction.support.TransactionSynchronizationManager
 import parfait.core.auth.port.out.TokenDeletePort
+import parfait.core.exception.BusinessException
 import parfait.core.member.domain.GlobalNickname
+import parfait.core.member.exception.MemberErrorCode
 import parfait.core.member.port.`in`.ChangeGlobalNicknameResult
 import parfait.core.member.port.`in`.ChangeGlobalNicknameUseCase
+import parfait.core.member.port.`in`.GetMyAccountUseCase
+import parfait.core.member.port.`in`.MyAccountResult
 import parfait.core.member.port.`in`.WithdrawUseCase
 import parfait.core.member.port.out.MemberDeletePort
 import parfait.core.member.port.out.MemberNicknameUpdatePort
@@ -25,7 +29,8 @@ class MemberService(
     private val parfaitGroupMemberLeavePort: ParfaitGroupMemberLeavePort,
     private val tokenDeletePort: TokenDeletePort,
 ) : ChangeGlobalNicknameUseCase,
-    WithdrawUseCase {
+    WithdrawUseCase,
+    GetMyAccountUseCase {
     private val log = LoggerFactory.getLogger(MemberService::class.java)
 
     @Transactional
@@ -56,5 +61,12 @@ class MemberService(
                 }
             },
         )
+    }
+
+    override fun getMyAccount(memberId: Long): MyAccountResult {
+        val account =
+            memberQueryPort.findAccountById(memberId)
+                ?: throw BusinessException(MemberErrorCode.MEMBER_NOT_FOUND)
+        return MyAccountResult(memberId, account.provider, account.nickname)
     }
 }

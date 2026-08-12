@@ -14,11 +14,15 @@ import org.springframework.http.MediaType
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
+import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
+import parfait.core.auth.domain.LoginProvider
 import parfait.core.exception.BusinessException
 import parfait.core.member.exception.MemberErrorCode
 import parfait.core.member.port.`in`.ChangeGlobalNicknameResult
 import parfait.core.member.port.`in`.ChangeGlobalNicknameUseCase
+import parfait.core.member.port.`in`.GetMyAccountUseCase
+import parfait.core.member.port.`in`.MyAccountResult
 import parfait.core.member.port.`in`.WithdrawUseCase
 import parfait.http.global.exception.GlobalExceptionHandler
 import parfait.http.global.security.TestMemberQueryPortConfig
@@ -41,6 +45,9 @@ class MemberControllerTest {
 
     @Autowired
     private lateinit var withdrawUseCase: WithdrawUseCase
+
+    @Autowired
+    private lateinit var getMyAccountUseCase: GetMyAccountUseCase
 
     private val authentication = UsernamePasswordAuthenticationToken("42", null, emptyList())
 
@@ -118,6 +125,36 @@ class MemberControllerTest {
         verify { withdrawUseCase.withdraw(42L) }
     }
 
+    @Test
+    fun `내 계정 정보를 조회하면 인증 회원 id로 조회한 결과를 그대로 응답한다`() {
+        every { getMyAccountUseCase.getMyAccount(42L) } returns MyAccountResult(42L, LoginProvider.KAKAO, "행복한 판다")
+
+        mockMvc
+            .get("/api/v1/users/me") {
+                principal = authentication
+            }.andExpect {
+                status { isOk() }
+                jsonPath("$.data.memberId") { value(42) }
+                jsonPath("$.data.provider") { value("KAKAO") }
+                jsonPath("$.data.nickname") { value("행복한 판다") }
+            }
+
+        verify { getMyAccountUseCase.getMyAccount(42L) }
+    }
+
+    @Test
+    fun `존재하지 않는 회원이면 404와 MEMBER_NOT_FOUND로 응답한다`() {
+        every { getMyAccountUseCase.getMyAccount(42L) } throws BusinessException(MemberErrorCode.MEMBER_NOT_FOUND)
+
+        mockMvc
+            .get("/api/v1/users/me") {
+                principal = authentication
+            }.andExpect {
+                status { isNotFound() }
+                jsonPath("$.code") { value("MEMBER_NOT_FOUND") }
+            }
+    }
+
     @TestConfiguration
     class UseCaseConfig {
         @Bean
@@ -125,5 +162,8 @@ class MemberControllerTest {
 
         @Bean
         fun withdrawUseCase(): WithdrawUseCase = mockk()
+
+        @Bean
+        fun getMyAccountUseCase(): GetMyAccountUseCase = mockk()
     }
 }

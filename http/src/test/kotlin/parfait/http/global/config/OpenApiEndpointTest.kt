@@ -17,10 +17,13 @@ import parfait.http.global.security.TestMemberQueryPortConfig
 import parfait.http.image.controller.TestConfirmImageUploadUseCaseConfig
 import parfait.http.image.controller.TestIssueImageUploadUrlUseCaseConfig
 import parfait.http.member.controller.TestChangeGlobalNicknameUseCaseConfig
+import parfait.http.member.controller.TestGetMyAccountUseCaseConfig
 import parfait.http.member.controller.TestWithdrawUseCaseConfig
 import parfait.http.parfait.controller.TestParfaitUseCaseConfig
 import parfait.http.parfaitgroup.controller.TestParfaitGroupUseCaseConfig
+import parfait.http.parfaitimage.controller.TestDeleteParfaitImageUseCaseConfig
 import parfait.http.parfaitimage.controller.TestPlaceParfaitImageUseCaseConfig
+import parfait.http.parfaitimage.controller.TestUpdateParfaitImageBorderUseCaseConfig
 import parfait.http.parfaitimage.controller.TestUpdateParfaitImageUseCaseConfig
 import kotlin.test.Test
 
@@ -38,10 +41,13 @@ import kotlin.test.Test
     TestPolicyQueryUseCaseConfig::class,
     TestChangeGlobalNicknameUseCaseConfig::class,
     TestWithdrawUseCaseConfig::class,
+    TestGetMyAccountUseCaseConfig::class,
     TestIssueImageUploadUrlUseCaseConfig::class,
     TestConfirmImageUploadUseCaseConfig::class,
     TestPlaceParfaitImageUseCaseConfig::class,
     TestUpdateParfaitImageUseCaseConfig::class,
+    TestUpdateParfaitImageBorderUseCaseConfig::class,
+    TestDeleteParfaitImageUseCaseConfig::class,
 )
 class OpenApiEndpointTest {
     @Autowired

@@ -55,23 +55,16 @@ class JwtTokenAdapter(
     override fun createRegistrationToken(
         provider: LoginProvider,
         providerUserId: String,
-        appleRefreshToken: String?,
-    ): String {
-        val builder =
-            Jwts
-                .builder()
-                .claim(CLAIM_PROVIDER, provider.name)
-                .claim(CLAIM_PROVIDER_USER_ID, providerUserId)
-                .claim(CLAIM_PURPOSE, PURPOSE_REGISTRATION)
-        if (appleRefreshToken != null) {
-            builder.claim(CLAIM_APPLE_REFRESH_TOKEN, appleRefreshToken)
-        }
-        return builder
+    ): String =
+        Jwts
+            .builder()
+            .claim(CLAIM_PROVIDER, provider.name)
+            .claim(CLAIM_PROVIDER_USER_ID, providerUserId)
+            .claim(CLAIM_PURPOSE, PURPOSE_REGISTRATION)
             .issuedAt(Date())
             .expiration(Date(System.currentTimeMillis() + registrationTokenExpirationSeconds * 1000))
             .signWith(key, Jwts.SIG.HS256)
             .compact()
-    }
 
     override fun validateAccessToken(token: String): Long {
         val claims = parseClaims(token)
@@ -100,7 +93,6 @@ class JwtTokenAdapter(
         return RegistrationTokenClaims(
             provider = LoginProvider.valueOf(claims.get(CLAIM_PROVIDER, String::class.java)),
             providerUserId = claims.get(CLAIM_PROVIDER_USER_ID, String::class.java),
-            appleRefreshToken = claims.get(CLAIM_APPLE_REFRESH_TOKEN, String::class.java),
         )
     }
 
@@ -129,6 +121,5 @@ class JwtTokenAdapter(
         private const val CLAIM_PROVIDER_USER_ID = "providerUserId"
         private const val CLAIM_PURPOSE = "purpose"
         private const val PURPOSE_REGISTRATION = "REGISTRATION"
-        private const val CLAIM_APPLE_REFRESH_TOKEN = "appleRefreshToken"
     }
 }

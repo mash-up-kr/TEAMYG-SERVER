@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 import parfait.core.auth.domain.LoginProvider
 import parfait.core.auth.port.out.TokenIssuePort
+import parfait.core.member.port.out.MemberAccount
 import parfait.core.member.port.out.MemberQueryPort
 import parfait.http.TestApplication
 import parfait.http.auth.controller.TestAppleLoginUseCaseConfig
@@ -26,10 +27,13 @@ import parfait.http.auth.controller.TestSignupUseCaseConfig
 import parfait.http.image.controller.TestConfirmImageUploadUseCaseConfig
 import parfait.http.image.controller.TestIssueImageUploadUrlUseCaseConfig
 import parfait.http.member.controller.TestChangeGlobalNicknameUseCaseConfig
+import parfait.http.member.controller.TestGetMyAccountUseCaseConfig
 import parfait.http.member.controller.TestWithdrawUseCaseConfig
 import parfait.http.parfait.controller.TestParfaitUseCaseConfig
 import parfait.http.parfaitgroup.controller.TestParfaitGroupUseCaseConfig
+import parfait.http.parfaitimage.controller.TestDeleteParfaitImageUseCaseConfig
 import parfait.http.parfaitimage.controller.TestPlaceParfaitImageUseCaseConfig
+import parfait.http.parfaitimage.controller.TestUpdateParfaitImageBorderUseCaseConfig
 import parfait.http.parfaitimage.controller.TestUpdateParfaitImageUseCaseConfig
 import kotlin.test.Test
 
@@ -56,10 +60,13 @@ import kotlin.test.Test
     TestPolicyQueryUseCaseConfig::class,
     TestChangeGlobalNicknameUseCaseConfig::class,
     TestWithdrawUseCaseConfig::class,
+    TestGetMyAccountUseCaseConfig::class,
     TestIssueImageUploadUrlUseCaseConfig::class,
     TestConfirmImageUploadUseCaseConfig::class,
     TestPlaceParfaitImageUseCaseConfig::class,
     TestUpdateParfaitImageUseCaseConfig::class,
+    TestUpdateParfaitImageBorderUseCaseConfig::class,
+    TestDeleteParfaitImageUseCaseConfig::class,
 )
 class SecurityConfigIntegrationTest {
     @Autowired
@@ -85,6 +92,9 @@ class SecurityConfigIntegrationTest {
                 ): Long? = null
 
                 override fun findGlobalNicknameById(memberId: Long): String? = if (memberId == 1L) "테스트" else null
+
+                override fun findAccountById(memberId: Long): MemberAccount? =
+                    if (memberId == 1L) MemberAccount(LoginProvider.KAKAO, "테스트") else null
             }
     }
 
@@ -177,7 +187,7 @@ class SecurityConfigIntegrationTest {
         mockMvc
             .post("/api/v1/auth/apple") {
                 contentType = MediaType.APPLICATION_JSON
-                content = """{"identityToken":"dummy","nonce":"dummy","authorizationCode":"dummy"}"""
+                content = """{"identityToken":"dummy","nonce":"dummy"}"""
             }.andExpect {
                 status { isOk() }
             }

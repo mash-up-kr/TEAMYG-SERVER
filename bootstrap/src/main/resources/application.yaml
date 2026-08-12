@@ -33,7 +33,6 @@ kakao:
 apple:
   issuer: https://appleid.apple.com
   jwks-uri: https://appleid.apple.com/auth/keys
-  token-uri: https://appleid.apple.com/auth/token
 
 aws:
   s3:

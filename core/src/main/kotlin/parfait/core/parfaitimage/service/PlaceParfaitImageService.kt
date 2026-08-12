@@ -6,6 +6,7 @@ import parfait.core.exception.BusinessException
 import parfait.core.image.domain.ImageStatus
 import parfait.core.image.exception.ImageErrorCode
 import parfait.core.image.port.out.ImageMetaQueryPort
+import parfait.core.image.port.out.ImageMetaSavePort
 import parfait.core.parfait.port.out.ParfaitQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
@@ -24,6 +25,7 @@ class PlaceParfaitImageService(
     private val parfaitGroupMemberQueryPort: ParfaitGroupMemberQueryPort,
     private val parfaitQueryPort: ParfaitQueryPort,
     private val imageMetaQueryPort: ImageMetaQueryPort,
+    private val imageMetaSavePort: ImageMetaSavePort,
     private val parfaitImageQueryPort: ParfaitImageQueryPort,
     private val parfaitImageSavePort: ParfaitImageSavePort,
 ) : PlaceParfaitImageUseCase {
@@ -72,6 +74,10 @@ class PlaceParfaitImageService(
             )
 
         val saved = parfaitImageSavePort.save(toSave)
+
+        if (existing == null) {
+            imageMetaSavePort.save(imageMeta.incrementReferenceCount())
+        }
 
         return PlaceParfaitImageResult(
             parfaitImageId = saved.requireId(),

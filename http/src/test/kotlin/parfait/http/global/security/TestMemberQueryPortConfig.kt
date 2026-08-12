@@ -3,6 +3,7 @@ package parfait.http.global.security
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import parfait.core.auth.domain.LoginProvider
+import parfait.core.member.port.out.MemberAccount
 import parfait.core.member.port.out.MemberQueryPort
 
 /**
@@ -27,5 +28,7 @@ class TestMemberQueryPortConfig {
                 provider: LoginProvider,
                 providerUserId: String,
             ): Long? = null
+
+            override fun findAccountById(memberId: Long): MemberAccount = MemberAccount(LoginProvider.KAKAO, "테스트")
         }
 }

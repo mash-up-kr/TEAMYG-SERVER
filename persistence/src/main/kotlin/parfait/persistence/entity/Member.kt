@@ -33,8 +33,6 @@ class Member(
     var providerUserId: String,
     @Column(name = "global_nickname", nullable = false, length = 255)
     var globalNickname: String,
-    @Column(name = "apple_refresh_token", nullable = true, length = 1024)
-    var appleRefreshToken: String? = null,
     @Column(name = "created_at", nullable = false)
     var createdAt: LocalDateTime = LocalDateTime.now(),
     @Column(name = "updated_at", nullable = false)

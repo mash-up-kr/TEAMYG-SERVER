@@ -3,7 +3,7 @@ package parfait.persistence.member
 import org.springframework.stereotype.Component
 import parfait.core.exception.BusinessException
 import parfait.core.member.exception.MemberErrorCode
-import parfait.core.member.port.out.MemberAppleRefreshTokenSavePort
+import parfait.core.member.port.out.MemberAccount
 import parfait.core.member.port.out.MemberCreatePort
 import parfait.core.member.port.out.MemberDeletePort
 import parfait.core.member.port.out.MemberNicknameUpdatePort
@@ -18,7 +18,6 @@ class MemberAdapter(
     private val memberRepository: MemberRepository,
 ) : MemberQueryPort,
     MemberCreatePort,
-    MemberAppleRefreshTokenSavePort,
     MemberNicknameUpdatePort,
     MemberDeletePort {
     override fun existsById(memberId: Long): Boolean = memberRepository.existsById(memberId)
@@ -34,6 +33,11 @@ class MemberAdapter(
             .findByLoginProviderAndProviderUserId(provider.toPersistenceProvider(), providerUserId)
             ?.id
 
+    override fun findAccountById(memberId: Long): MemberAccount? =
+        memberRepository.findById(memberId).orElse(null)?.let {
+            MemberAccount(provider = it.loginProvider.toCoreProvider(), nickname = it.globalNickname)
+        }
+
     override fun create(
         provider: CoreLoginProvider,
         providerUserId: String,
@@ -47,15 +51,6 @@ class MemberAdapter(
                     globalNickname = nickname,
                 ),
             ).id!!
-
-    override fun saveRefreshToken(
-        memberId: Long,
-        appleRefreshToken: String,
-    ) {
-        val member = memberRepository.findById(memberId).get()
-        member.appleRefreshToken = appleRefreshToken
-        memberRepository.save(member)
-    }
 
     override fun updateGlobalNickname(
         memberId: Long,
@@ -83,5 +78,12 @@ class MemberAdapter(
         when (this) {
             CoreLoginProvider.KAKAO -> LoginProvider.KAKAO
             CoreLoginProvider.APPLE -> LoginProvider.APPLE
+        }
+
+    private fun LoginProvider.toCoreProvider(): CoreLoginProvider =
+        when (this) {
+            LoginProvider.KAKAO -> CoreLoginProvider.KAKAO
+            LoginProvider.APPLE -> CoreLoginProvider.APPLE
+            LoginProvider.GOOGLE -> error("GOOGLE login provider is not supported yet")
         }
 }

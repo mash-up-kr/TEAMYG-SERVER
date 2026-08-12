@@ -13,6 +13,7 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import parfait.core.exception.BusinessException
 import parfait.core.member.exception.MemberErrorCode
+import parfait.core.member.port.out.MemberAccount
 import parfait.persistence.TestApplication
 import parfait.persistence.entity.LoginProvider
 import parfait.persistence.entity.Member
@@ -125,24 +126,6 @@ class MemberAdapterTest {
     }
 
     @Test
-    fun `saveRefreshToken을 호출하면 apple_refresh_token 컬럼이 갱신된다`() {
-        val adapter = MemberAdapter(memberRepository)
-        val saved =
-            memberRepository.save(
-                Member(
-                    loginProvider = LoginProvider.APPLE,
-                    providerUserId = "apple-user-1",
-                    globalNickname = "애플회원",
-                ),
-            )
-
-        adapter.saveRefreshToken(saved.id!!, "apple-refresh-token-1")
-
-        val updated = memberRepository.findById(saved.id!!).get()
-        updated.appleRefreshToken shouldBe "apple-refresh-token-1"
-    }
-
-    @Test
     fun `전역 닉네임을 변경하면 저장된 값이 갱신된다`() {
         val adapter = MemberAdapter(memberRepository)
         val saved =
@@ -218,5 +201,30 @@ class MemberAdapterTest {
             }
 
         exception.errorCode shouldBe MemberErrorCode.MEMBER_NOT_FOUND
+    }
+
+    @Test
+    fun `회원이 존재하면 provider와 닉네임을 담은 계정 정보를 반환한다`() {
+        val mockRepository = mockk<MemberRepository>()
+        val adapter = MemberAdapter(mockRepository)
+        val member =
+            Member(
+                loginProvider = LoginProvider.APPLE,
+                providerUserId = "provider-id",
+                globalNickname = "파르페",
+                id = 1L,
+            )
+        every { mockRepository.findById(1L) } returns Optional.of(member)
+
+        adapter.findAccountById(1L) shouldBe MemberAccount(CoreLoginProvider.APPLE, "파르페")
+    }
+
+    @Test
+    fun `회원이 없으면 계정 정보 조회 결과는 null이다`() {
+        val mockRepository = mockk<MemberRepository>()
+        val adapter = MemberAdapter(mockRepository)
+        every { mockRepository.findById(1L) } returns Optional.empty()
+
+        adapter.findAccountById(1L) shouldBe null
     }
 }
