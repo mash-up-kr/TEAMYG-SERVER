@@ -11,6 +11,8 @@ interface ParfaitImageRepository : JpaRepository<ParfaitImage, Long> {
         imageMetaId: Long,
     ): ParfaitImage?
 
+    fun findAllByParfaitId(parfaitId: Long): List<ParfaitImage>
+
     @Query(
         "SELECT pi.parfaitId AS parfaitId, COUNT(pi) AS count FROM ParfaitImage pi " +
             "WHERE pi.parfaitId IN :parfaitIds GROUP BY pi.parfaitId",

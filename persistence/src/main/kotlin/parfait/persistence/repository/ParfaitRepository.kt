@@ -24,4 +24,14 @@ interface ParfaitRepository : JpaRepository<Parfait, Long> {
         from: LocalDate,
         to: LocalDate,
     ): List<Parfait>
+
+    fun findByParfaitGroupIdAndParfaitDate(
+        parfaitGroupId: Long,
+        parfaitDate: LocalDate,
+    ): Parfait?
+
+    fun findTopByParfaitGroupIdAndStatusOrderByParfaitDateDesc(
+        parfaitGroupId: Long,
+        status: String,
+    ): Parfait?
 }

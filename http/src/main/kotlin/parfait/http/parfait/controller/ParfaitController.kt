@@ -10,6 +10,9 @@ import parfait.common.response.ApiResponse
 import parfait.core.parfait.port.`in`.GetParfaitYearsUseCase
 import parfait.core.parfait.port.`in`.GetPastParfaitsCommand
 import parfait.core.parfait.port.`in`.GetPastParfaitsUseCase
+import parfait.core.parfait.port.`in`.GetTodayParfaitCommand
+import parfait.core.parfait.port.`in`.GetTodayParfaitUseCase
+import parfait.http.parfait.dto.GetTodayParfaitResponse
 import parfait.http.parfait.dto.ParfaitYearsResponse
 import parfait.http.parfait.dto.PastParfaitsResponse
 import java.time.LocalDate
@@ -19,6 +22,7 @@ import java.time.LocalDate
 class ParfaitController(
     private val getParfaitYearsUseCase: GetParfaitYearsUseCase,
     private val getPastParfaitsUseCase: GetPastParfaitsUseCase,
+    private val getTodayParfaitUseCase: GetTodayParfaitUseCase,
 ) {
     @GetMapping("/year")
     fun getYears(
@@ -27,6 +31,19 @@ class ParfaitController(
     ): ApiResponse<ParfaitYearsResponse> =
         ApiResponse.ok(
             ParfaitYearsResponse(getParfaitYearsUseCase.getYears(authentication.memberId(), groupId)),
+        )
+
+    @GetMapping("/today")
+    fun getToday(
+        authentication: Authentication,
+        @PathVariable groupId: Long,
+    ): ApiResponse<GetTodayParfaitResponse> =
+        ApiResponse.ok(
+            GetTodayParfaitResponse.from(
+                getTodayParfaitUseCase.get(
+                    GetTodayParfaitCommand(memberId = authentication.memberId(), groupId = groupId),
+                ),
+            ),
         )
 
     @GetMapping

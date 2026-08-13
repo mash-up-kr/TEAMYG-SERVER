@@ -10,6 +10,9 @@ value class GroupNickname private constructor(
         private val VALID_PATTERN = Regex("^[가-힣A-Za-z0-9]+(?: [가-힣A-Za-z0-9]+)*$")
 
         fun of(value: String): GroupNickname {
+            if (value == UNKNOWN_NICKNAME) {
+                return GroupNickname(value)
+            }
             if (value.length !in 1..MAX_LENGTH || !VALID_PATTERN.matches(value)) {
                 throw ParfaitGroupException(ParfaitGroupError.INVALID_GROUP_NICKNAME)
             }
