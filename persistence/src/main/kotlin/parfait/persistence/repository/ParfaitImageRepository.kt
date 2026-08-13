@@ -8,4 +8,6 @@ interface ParfaitImageRepository : JpaRepository<ParfaitImage, Long> {
         parfaitId: Long,
         imageMetaId: Long,
     ): ParfaitImage?
+
+    fun findAllByParfaitId(parfaitId: Long): List<ParfaitImage>
 }

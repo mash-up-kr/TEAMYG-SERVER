@@ -25,6 +25,12 @@ class Parfait(
     var parfaitGroupId: Long,
     @Column(name = "parfait_date", nullable = false)
     var parfaitDate: LocalDate,
+    @Column(name = "status", nullable = false, length = 50)
+    var status: String,
+    @Column(name = "background_type", length = 50)
+    var backgroundType: String?,
+    @Column(name = "background_value", length = 2048)
+    var backgroundValue: String?,
     @Column(name = "created_at", nullable = false)
     var createdAt: LocalDateTime = LocalDateTime.now(),
     @Column(name = "updated_at", nullable = false)

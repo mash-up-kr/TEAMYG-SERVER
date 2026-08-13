@@ -28,6 +28,8 @@ interface ParfaitGroupMemberRepository : JpaRepository<ParfaitGroupMember, Long>
 
     fun countByParfaitGroupIdAndLeftAtIsNull(parfaitGroupId: Long): Long
 
+    fun findAllByIdIn(ids: Collection<Long>): List<ParfaitGroupMember>
+
     @Query(
         value =
             """

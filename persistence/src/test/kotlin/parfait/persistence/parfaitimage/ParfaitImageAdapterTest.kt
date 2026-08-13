@@ -88,7 +88,13 @@ class ParfaitImageAdapterTest {
         val group = parfaitGroupMemberRepository.findById(groupMemberId).get()
         val parfait =
             parfaitRepository.save(
-                Parfait(parfaitGroupId = group.parfaitGroupId, parfaitDate = LocalDate.now()),
+                Parfait(
+                    parfaitGroupId = group.parfaitGroupId,
+                    parfaitDate = LocalDate.now(),
+                    status = "ACTIVE",
+                    backgroundType = null,
+                    backgroundValue = null,
+                ),
             )
         return requireNotNull(parfait.id)
     }
@@ -204,5 +210,74 @@ class ParfaitImageAdapterTest {
     @Test
     fun `존재하지 않는 id로 조회하면 null을 반환한다`() {
         parfaitImageAdapter.findById(-1L) shouldBe null
+    }
+
+    @Test
+    fun `parfaitId로 조회하면 해당 파르페에 배치된 토핑 전체를 반환한다`() {
+        val (memberId, groupMemberId) = setUpGroupMember("D")
+        val (_, otherGroupMemberId) = setUpGroupMember("E")
+        val parfaitId = setUpParfait(groupMemberId)
+        val otherParfaitId = setUpParfait(otherGroupMemberId)
+        val imageMetaIdA = setUpConfirmedImageMeta(memberId, "D1")
+        val imageMetaIdB = setUpConfirmedImageMeta(memberId, "D2")
+        val imageMetaIdOther = setUpConfirmedImageMeta(memberId, "D3")
+        parfaitImageAdapter.save(
+            ParfaitImage.place(
+                parfaitId = parfaitId,
+                imageMetaId = imageMetaIdA,
+                placedByGroupMemberId = groupMemberId,
+                imageUrl = "https://s3.example/nukki/user1/uuid4.png",
+                positionX = 0.0,
+                positionY = 0.0,
+                positionZ = 0,
+                scale = 1.0,
+                rotation = 0.0,
+                borderType = BorderType.NONE,
+                borderColor = null,
+                borderWidth = null,
+            ),
+        )
+        parfaitImageAdapter.save(
+            ParfaitImage.place(
+                parfaitId = parfaitId,
+                imageMetaId = imageMetaIdB,
+                placedByGroupMemberId = groupMemberId,
+                imageUrl = "https://s3.example/nukki/user1/uuid5.png",
+                positionX = 1.0,
+                positionY = 1.0,
+                positionZ = 1,
+                scale = 1.0,
+                rotation = 0.0,
+                borderType = BorderType.NONE,
+                borderColor = null,
+                borderWidth = null,
+            ),
+        )
+        parfaitImageAdapter.save(
+            ParfaitImage.place(
+                parfaitId = otherParfaitId,
+                imageMetaId = imageMetaIdOther,
+                placedByGroupMemberId = otherGroupMemberId,
+                imageUrl = "https://s3.example/nukki/user1/uuid6.png",
+                positionX = 2.0,
+                positionY = 2.0,
+                positionZ = 2,
+                scale = 1.0,
+                rotation = 0.0,
+                borderType = BorderType.NONE,
+                borderColor = null,
+                borderWidth = null,
+            ),
+        )
+
+        val result = parfaitImageAdapter.findAllByParfaitId(parfaitId)
+
+        result.size shouldBe 2
+        result.map { it.imageMetaId } shouldBe listOf(imageMetaIdA, imageMetaIdB)
+    }
+
+    @Test
+    fun `배치된 토핑이 없으면 빈 목록을 반환한다`() {
+        parfaitImageAdapter.findAllByParfaitId(-1L) shouldBe emptyList()
     }
 }
