@@ -69,6 +69,9 @@ class ParfaitGroupAdapter(
     override fun countByGroupId(groupId: Long): Int =
         Math.toIntExact(parfaitGroupMemberRepository.countByParfaitGroupIdAndLeftAtIsNull(groupId))
 
+    override fun findAllByIds(groupMemberIds: Collection<Long>): List<ParfaitGroupMember> =
+        parfaitGroupMemberRepository.findAllByIdIn(groupMemberIds).map { it.toDomain() }
+
     override fun save(groupMember: ParfaitGroupMember): ParfaitGroupMember =
         parfaitGroupMemberRepository.save(groupMember.toEntity()).toDomain()
 

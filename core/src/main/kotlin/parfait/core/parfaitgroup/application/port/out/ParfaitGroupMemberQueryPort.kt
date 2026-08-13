@@ -24,4 +24,6 @@ interface ParfaitGroupMemberQueryPort {
     ): Boolean
 
     fun countByGroupId(groupId: Long): Int
+
+    fun findAllByIds(groupMemberIds: Collection<Long>): List<ParfaitGroupMember>
 }

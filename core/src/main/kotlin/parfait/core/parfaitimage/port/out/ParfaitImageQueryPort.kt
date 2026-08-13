@@ -9,4 +9,6 @@ interface ParfaitImageQueryPort {
     ): ParfaitImage?
 
     fun findById(parfaitImageId: Long): ParfaitImage?
+
+    fun findAllByParfaitId(parfaitId: Long): List<ParfaitImage>
 }

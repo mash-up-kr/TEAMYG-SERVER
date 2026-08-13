@@ -23,6 +23,9 @@ class ParfaitImageAdapter(
     override fun findById(parfaitImageId: Long): ParfaitImage? =
         parfaitImageRepository.findById(parfaitImageId).orElse(null)?.toDomain()
 
+    override fun findAllByParfaitId(parfaitId: Long): List<ParfaitImage> =
+        parfaitImageRepository.findAllByParfaitId(parfaitId).map { it.toDomain() }
+
     override fun save(parfaitImage: ParfaitImage): ParfaitImage =
         parfaitImageRepository.save(parfaitImage.toEntity()).toDomain()
 
