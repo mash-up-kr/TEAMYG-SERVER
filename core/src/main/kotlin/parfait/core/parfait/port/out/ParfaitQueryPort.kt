@@ -11,6 +11,12 @@ interface ParfaitQueryPort {
         groupId: Long,
     ): Boolean
 
+    fun findAllByGroupIdAndDateRange(
+        groupId: Long,
+        from: LocalDate,
+        to: LocalDate,
+    ): List<ParfaitSummary>
+
     fun findByGroupIdAndDate(
         groupId: Long,
         date: LocalDate,
@@ -18,3 +24,8 @@ interface ParfaitQueryPort {
 
     fun findLastClosedDateByGroupId(groupId: Long): LocalDate?
 }
+
+data class ParfaitSummary(
+    val id: Long,
+    val date: LocalDate,
+)

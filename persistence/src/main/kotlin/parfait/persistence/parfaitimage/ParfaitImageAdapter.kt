@@ -23,6 +23,15 @@ class ParfaitImageAdapter(
     override fun findById(parfaitImageId: Long): ParfaitImage? =
         parfaitImageRepository.findById(parfaitImageId).orElse(null)?.toDomain()
 
+    override fun countAllByParfaitIds(parfaitIds: Collection<Long>): Map<Long, Int> {
+        if (parfaitIds.isEmpty()) {
+            return emptyMap()
+        }
+        return parfaitImageRepository.countAllByParfaitIdIn(parfaitIds).associate {
+            it.parfaitId to it.count.toInt()
+        }
+    }
+
     override fun findAllByParfaitId(parfaitId: Long): List<ParfaitImage> =
         parfaitImageRepository.findAllByParfaitId(parfaitId).map { it.toDomain() }
 

@@ -6,6 +6,7 @@ import parfait.core.parfait.domain.Parfait
 import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.port.out.ParfaitQueryPort
 import parfait.core.parfait.port.out.ParfaitSavePort
+import parfait.core.parfait.port.out.ParfaitSummary
 import parfait.persistence.repository.ParfaitRepository
 import java.time.LocalDate
 import parfait.persistence.entity.Parfait as ParfaitEntity
@@ -22,6 +23,15 @@ class ParfaitAdapter(
         parfaitId: Long,
         groupId: Long,
     ): Boolean = parfaitRepository.existsByIdAndParfaitGroupId(parfaitId, groupId)
+
+    override fun findAllByGroupIdAndDateRange(
+        groupId: Long,
+        from: LocalDate,
+        to: LocalDate,
+    ): List<ParfaitSummary> =
+        parfaitRepository.findAllByParfaitGroupIdAndParfaitDateBetweenOrderByParfaitDateDesc(groupId, from, to).map {
+            ParfaitSummary(id = requireNotNull(it.id), date = it.parfaitDate)
+        }
 
     override fun findByGroupIdAndDate(
         groupId: Long,

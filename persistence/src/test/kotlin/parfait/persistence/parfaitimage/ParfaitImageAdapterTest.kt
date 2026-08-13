@@ -280,4 +280,56 @@ class ParfaitImageAdapterTest {
     fun `배치된 토핑이 없으면 빈 목록을 반환한다`() {
         parfaitImageAdapter.findAllByParfaitId(-1L) shouldBe emptyList()
     }
+
+    @Test
+    fun `parfaitId 목록으로 배치된 토핑 수를 그룹핑해 반환하고 배치가 없는 id는 결과에서 제외한다`() {
+        val (memberId, groupMemberId) = setUpGroupMember("F")
+        val (_, otherGroupMemberId) = setUpGroupMember("G")
+        val parfaitIdWithImages = setUpParfait(groupMemberId)
+        val parfaitIdWithoutImages = setUpParfait(otherGroupMemberId)
+        val imageMetaIdA = setUpConfirmedImageMeta(memberId, "F1")
+        val imageMetaIdB = setUpConfirmedImageMeta(memberId, "F2")
+        parfaitImageAdapter.save(
+            ParfaitImage.place(
+                parfaitId = parfaitIdWithImages,
+                imageMetaId = imageMetaIdA,
+                placedByGroupMemberId = groupMemberId,
+                imageUrl = "https://s3.example/nukki/user1/uuid7.png",
+                positionX = 0.0,
+                positionY = 0.0,
+                positionZ = 0,
+                scale = 1.0,
+                rotation = 0.0,
+                borderType = BorderType.NONE,
+                borderColor = null,
+                borderWidth = null,
+            ),
+        )
+        parfaitImageAdapter.save(
+            ParfaitImage.place(
+                parfaitId = parfaitIdWithImages,
+                imageMetaId = imageMetaIdB,
+                placedByGroupMemberId = groupMemberId,
+                imageUrl = "https://s3.example/nukki/user1/uuid8.png",
+                positionX = 1.0,
+                positionY = 1.0,
+                positionZ = 1,
+                scale = 1.0,
+                rotation = 0.0,
+                borderType = BorderType.NONE,
+                borderColor = null,
+                borderWidth = null,
+            ),
+        )
+
+        val result =
+            parfaitImageAdapter.countAllByParfaitIds(listOf(parfaitIdWithImages, parfaitIdWithoutImages))
+
+        result shouldBe mapOf(parfaitIdWithImages to 2)
+    }
+
+    @Test
+    fun `빈 목록으로 조회하면 빈 맵을 반환한다`() {
+        parfaitImageAdapter.countAllByParfaitIds(emptyList()) shouldBe emptyMap()
+    }
 }
