@@ -93,6 +93,27 @@ class ParfaitAdapterTest {
     }
 
     @Test
+    fun `ACTIVE 상태의 파르페를 조회해 도메인으로 변환한다`() {
+        every {
+            parfaitRepository.findTopByParfaitGroupIdAndStatusOrderByParfaitDateDesc(1L, "ACTIVE")
+        } returns parfaitEntity(status = "ACTIVE")
+
+        val result = adapter.findActiveByGroupId(1L)!!
+
+        result.id shouldBe 100L
+        result.parfaitGroupId shouldBe 1L
+    }
+
+    @Test
+    fun `ACTIVE 상태의 파르페가 없으면 null을 반환한다`() {
+        every {
+            parfaitRepository.findTopByParfaitGroupIdAndStatusOrderByParfaitDateDesc(1L, "ACTIVE")
+        } returns null
+
+        adapter.findActiveByGroupId(1L) shouldBe null
+    }
+
+    @Test
     fun `도메인 파르페를 JPA 엔티티로 저장하고 다시 도메인으로 반환한다`() {
         val parfait = Parfait.createToday(parfaitGroupId = 1L, date = LocalDate.of(2026, 7, 9), now = now)
         every { parfaitRepository.save(any()) } answers {
