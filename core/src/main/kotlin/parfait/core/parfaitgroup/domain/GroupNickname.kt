@@ -7,7 +7,7 @@ value class GroupNickname private constructor(
     companion object {
         private const val MAX_LENGTH = 15
         private const val UNKNOWN_NICKNAME = "(알수없음)"
-        private val VALID_PATTERN = Regex("^[가-힣A-Za-z0-9]+(?: [가-힣A-Za-z0-9]+)*$")
+        private val VALID_PATTERN = Regex("^[가-힣ㄱ-ㅎㅏ-ㅣA-Za-z0-9]+(?: [가-힣ㄱ-ㅎㅏ-ㅣA-Za-z0-9]+)*$")
 
         fun of(value: String): GroupNickname {
             if (value == UNKNOWN_NICKNAME) {
