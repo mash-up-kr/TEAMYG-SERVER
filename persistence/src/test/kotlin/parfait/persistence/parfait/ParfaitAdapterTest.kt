@@ -93,6 +93,24 @@ class ParfaitAdapterTest {
     }
 
     @Test
+    fun `id와 그룹 id로 조회한 JPA 엔티티를 도메인으로 변환한다`() {
+        every { parfaitRepository.findByIdAndParfaitGroupId(98L, 1L) } returns
+            parfaitEntity(parfaitDate = LocalDate.of(2026, 7, 7)).apply { id = 98L }
+
+        val result = adapter.findByIdAndGroupId(98L, 1L)!!
+
+        result.id shouldBe 98L
+        result.parfaitGroupId shouldBe 1L
+    }
+
+    @Test
+    fun `존재하지 않거나 다른 그룹 소속이면 null을 반환한다`() {
+        every { parfaitRepository.findByIdAndParfaitGroupId(98L, 1L) } returns null
+
+        adapter.findByIdAndGroupId(98L, 1L) shouldBe null
+    }
+
+    @Test
     fun `ACTIVE 상태의 파르페를 조회해 도메인으로 변환한다`() {
         every {
             parfaitRepository.findTopByParfaitGroupIdAndStatusOrderByParfaitDateDesc(1L, "ACTIVE")

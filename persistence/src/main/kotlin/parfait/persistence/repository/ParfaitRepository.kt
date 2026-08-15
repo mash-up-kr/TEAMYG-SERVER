@@ -34,4 +34,9 @@ interface ParfaitRepository : JpaRepository<Parfait, Long> {
         parfaitGroupId: Long,
         status: String,
     ): Parfait?
+
+    fun findByIdAndParfaitGroupId(
+        id: Long,
+        parfaitGroupId: Long,
+    ): Parfait?
 }
