@@ -67,7 +67,6 @@ class ParfaitGroupServiceTest {
         every { groupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns false
         every { groupMemberQueryPort.countByGroupId(1L) } returns 1
         every { memberQueryPort.findGlobalNicknameById(10L) } returns "멤버 닉네임"
-        every { groupMemberQueryPort.existsByGroupIdAndNickname(1L, any()) } returns false
     }
 
     @Test
@@ -119,15 +118,6 @@ class ParfaitGroupServiceTest {
         memberSlot.captured.memberId shouldBe 10L
         memberSlot.captured.groupNickname.value shouldBe "멤버 닉네임"
         verify { groupQueryPort.findByInviteCodeForUpdate(InviteCode.of("ABCD12")) }
-    }
-
-    @Test
-    fun `같은 그룹에서 이미 사용 중인 전역 닉네임이면 참여를 거부한다`() {
-        every { groupMemberQueryPort.existsByGroupIdAndNickname(1L, any()) } returns true
-
-        assertError(ParfaitGroupError.GROUP_NICKNAME_ALREADY_USED) {
-            service.join(JoinParfaitGroupCommand(memberId = 10L, inviteCode = "ABCD12"))
-        }
     }
 
     @Test
@@ -231,12 +221,11 @@ class ParfaitGroupServiceTest {
     }
 
     @Test
-    fun `그룹 닉네임 변경은 그룹을 잠그고 중복이 없으면 멤버십을 저장한다`() {
+    fun `그룹 닉네임 변경은 그룹을 잠그고 멤버십을 저장한다`() {
         val currentMembership = membership(memberId = 10L, nickname = "기존 닉네임")
         val savedSlot = slot<ParfaitGroupMember>()
         every { groupQueryPort.findByIdForUpdate(1L) } returns group
         every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 10L) } returns currentMembership
-        every { groupMemberQueryPort.existsByGroupIdAndNickname(1L, any()) } returns false
         every { groupMemberSavePort.save(capture(savedSlot)) } answers { firstArg() }
 
         val result =
@@ -251,18 +240,6 @@ class ParfaitGroupServiceTest {
         result.groupNickname shouldBe "새 닉네임"
         savedSlot.captured.groupNickname.value shouldBe "새 닉네임"
         verify { groupQueryPort.findByIdForUpdate(1L) }
-    }
-
-    @Test
-    fun `이미 사용 중인 그룹 닉네임으로 변경할 수 없다`() {
-        every { groupQueryPort.findByIdForUpdate(1L) } returns group
-        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 10L) } returns membership(10L, "기존 닉네임")
-        every { groupMemberQueryPort.existsByGroupIdAndNickname(1L, any()) } returns true
-
-        assertError(ParfaitGroupError.GROUP_NICKNAME_ALREADY_USED) {
-            service.change(ChangeMyParfaitGroupNicknameCommand(10L, 1L, "다른 닉네임"))
-        }
-        verify(exactly = 0) { groupMemberSavePort.save(any()) }
     }
 
     @Test
