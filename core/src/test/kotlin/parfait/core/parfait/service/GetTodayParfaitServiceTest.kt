@@ -3,15 +3,14 @@ package parfait.core.parfait.service
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import parfait.core.parfait.domain.BackgroundType
 import parfait.core.parfait.domain.Parfait
 import parfait.core.parfait.domain.ParfaitStatus
+import parfait.core.parfait.port.`in`.EnsureActiveCanvasUseCase
 import parfait.core.parfait.port.`in`.GetTodayParfaitCommand
 import parfait.core.parfait.port.out.ParfaitQueryPort
-import parfait.core.parfait.port.out.ParfaitSavePort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
@@ -26,13 +25,13 @@ import kotlin.test.assertFailsWith
 class GetTodayParfaitServiceTest {
     private val parfaitGroupMemberQueryPort = mockk<ParfaitGroupMemberQueryPort>()
     private val parfaitQueryPort = mockk<ParfaitQueryPort>()
-    private val parfaitSavePort = mockk<ParfaitSavePort>()
+    private val ensureActiveCanvasUseCase = mockk<EnsureActiveCanvasUseCase>()
     private val parfaitImageQueryPort = mockk<ParfaitImageQueryPort>()
     private val service =
         GetTodayParfaitService(
             parfaitGroupMemberQueryPort,
             parfaitQueryPort,
-            parfaitSavePort,
+            ensureActiveCanvasUseCase,
             parfaitImageQueryPort,
         )
 
@@ -51,9 +50,7 @@ class GetTodayParfaitServiceTest {
     @Test
     fun `오늘자 파르페가 없으면 자동 생성한다`() {
         every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
-        every { parfaitQueryPort.findByGroupIdAndDate(1L, any()) } returns null
-        val saved = slot<Parfait>()
-        every { parfaitSavePort.save(capture(saved)) } answers {
+        every { ensureActiveCanvasUseCase.ensure(1L, any()) } returns
             Parfait.reconstitute(
                 id = 100L,
                 parfaitGroupId = 1L,
@@ -64,7 +61,6 @@ class GetTodayParfaitServiceTest {
                 createdAt = LocalDateTime.now(),
                 updatedAt = LocalDateTime.now(),
             )
-        }
         every { parfaitQueryPort.findLastClosedDateByGroupId(1L) } returns null
         every { parfaitGroupMemberQueryPort.findAllByGroupId(1L) } returns emptyList()
         every { parfaitImageQueryPort.findAllByParfaitId(100L) } returns emptyList()
@@ -73,14 +69,13 @@ class GetTodayParfaitServiceTest {
 
         result.parfaitId shouldBe 100L
         result.status shouldBe ParfaitStatus.ACTIVE
-        verify(exactly = 1) { parfaitSavePort.save(any()) }
-        saved.captured.parfaitGroupId shouldBe 1L
+        verify(exactly = 1) { ensureActiveCanvasUseCase.ensure(1L, any()) }
     }
 
     @Test
     fun `오늘자 파르페가 이미 있으면 재사용한다`() {
         every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
-        every { parfaitQueryPort.findByGroupIdAndDate(1L, any()) } returns
+        every { ensureActiveCanvasUseCase.ensure(1L, any()) } returns
             Parfait.reconstitute(
                 id = 200L,
                 parfaitGroupId = 1L,
@@ -99,13 +94,13 @@ class GetTodayParfaitServiceTest {
 
         result.parfaitId shouldBe 200L
         result.lastClosedDate shouldBe LocalDate.of(2026, 7, 8)
-        verify(exactly = 0) { parfaitSavePort.save(any()) }
+        verify(exactly = 1) { ensureActiveCanvasUseCase.ensure(1L, any()) }
     }
 
     @Test
     fun `배치된 토핑이 없으면 images는 null이다`() {
         every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
-        every { parfaitQueryPort.findByGroupIdAndDate(1L, any()) } returns
+        every { ensureActiveCanvasUseCase.ensure(1L, any()) } returns
             Parfait.reconstitute(
                 id = 200L,
                 parfaitGroupId = 1L,
@@ -129,7 +124,7 @@ class GetTodayParfaitServiceTest {
     @Test
     fun `배치된 토핑이 있으면 배치자 닉네임을 붙여 반환한다 (탈퇴 멤버 포함)`() {
         every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
-        every { parfaitQueryPort.findByGroupIdAndDate(1L, any()) } returns
+        every { ensureActiveCanvasUseCase.ensure(1L, any()) } returns
             Parfait.reconstitute(
                 id = 200L,
                 parfaitGroupId = 1L,
@@ -182,7 +177,7 @@ class GetTodayParfaitServiceTest {
     @Test
     fun `배경이 모두 설정되어 있으면 background를 채워 반환한다`() {
         every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
-        every { parfaitQueryPort.findByGroupIdAndDate(1L, any()) } returns
+        every { ensureActiveCanvasUseCase.ensure(1L, any()) } returns
             Parfait.reconstitute(
                 id = 200L,
                 parfaitGroupId = 1L,

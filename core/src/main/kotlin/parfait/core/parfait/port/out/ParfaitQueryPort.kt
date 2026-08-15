@@ -22,6 +22,12 @@ interface ParfaitQueryPort {
         date: LocalDate,
     ): Parfait?
 
+    /**
+     * 그룹당 ACTIVE 상태의 파르페는 최대 1개라는 가정에 의존한다(DB 제약 없음,
+     * 캔버스 회전 배치 로직이 이 불변식을 유지한다).
+     */
+    fun findActiveByGroupId(groupId: Long): Parfait?
+
     fun findLastClosedDateByGroupId(groupId: Long): LocalDate?
 
     fun findByIdAndGroupId(

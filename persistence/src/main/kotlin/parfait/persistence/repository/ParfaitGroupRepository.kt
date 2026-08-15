@@ -23,4 +23,7 @@ interface ParfaitGroupRepository : JpaRepository<ParfaitGroup, Long> {
     fun findByInviteCodeForUpdate(
         @Param("inviteCode") inviteCode: String,
     ): ParfaitGroup?
+
+    @Query("select pg.id from ParfaitGroup pg")
+    fun findAllIds(): List<Long>
 }

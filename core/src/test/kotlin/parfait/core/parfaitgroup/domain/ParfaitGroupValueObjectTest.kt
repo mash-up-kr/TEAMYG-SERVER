@@ -32,6 +32,13 @@ class ParfaitGroupValueObjectTest {
     }
 
     @Test
+    fun `그룹 닉네임은 자음 모음 단독 입력도 허용한다`() {
+        GroupNickname.of("ㅋㅋㅋ").value shouldBe "ㅋㅋㅋ"
+        GroupNickname.of("ㅏㅑㅓ").value shouldBe "ㅏㅑㅓ"
+        GroupNickname.of("자모 ㅠㅠ").value shouldBe "자모 ㅠㅠ"
+    }
+
+    @Test
     fun `그룹 인원은 1명부터 12명까지 허용한다`() {
         GroupMemberLimit.of(1).value shouldBe 1
         GroupMemberLimit.of(12).value shouldBe 12
@@ -44,10 +51,10 @@ class ParfaitGroupValueObjectTest {
     }
 
     @Test
-    fun `초대코드는 영문 숫자 8자이며 소문자는 대문자로 정규화한다`() {
-        InviteCode.of("abcd1234").value shouldBe "ABCD1234"
+    fun `초대코드는 영문 숫자 6자이며 소문자는 대문자로 정규화한다`() {
+        InviteCode.of("abcd12").value shouldBe "ABCD12"
 
-        listOf("", "ABC1234", "ABCDEFGHI", "ABCD-123", "가나다12345").forEach { value ->
+        listOf("", "ABC12", "ABCDEFG", "ABC-12", "가나다123").forEach { value ->
             assertGroupError(ParfaitGroupError.INVALID_INVITE_CODE) { InviteCode.of(value) }
         }
     }

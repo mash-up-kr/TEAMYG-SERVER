@@ -10,7 +10,7 @@ class ParfaitGroupTest {
         ParfaitGroup.reconstitute(
             id = 1L,
             name = "파르페",
-            inviteCode = "ABCD1234",
+            inviteCode = "ABCD12",
             memberLimit = 2,
             createdAt = LocalDateTime.MIN,
             updatedAt = LocalDateTime.MIN,

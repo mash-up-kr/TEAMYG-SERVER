@@ -20,6 +20,13 @@ spring:
   flyway:
     enabled: false
     locations: classpath:db/migration
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      # flyway가 꺼져 있어(V12 미적용) Spring Batch 메타테이블이 어디서도 생성되지 않는 문제의 stopgap.
+      # flyway.enabled를 true로 되돌리면 V12와 중복 초기화될 수 있으니 그때 이 설정도 함께 재검토할 것.
+      initialize-schema: always
 
 jwt:
   access-token-expiration-seconds: 3600

@@ -2,8 +2,8 @@ package parfait.core.parfait.service
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import parfait.core.parfait.domain.Parfait
 import parfait.core.parfait.port.`in`.BackgroundResult
+import parfait.core.parfait.port.`in`.EnsureActiveCanvasUseCase
 import parfait.core.parfait.port.`in`.GetTodayParfaitCommand
 import parfait.core.parfait.port.`in`.GetTodayParfaitResult
 import parfait.core.parfait.port.`in`.GetTodayParfaitUseCase
@@ -11,7 +11,6 @@ import parfait.core.parfait.port.`in`.GroupMemberResult
 import parfait.core.parfait.port.`in`.PlacedByResult
 import parfait.core.parfait.port.`in`.TodayParfaitImageResult
 import parfait.core.parfait.port.out.ParfaitQueryPort
-import parfait.core.parfait.port.out.ParfaitSavePort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
@@ -22,7 +21,7 @@ import java.time.LocalDate
 class GetTodayParfaitService(
     private val parfaitGroupMemberQueryPort: ParfaitGroupMemberQueryPort,
     private val parfaitQueryPort: ParfaitQueryPort,
-    private val parfaitSavePort: ParfaitSavePort,
+    private val ensureActiveCanvasUseCase: EnsureActiveCanvasUseCase,
     private val parfaitImageQueryPort: ParfaitImageQueryPort,
 ) : GetTodayParfaitUseCase {
     @Transactional
@@ -32,9 +31,7 @@ class GetTodayParfaitService(
         }
 
         val today = LocalDate.now()
-        val parfait =
-            parfaitQueryPort.findByGroupIdAndDate(command.groupId, today)
-                ?: parfaitSavePort.save(Parfait.createToday(command.groupId, today))
+        val parfait = ensureActiveCanvasUseCase.ensure(command.groupId, today)
 
         val lastClosedDate = parfaitQueryPort.findLastClosedDateByGroupId(command.groupId)
 

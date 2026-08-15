@@ -13,4 +13,6 @@ interface ParfaitGroupQueryPort {
     fun findByInviteCodeForUpdate(inviteCode: InviteCode): ParfaitGroup?
 
     fun existsByInviteCode(inviteCode: InviteCode): Boolean
+
+    fun findAllIds(): List<Long>
 }

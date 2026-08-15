@@ -1,5 +1,7 @@
 package parfait.core.parfait.domain
 
+import parfait.core.exception.BusinessException
+import parfait.core.parfait.exception.ParfaitErrorCode
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -14,6 +16,38 @@ class Parfait private constructor(
     val updatedAt: LocalDateTime,
 ) {
     fun requireId(): Long = requireNotNull(id) { "저장된 파르페의 id가 필요합니다" }
+
+    fun close(now: LocalDateTime = LocalDateTime.now()): Parfait {
+        if (status != ParfaitStatus.ACTIVE) {
+            throw BusinessException(ParfaitErrorCode.PARFAIT_ALREADY_CLOSED)
+        }
+        return Parfait(
+            id = id,
+            parfaitGroupId = parfaitGroupId,
+            parfaitDate = parfaitDate,
+            status = ParfaitStatus.CLOSED,
+            backgroundType = backgroundType,
+            backgroundValue = backgroundValue,
+            createdAt = createdAt,
+            updatedAt = now,
+        )
+    }
+
+    fun markEmpty(now: LocalDateTime = LocalDateTime.now()): Parfait {
+        if (status != ParfaitStatus.ACTIVE) {
+            throw BusinessException(ParfaitErrorCode.PARFAIT_ALREADY_CLOSED)
+        }
+        return Parfait(
+            id = id,
+            parfaitGroupId = parfaitGroupId,
+            parfaitDate = parfaitDate,
+            status = ParfaitStatus.EMPTY,
+            backgroundType = backgroundType,
+            backgroundValue = backgroundValue,
+            createdAt = createdAt,
+            updatedAt = now,
+        )
+    }
 
     companion object {
         fun createToday(

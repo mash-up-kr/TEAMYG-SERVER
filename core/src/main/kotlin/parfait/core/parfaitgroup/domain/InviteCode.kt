@@ -5,7 +5,7 @@ value class InviteCode private constructor(
     val value: String,
 ) {
     companion object {
-        const val LENGTH = 8
+        const val LENGTH = 6
 
         fun of(value: String): InviteCode {
             if (value.length != LENGTH || value.any { !it.isLetterOrDigit() || it.code > 127 }) {

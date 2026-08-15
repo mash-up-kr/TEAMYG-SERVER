@@ -38,6 +38,11 @@ class ParfaitAdapter(
         date: LocalDate,
     ): Parfait? = parfaitRepository.findByParfaitGroupIdAndParfaitDate(groupId, date)?.toDomain()
 
+    override fun findActiveByGroupId(groupId: Long): Parfait? =
+        parfaitRepository
+            .findTopByParfaitGroupIdAndStatusOrderByParfaitDateDesc(groupId, ParfaitStatus.ACTIVE.name)
+            ?.toDomain()
+
     override fun findLastClosedDateByGroupId(groupId: Long): LocalDate? =
         parfaitRepository
             .findTopByParfaitGroupIdAndStatusOrderByParfaitDateDesc(groupId, ParfaitStatus.CLOSED.name)

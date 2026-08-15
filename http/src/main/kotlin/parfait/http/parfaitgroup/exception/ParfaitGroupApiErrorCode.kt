@@ -11,7 +11,6 @@ enum class ParfaitGroupApiErrorCode(
     INVALID_INVITE_CODE(404, "INVALID_INVITE_CODE", "유효하지 않은 초대코드입니다"),
     GROUP_ALREADY_JOINED(409, "GROUP_ALREADY_JOINED", "이미 참여한 그룹입니다"),
     GROUP_MEMBER_LIMIT_REACHED(409, "GROUP_MEMBER_LIMIT_REACHED", "그룹의 최대 인원이 모두 참여했습니다"),
-    GROUP_NICKNAME_ALREADY_USED(409, "GROUP_NICKNAME_ALREADY_USED", "그룹에서 이미 사용 중인 닉네임입니다"),
     INVALID_GROUP_NAME(400, "INVALID_GROUP_NAME", "그룹명이 올바르지 않습니다"),
     INVALID_GROUP_NICKNAME(400, "INVALID_GROUP_NICKNAME", "그룹 닉네임이 올바르지 않습니다"),
     INVALID_GROUP_MEMBER_LIMIT(400, "INVALID_GROUP_MEMBER_LIMIT", "그룹 최대 인원은 1명 이상 12명 이하여야 합니다"),

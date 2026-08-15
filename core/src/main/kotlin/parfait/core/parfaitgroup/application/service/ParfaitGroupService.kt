@@ -3,6 +3,7 @@ package parfait.core.parfaitgroup.application.service
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import parfait.core.member.port.out.MemberQueryPort
+import parfait.core.parfait.port.`in`.EnsureActiveCanvasUseCase
 import parfait.core.parfaitgroup.application.port.`in`.ChangeMyParfaitGroupNicknameCommand
 import parfait.core.parfaitgroup.application.port.`in`.ChangeMyParfaitGroupNicknameResult
 import parfait.core.parfaitgroup.application.port.`in`.ChangeMyParfaitGroupNicknameUseCase
@@ -40,6 +41,7 @@ import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 import parfait.core.parfaitgroup.domain.ParfaitGroupReport
+import java.time.LocalDate
 
 @Service
 class ParfaitGroupService(
@@ -52,6 +54,7 @@ class ParfaitGroupService(
     private val myParfaitGroupQueryPort: MyParfaitGroupQueryPort,
     private val memberQueryPort: MemberQueryPort,
     private val inviteCodeGenerator: InviteCodeGenerator,
+    private val ensureActiveCanvasUseCase: EnsureActiveCanvasUseCase,
 ) : PreviewParfaitGroupJoinUseCase,
     JoinParfaitGroupUseCase,
     CreateParfaitGroupUseCase,
@@ -100,6 +103,7 @@ class ParfaitGroupService(
                     memberLimit = command.memberLimit,
                 ),
             )
+        ensureActiveCanvasUseCase.ensure(savedGroup.requireId(), LocalDate.now())
         parfaitGroupMemberSavePort.save(
             ParfaitGroupMember.join(
                 parfaitGroupId = savedGroup.requireId(),
@@ -152,11 +156,6 @@ class ParfaitGroupService(
         findGroupByIdForUpdate(command.groupId)
         val membership = findMembership(command.groupId, command.memberId)
         val changedMembership = membership.changeNickname(command.groupNickname)
-        if (changedMembership.groupNickname != membership.groupNickname &&
-            parfaitGroupMemberQueryPort.existsByGroupIdAndNickname(command.groupId, changedMembership.groupNickname)
-        ) {
-            throw ParfaitGroupException(ParfaitGroupError.GROUP_NICKNAME_ALREADY_USED)
-        }
         if (changedMembership.groupNickname != membership.groupNickname) {
             parfaitGroupMemberSavePort.save(changedMembership)
         }
@@ -221,11 +220,7 @@ class ParfaitGroupService(
             alreadyJoined = parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(groupId, memberId),
             currentMemberCount = parfaitGroupMemberQueryPort.countByGroupId(groupId),
         )
-        val nickname = GroupNickname.of(requireMemberNickname(memberId))
-        if (parfaitGroupMemberQueryPort.existsByGroupIdAndNickname(groupId, nickname)) {
-            throw ParfaitGroupException(ParfaitGroupError.GROUP_NICKNAME_ALREADY_USED)
-        }
-        return nickname
+        return GroupNickname.of(requireMemberNickname(memberId))
     }
 
     private fun requireMemberNickname(memberId: Long): String =
