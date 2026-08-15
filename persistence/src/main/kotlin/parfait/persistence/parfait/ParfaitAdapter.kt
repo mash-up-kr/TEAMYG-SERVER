@@ -43,6 +43,11 @@ class ParfaitAdapter(
             .findTopByParfaitGroupIdAndStatusOrderByParfaitDateDesc(groupId, ParfaitStatus.CLOSED.name)
             ?.parfaitDate
 
+    override fun findByIdAndGroupId(
+        parfaitId: Long,
+        groupId: Long,
+    ): Parfait? = parfaitRepository.findByIdAndParfaitGroupId(parfaitId, groupId)?.toDomain()
+
     override fun save(parfait: Parfait): Parfait = parfaitRepository.save(parfait.toEntity()).toDomain()
 
     private fun Parfait.toEntity(): ParfaitEntity =

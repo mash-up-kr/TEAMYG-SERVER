@@ -23,6 +23,11 @@ interface ParfaitQueryPort {
     ): Parfait?
 
     fun findLastClosedDateByGroupId(groupId: Long): LocalDate?
+
+    fun findByIdAndGroupId(
+        parfaitId: Long,
+        groupId: Long,
+    ): Parfait?
 }
 
 data class ParfaitSummary(
