@@ -13,6 +13,8 @@ interface ParfaitImageRepository : JpaRepository<ParfaitImage, Long> {
 
     fun findAllByParfaitId(parfaitId: Long): List<ParfaitImage>
 
+    fun existsByParfaitId(parfaitId: Long): Boolean
+
     @Query(
         "SELECT pi.parfaitId AS parfaitId, COUNT(pi) AS count FROM ParfaitImage pi " +
             "WHERE pi.parfaitId IN :parfaitIds GROUP BY pi.parfaitId",
