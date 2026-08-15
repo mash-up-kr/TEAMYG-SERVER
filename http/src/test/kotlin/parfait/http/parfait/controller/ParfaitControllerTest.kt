@@ -19,6 +19,7 @@ import parfait.core.parfait.domain.BackgroundType
 import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.exception.ParfaitErrorCode
 import parfait.core.parfait.port.`in`.BackgroundResult
+import parfait.core.parfait.port.`in`.GetParfaitDetailUseCase
 import parfait.core.parfait.port.`in`.GetParfaitYearsUseCase
 import parfait.core.parfait.port.`in`.GetPastParfaitsUseCase
 import parfait.core.parfait.port.`in`.GetTodayParfaitResult
@@ -56,6 +57,9 @@ class ParfaitControllerTest {
 
     @Autowired
     private lateinit var getTodayParfaitUseCase: GetTodayParfaitUseCase
+
+    @Autowired
+    private lateinit var getParfaitDetailUseCase: GetParfaitDetailUseCase
 
     private val authentication = UsernamePasswordAuthenticationToken("42", null, emptyList())
 
@@ -230,6 +234,64 @@ class ParfaitControllerTest {
             }
     }
 
+    @Test
+    fun `파르페 상세 조회에 성공하면 200과 캔버스 정보를 응답한다`() {
+        every { getParfaitDetailUseCase.getDetail(any()) } returns
+            GetTodayParfaitResult(
+                parfaitId = 98L,
+                date = LocalDate.of(2026, 7, 7),
+                status = ParfaitStatus.CLOSED,
+                lastClosedDate = LocalDate.of(2026, 7, 7),
+                groupMembers = listOf(GroupMemberResult(id = 10L, nickname = "연경이")),
+                background = BackgroundResult(type = BackgroundType.COLOR, value = "#FFFFFF"),
+                images = null,
+            )
+
+        mockMvc
+            .get("/api/v1/groups/1/parfaits/98") {
+                principal = authentication
+            }.andExpect {
+                status { isOk() }
+                jsonPath("$.data.parfaitId") { value(98) }
+                jsonPath("$.data.status") { value("CLOSED") }
+                jsonPath("$.data.background.type") { value("COLOR") }
+            }
+
+        verify {
+            getParfaitDetailUseCase.getDetail(
+                match { it.memberId == 42L && it.groupId == 1L && it.parfaitId == 98L },
+            )
+        }
+    }
+
+    @Test
+    fun `존재하지 않는 파르페면 404와 PARFAIT_NOT_FOUND로 응답한다`() {
+        every { getParfaitDetailUseCase.getDetail(any()) } throws
+            BusinessException(ParfaitErrorCode.PARFAIT_NOT_FOUND)
+
+        mockMvc
+            .get("/api/v1/groups/1/parfaits/98") {
+                principal = authentication
+            }.andExpect {
+                status { isNotFound() }
+                jsonPath("$.code") { value("PARFAIT_NOT_FOUND") }
+            }
+    }
+
+    @Test
+    fun `그룹에 참여하지 않았으면 403과 GROUP_NOT_JOINED로 응답한다 (상세 조회)`() {
+        every { getParfaitDetailUseCase.getDetail(any()) } throws
+            ParfaitGroupException(ParfaitGroupError.GROUP_NOT_JOINED)
+
+        mockMvc
+            .get("/api/v1/groups/1/parfaits/98") {
+                principal = authentication
+            }.andExpect {
+                status { isForbidden() }
+                jsonPath("$.code") { value("GROUP_NOT_JOINED") }
+            }
+    }
+
     @TestConfiguration
     class UseCaseConfig {
         @Bean
@@ -240,5 +302,8 @@ class ParfaitControllerTest {
 
         @Bean
         fun getTodayParfaitUseCase(): GetTodayParfaitUseCase = mockk()
+
+        @Bean
+        fun getParfaitDetailUseCase(): GetParfaitDetailUseCase = mockk()
     }
 }
