@@ -82,20 +82,20 @@ class ParfaitGroupControllerTest {
 
     @Test
     fun `참여 미리보기는 인증 회원과 초대코드를 검증하고 그룹명을 응답한다`() {
-        every { previewUseCase.preview(42L, "ABCD1234") } returns
+        every { previewUseCase.preview(42L, "ABCD12") } returns
             PreviewParfaitGroupJoinResult(groupName = "우리 그룹")
 
         mockMvc
             .get("/api/parfait-groups/join-preview") {
                 principal = authentication
-                param("inviteCode", "ABCD1234")
+                param("inviteCode", "ABCD12")
             }.andExpect {
                 status { isOk() }
                 jsonPath("$.success") { value(true) }
                 jsonPath("$.data.groupName") { value("우리 그룹") }
             }
 
-        verify { previewUseCase.preview(42L, "ABCD1234") }
+        verify { previewUseCase.preview(42L, "ABCD12") }
     }
 
     @Test
@@ -150,7 +150,7 @@ class ParfaitGroupControllerTest {
             MyParfaitGroupDetailResult(
                 groupId = 1L,
                 groupNickname = "내 닉네임",
-                inviteCode = "ABCD1234",
+                inviteCode = "ABCD12",
                 members = listOf(ParfaitGroupMemberResult(42L, "내 닉네임")),
             )
 
@@ -161,20 +161,20 @@ class ParfaitGroupControllerTest {
                 status { isOk() }
                 jsonPath("$.data.groupId") { value(1) }
                 jsonPath("$.data.groupNickname") { value("내 닉네임") }
-                jsonPath("$.data.inviteCode") { value("ABCD1234") }
+                jsonPath("$.data.inviteCode") { value("ABCD12") }
                 jsonPath("$.data.members[0].memberId") { value(42) }
             }
     }
 
     @Test
     fun `참여 미리보기 실패는 UX 분기용 그룹 오류 코드로 응답한다`() {
-        every { previewUseCase.preview(42L, "ABCD1234") } throws
+        every { previewUseCase.preview(42L, "ABCD12") } throws
             ParfaitGroupException(ParfaitGroupError.GROUP_MEMBER_LIMIT_REACHED)
 
         mockMvc
             .get("/api/parfait-groups/join-preview") {
                 principal = authentication
-                param("inviteCode", "ABCD1234")
+                param("inviteCode", "ABCD12")
             }.andExpect {
                 status { isConflict() }
                 jsonPath("$.success") { value(false) }
@@ -190,7 +190,7 @@ class ParfaitGroupControllerTest {
             .post("/api/parfait-groups/join") {
                 principal = authentication
                 contentType = MediaType.APPLICATION_JSON
-                content = """{"inviteCode":"ABCD1234"}"""
+                content = """{"inviteCode":"ABCD12"}"""
             }.andExpect {
                 status { isOk() }
                 jsonPath("$.data.groupId") { value(1) }
@@ -199,7 +199,7 @@ class ParfaitGroupControllerTest {
 
         verify {
             joinUseCase.join(
-                match { it.memberId == 42L && it.inviteCode == "ABCD1234" },
+                match { it.memberId == 42L && it.inviteCode == "ABCD12" },
             )
         }
     }
@@ -210,7 +210,7 @@ class ParfaitGroupControllerTest {
             CreateParfaitGroupResult(
                 groupId = 1L,
                 groupName = "우리 그룹",
-                inviteCode = "ABCD1234",
+                inviteCode = "ABCD12",
                 memberLimit = 12,
             )
 
@@ -224,7 +224,7 @@ class ParfaitGroupControllerTest {
                 status { isCreated() }
                 jsonPath("$.code") { value("CREATED") }
                 jsonPath("$.data.groupId") { value(1) }
-                jsonPath("$.data.inviteCode") { value("ABCD1234") }
+                jsonPath("$.data.inviteCode") { value("ABCD12") }
                 jsonPath("$.data.memberLimit") { value(12) }
             }
 

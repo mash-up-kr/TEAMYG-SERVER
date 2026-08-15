@@ -89,7 +89,7 @@ class ParfaitCanvasRotationJobIntegrationTest {
     fun `parfaitCanvasRotationJob을 실제로 실행하면 COMPLETED로 끝나고 어제 ACTIVE 캔버스가 회전된다`() {
         val group =
             parfaitGroupSavePort.save(
-                ParfaitGroup.create(name = "회전테스트그룹", inviteCode = InviteCode.of("ROTATE01"), memberLimit = 12),
+                ParfaitGroup.create(name = "회전테스트그룹", inviteCode = InviteCode.of("ROTA01"), memberLimit = 12),
             )
         val groupId = group.requireId()
         val yesterday = LocalDate.now().minusDays(1)

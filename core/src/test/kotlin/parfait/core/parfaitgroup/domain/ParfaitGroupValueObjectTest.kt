@@ -44,10 +44,10 @@ class ParfaitGroupValueObjectTest {
     }
 
     @Test
-    fun `초대코드는 영문 숫자 8자이며 소문자는 대문자로 정규화한다`() {
-        InviteCode.of("abcd1234").value shouldBe "ABCD1234"
+    fun `초대코드는 영문 숫자 6자이며 소문자는 대문자로 정규화한다`() {
+        InviteCode.of("abcd12").value shouldBe "ABCD12"
 
-        listOf("", "ABC1234", "ABCDEFGHI", "ABCD-123", "가나다12345").forEach { value ->
+        listOf("", "ABC12", "ABCDEFG", "ABC-12", "가나다123").forEach { value ->
             assertGroupError(ParfaitGroupError.INVALID_INVITE_CODE) { InviteCode.of(value) }
         }
     }
