@@ -1,6 +1,5 @@
 package parfait.core.parfaitgroup.application.port.out
 
-import parfait.core.parfaitgroup.domain.GroupNickname
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 
 interface ParfaitGroupMemberQueryPort {
@@ -16,11 +15,6 @@ interface ParfaitGroupMemberQueryPort {
     fun existsByGroupIdAndMemberId(
         groupId: Long,
         memberId: Long,
-    ): Boolean
-
-    fun existsByGroupIdAndNickname(
-        groupId: Long,
-        nickname: GroupNickname,
     ): Boolean
 
     fun countByGroupId(groupId: Long): Int

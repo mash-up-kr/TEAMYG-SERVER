@@ -6,7 +6,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import parfait.core.parfaitgroup.application.port.out.MyParfaitGroupSummary
-import parfait.core.parfaitgroup.domain.GroupNickname
 import parfait.core.parfaitgroup.domain.InviteCode
 import parfait.core.parfaitgroup.domain.ParfaitGroup
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
@@ -76,14 +75,12 @@ class ParfaitGroupAdapterTest {
     fun `멤버십 조회와 저장을 그룹 멤버 리포지토리에 위임한다`() {
         val member = ParfaitGroupMember.join(1L, 10L, "내 닉네임", now)
         every { groupMemberRepository.existsByParfaitGroupIdAndMemberId(1L, 10L) } returns true
-        every { groupMemberRepository.existsByParfaitGroupIdAndGroupNicknameAndLeftAtIsNull(1L, "내 닉네임") } returns true
         every { groupMemberRepository.countByParfaitGroupIdAndLeftAtIsNull(1L) } returns 3L
         every { groupMemberRepository.save(any()) } answers {
             firstArg<ParfaitGroupMemberEntity>().apply { id = 2L }
         }
 
         adapter.existsByGroupIdAndMemberId(1L, 10L) shouldBe true
-        adapter.existsByGroupIdAndNickname(1L, GroupNickname.of("내 닉네임")) shouldBe true
         adapter.countByGroupId(1L) shouldBe 3
         adapter.save(member).id shouldBe 2L
     }

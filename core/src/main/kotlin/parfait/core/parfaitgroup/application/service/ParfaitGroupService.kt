@@ -156,11 +156,6 @@ class ParfaitGroupService(
         findGroupByIdForUpdate(command.groupId)
         val membership = findMembership(command.groupId, command.memberId)
         val changedMembership = membership.changeNickname(command.groupNickname)
-        if (changedMembership.groupNickname != membership.groupNickname &&
-            parfaitGroupMemberQueryPort.existsByGroupIdAndNickname(command.groupId, changedMembership.groupNickname)
-        ) {
-            throw ParfaitGroupException(ParfaitGroupError.GROUP_NICKNAME_ALREADY_USED)
-        }
         if (changedMembership.groupNickname != membership.groupNickname) {
             parfaitGroupMemberSavePort.save(changedMembership)
         }
@@ -225,11 +220,7 @@ class ParfaitGroupService(
             alreadyJoined = parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(groupId, memberId),
             currentMemberCount = parfaitGroupMemberQueryPort.countByGroupId(groupId),
         )
-        val nickname = GroupNickname.of(requireMemberNickname(memberId))
-        if (parfaitGroupMemberQueryPort.existsByGroupIdAndNickname(groupId, nickname)) {
-            throw ParfaitGroupException(ParfaitGroupError.GROUP_NICKNAME_ALREADY_USED)
-        }
-        return nickname
+        return GroupNickname.of(requireMemberNickname(memberId))
     }
 
     private fun requireMemberNickname(memberId: Long): String =

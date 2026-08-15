@@ -21,11 +21,6 @@ interface ParfaitGroupMemberRepository : JpaRepository<ParfaitGroupMember, Long>
         memberId: Long,
     ): Boolean
 
-    fun existsByParfaitGroupIdAndGroupNicknameAndLeftAtIsNull(
-        parfaitGroupId: Long,
-        groupNickname: String,
-    ): Boolean
-
     fun countByParfaitGroupIdAndLeftAtIsNull(parfaitGroupId: Long): Long
 
     fun findAllByIdIn(ids: Collection<Long>): List<ParfaitGroupMember>
