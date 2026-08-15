@@ -332,4 +332,37 @@ class ParfaitImageAdapterTest {
     fun `빈 목록으로 조회하면 빈 맵을 반환한다`() {
         parfaitImageAdapter.countAllByParfaitIds(emptyList()) shouldBe emptyMap()
     }
+
+    @Test
+    fun `토핑이 존재하는 파르페는 true를 반환한다`() {
+        val (memberId, groupMemberId) = setUpGroupMember("H")
+        val parfaitId = setUpParfait(groupMemberId)
+        val imageMetaId = setUpConfirmedImageMeta(memberId, "H")
+        parfaitImageAdapter.save(
+            ParfaitImage.place(
+                parfaitId = parfaitId,
+                imageMetaId = imageMetaId,
+                placedByGroupMemberId = groupMemberId,
+                imageUrl = "https://s3.example/nukki/user1/uuid9.png",
+                positionX = 0.0,
+                positionY = 0.0,
+                positionZ = 0,
+                scale = 1.0,
+                rotation = 0.0,
+                borderType = BorderType.NONE,
+                borderColor = null,
+                borderWidth = null,
+            ),
+        )
+
+        parfaitImageAdapter.existsByParfaitId(parfaitId) shouldBe true
+    }
+
+    @Test
+    fun `토핑이 없는 파르페는 false를 반환한다`() {
+        val (_, groupMemberId) = setUpGroupMember("I")
+        val parfaitId = setUpParfait(groupMemberId)
+
+        parfaitImageAdapter.existsByParfaitId(parfaitId) shouldBe false
+    }
 }

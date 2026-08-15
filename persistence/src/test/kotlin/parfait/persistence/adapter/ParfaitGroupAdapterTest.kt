@@ -170,6 +170,13 @@ class ParfaitGroupAdapterTest {
         result.single().groupNickname.value shouldBe "내 닉네임"
     }
 
+    @Test
+    fun `전체 그룹 id 조회를 리포지토리에 위임한다`() {
+        every { groupRepository.findAllIds() } returns listOf(1L, 2L, 3L)
+
+        adapter.findAllIds() shouldBe listOf(1L, 2L, 3L)
+    }
+
     private fun groupEntity(): ParfaitGroupEntity =
         ParfaitGroupEntity(
             name = "우리 그룹",

@@ -1,0 +1,101 @@
+package parfait.core.parfait.service
+
+import io.kotest.matchers.shouldBe
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.jupiter.api.Test
+import parfait.core.parfait.domain.Parfait
+import parfait.core.parfait.domain.ParfaitStatus
+import parfait.core.parfait.port.out.ParfaitQueryPort
+import parfait.core.parfait.port.out.ParfaitSavePort
+import parfait.core.parfaitimage.port.out.ParfaitImageQueryPort
+import java.time.LocalDate
+
+class ParfaitCanvasRotatorTest {
+    private val parfaitQueryPort = mockk<ParfaitQueryPort>()
+    private val parfaitImageQueryPort = mockk<ParfaitImageQueryPort>()
+    private val parfaitSavePort = mockk<ParfaitSavePort>()
+    private val rotator = ParfaitCanvasRotator(parfaitQueryPort, parfaitImageQueryPort, parfaitSavePort)
+    private val today = LocalDate.of(2026, 8, 13)
+
+    private fun activeParfait(
+        id: Long,
+        date: LocalDate = today,
+    ): Parfait =
+        Parfait.reconstitute(
+            id = id,
+            parfaitGroupId = 1L,
+            parfaitDate = date,
+            status = ParfaitStatus.ACTIVE,
+            backgroundType = null,
+            backgroundValue = null,
+            createdAt = date.atStartOfDay(),
+            updatedAt = date.atStartOfDay(),
+        )
+
+    @Test
+    fun `ACTIVE 캔버스가 없으면 아무 것도 하지 않고 null을 반환한다`() {
+        every { parfaitQueryPort.findActiveByGroupId(1L) } returns null
+
+        rotator.rotateOne(1L) shouldBe null
+        verify(exactly = 0) { parfaitSavePort.save(any()) }
+    }
+
+    @Test
+    fun `ACTIVE 캔버스 날짜가 미래면 건드리지 않고 null을 반환한다`() {
+        // today(2026-08-13)는 고정값이라 테스트 실행 시점의 실제 오늘 날짜(LocalDate.now())를 알 수 없으므로,
+        // "미래"임이 항상 보장되도록 실제 현재 날짜 기준으로 충분히 먼 미래 날짜를 사용한다.
+        every {
+            parfaitQueryPort.findActiveByGroupId(1L)
+        } returns activeParfait(1L, date = LocalDate.now().plusYears(1))
+
+        rotator.rotateOne(1L) shouldBe null
+        verify(exactly = 0) { parfaitSavePort.save(any()) }
+    }
+
+    @Test
+    fun `토핑이 있으면 CLOSED로 마감하고 다음날 캔버스를 새로 생성한다`() {
+        every { parfaitQueryPort.findActiveByGroupId(1L) } returns activeParfait(1L)
+        every { parfaitImageQueryPort.existsByParfaitId(1L) } returns true
+        every { parfaitSavePort.save(any()) } answers { firstArg() }
+        every { parfaitQueryPort.findByGroupIdAndDate(1L, today.plusDays(1)) } returns null
+
+        val result = rotator.rotateOne(1L)!!
+
+        result.wasEmpty shouldBe false
+        result.created shouldBe true
+        verify { parfaitSavePort.save(match { it.status == ParfaitStatus.CLOSED }) }
+        verify {
+            parfaitSavePort.save(match { it.status == ParfaitStatus.ACTIVE && it.parfaitDate == today.plusDays(1) })
+        }
+    }
+
+    @Test
+    fun `토핑이 없으면 EMPTY로 마감한다`() {
+        every { parfaitQueryPort.findActiveByGroupId(1L) } returns activeParfait(2L)
+        every { parfaitImageQueryPort.existsByParfaitId(2L) } returns false
+        every { parfaitSavePort.save(any()) } answers { firstArg() }
+        every { parfaitQueryPort.findByGroupIdAndDate(1L, today.plusDays(1)) } returns null
+
+        val result = rotator.rotateOne(1L)!!
+
+        result.wasEmpty shouldBe true
+        verify { parfaitSavePort.save(match { it.status == ParfaitStatus.EMPTY }) }
+    }
+
+    @Test
+    fun `다음 날짜 캔버스가 이미 있으면 생성을 생략한다`() {
+        every { parfaitQueryPort.findActiveByGroupId(1L) } returns activeParfait(3L)
+        every { parfaitImageQueryPort.existsByParfaitId(3L) } returns true
+        every { parfaitSavePort.save(any()) } answers { firstArg() }
+        every {
+            parfaitQueryPort.findByGroupIdAndDate(1L, today.plusDays(1))
+        } returns Parfait.createToday(parfaitGroupId = 1L, date = today.plusDays(1))
+
+        val result = rotator.rotateOne(1L)!!
+
+        result.created shouldBe false
+        verify(exactly = 1) { parfaitSavePort.save(any()) }
+    }
+}

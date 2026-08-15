@@ -33,6 +33,8 @@ class SecurityConfig(
                 "/api/v1/auth/signup",
                 "/api/v1/auth/reissue",
                 "/api/v1/policies",
+                // TODO: 테스트 전용 — 프로덕션 오픈 전 제거 (ParfaitCanvasRotationTestController와 함께)
+                "/api/v1/test/parfait-canvas/rotate",
             )
     }
 

@@ -42,6 +42,8 @@ class ParfaitGroupAdapter(
     override fun existsByInviteCode(inviteCode: InviteCode): Boolean =
         parfaitGroupRepository.existsByInviteCode(inviteCode.value)
 
+    override fun findAllIds(): List<Long> = parfaitGroupRepository.findAllIds()
+
     override fun save(group: ParfaitGroup): ParfaitGroup = parfaitGroupRepository.save(group.toEntity()).toDomain()
 
     override fun existsByGroupIdAndMemberId(

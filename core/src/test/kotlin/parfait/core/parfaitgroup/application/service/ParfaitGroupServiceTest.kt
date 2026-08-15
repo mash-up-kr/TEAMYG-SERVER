@@ -9,6 +9,7 @@ import io.mockk.verifySequence
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import parfait.core.member.port.out.MemberQueryPort
+import parfait.core.parfait.port.`in`.EnsureActiveCanvasUseCase
 import parfait.core.parfaitgroup.application.port.`in`.ChangeMyParfaitGroupNicknameCommand
 import parfait.core.parfaitgroup.application.port.`in`.CreateParfaitGroupCommand
 import parfait.core.parfaitgroup.application.port.`in`.JoinParfaitGroupCommand
@@ -42,6 +43,7 @@ class ParfaitGroupServiceTest {
     private val myGroupQueryPort = mockk<MyParfaitGroupQueryPort>(relaxed = true)
     private val memberQueryPort = mockk<MemberQueryPort>()
     private val inviteCodeGenerator = mockk<InviteCodeGenerator>()
+    private val ensureActiveCanvasUseCase = mockk<EnsureActiveCanvasUseCase>(relaxed = true)
     private val service =
         ParfaitGroupService(
             parfaitGroupQueryPort = groupQueryPort,
@@ -53,6 +55,7 @@ class ParfaitGroupServiceTest {
             myParfaitGroupQueryPort = myGroupQueryPort,
             memberQueryPort = memberQueryPort,
             inviteCodeGenerator = inviteCodeGenerator,
+            ensureActiveCanvasUseCase = ensureActiveCanvasUseCase,
         )
 
     private val group = savedGroup(memberLimit = 2)
@@ -164,6 +167,36 @@ class ParfaitGroupServiceTest {
         memberSlot.captured.parfaitGroupId shouldBe 20L
         memberSlot.captured.memberId shouldBe 10L
         memberSlot.captured.groupNickname.value shouldBe "그룹 닉네임"
+    }
+
+    @Test
+    fun `그룹을 생성하면 오늘 날짜의 활성 캔버스를 즉시 생성한다`() {
+        every { inviteCodeGenerator.generate() } returns InviteCode.of("NEWC1234")
+        every { groupQueryPort.existsByInviteCode(any()) } returns false
+        every { memberQueryPort.existsById(10L) } returns true
+        every { groupSavePort.save(any()) } answers {
+            val requested = firstArg<ParfaitGroup>()
+            ParfaitGroup.reconstitute(
+                id = 20L,
+                name = requested.name.value,
+                inviteCode = requested.inviteCode.value,
+                memberLimit = requested.memberLimit.value,
+                createdAt = requested.createdAt,
+                updatedAt = requested.updatedAt,
+            )
+        }
+        every { groupMemberSavePort.save(any()) } answers { firstArg() }
+
+        service.create(
+            CreateParfaitGroupCommand(
+                memberId = 10L,
+                groupName = "새 그룹",
+                groupNickname = "그룹 닉네임",
+                memberLimit = 12,
+            ),
+        )
+
+        verify { ensureActiveCanvasUseCase.ensure(20L, any()) }
     }
 
     @Test
