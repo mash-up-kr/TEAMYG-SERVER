@@ -72,10 +72,10 @@ class ParfaitGroupServiceTest {
 
     @Test
     fun `참여 미리보기는 검증에 성공하면 그룹명을 반환한다`() {
-        val result = service.preview(memberId = 10L, inviteCode = "abcd1234")
+        val result = service.preview(memberId = 10L, inviteCode = "abcd12")
 
         result.groupName shouldBe "파르페"
-        verify { groupQueryPort.findByInviteCode(InviteCode.of("ABCD1234")) }
+        verify { groupQueryPort.findByInviteCode(InviteCode.of("ABCD12")) }
         verify(exactly = 0) { groupQueryPort.findByInviteCodeForUpdate(any()) }
     }
 
@@ -84,7 +84,7 @@ class ParfaitGroupServiceTest {
         every { groupQueryPort.findByInviteCode(any()) } returns null
 
         assertError(ParfaitGroupError.INVALID_INVITE_CODE) {
-            service.preview(memberId = 10L, inviteCode = "NONE1234")
+            service.preview(memberId = 10L, inviteCode = "NONE12")
         }
     }
 
@@ -93,7 +93,7 @@ class ParfaitGroupServiceTest {
         every { groupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
 
         assertError(ParfaitGroupError.GROUP_ALREADY_JOINED) {
-            service.preview(memberId = 10L, inviteCode = "ABCD1234")
+            service.preview(memberId = 10L, inviteCode = "ABCD12")
         }
     }
 
@@ -102,7 +102,7 @@ class ParfaitGroupServiceTest {
         every { groupMemberQueryPort.countByGroupId(1L) } returns 2
 
         assertError(ParfaitGroupError.GROUP_MEMBER_LIMIT_REACHED) {
-            service.preview(memberId = 10L, inviteCode = "ABCD1234")
+            service.preview(memberId = 10L, inviteCode = "ABCD12")
         }
     }
 
@@ -111,14 +111,14 @@ class ParfaitGroupServiceTest {
         val memberSlot = slot<ParfaitGroupMember>()
         every { groupMemberSavePort.save(capture(memberSlot)) } answers { firstArg() }
 
-        val result = service.join(JoinParfaitGroupCommand(memberId = 10L, inviteCode = "ABCD1234"))
+        val result = service.join(JoinParfaitGroupCommand(memberId = 10L, inviteCode = "ABCD12"))
 
         result.groupId shouldBe 1L
         result.groupName shouldBe "파르페"
         memberSlot.captured.parfaitGroupId shouldBe 1L
         memberSlot.captured.memberId shouldBe 10L
         memberSlot.captured.groupNickname.value shouldBe "멤버 닉네임"
-        verify { groupQueryPort.findByInviteCodeForUpdate(InviteCode.of("ABCD1234")) }
+        verify { groupQueryPort.findByInviteCodeForUpdate(InviteCode.of("ABCD12")) }
     }
 
     @Test
@@ -126,13 +126,13 @@ class ParfaitGroupServiceTest {
         every { groupMemberQueryPort.existsByGroupIdAndNickname(1L, any()) } returns true
 
         assertError(ParfaitGroupError.GROUP_NICKNAME_ALREADY_USED) {
-            service.join(JoinParfaitGroupCommand(memberId = 10L, inviteCode = "ABCD1234"))
+            service.join(JoinParfaitGroupCommand(memberId = 10L, inviteCode = "ABCD12"))
         }
     }
 
     @Test
     fun `그룹 생성은 자동 초대코드를 발급하고 생성자를 첫 멤버로 저장한다`() {
-        val generatedCode = InviteCode.of("NEWC1234")
+        val generatedCode = InviteCode.of("NEWC12")
         val memberSlot = slot<ParfaitGroupMember>()
         every { inviteCodeGenerator.generate() } returns generatedCode
         every { groupQueryPort.existsByInviteCode(generatedCode) } returns false
@@ -162,7 +162,7 @@ class ParfaitGroupServiceTest {
 
         result.groupId shouldBe 20L
         result.groupName shouldBe "새 그룹"
-        result.inviteCode shouldBe "NEWC1234"
+        result.inviteCode shouldBe "NEWC12"
         result.memberLimit shouldBe 12
         memberSlot.captured.parfaitGroupId shouldBe 20L
         memberSlot.captured.memberId shouldBe 10L
@@ -171,7 +171,7 @@ class ParfaitGroupServiceTest {
 
     @Test
     fun `그룹을 생성하면 오늘 날짜의 활성 캔버스를 즉시 생성한다`() {
-        every { inviteCodeGenerator.generate() } returns InviteCode.of("NEWC1234")
+        every { inviteCodeGenerator.generate() } returns InviteCode.of("NEWC12")
         every { groupQueryPort.existsByInviteCode(any()) } returns false
         every { memberQueryPort.existsById(10L) } returns true
         every { groupSavePort.save(any()) } answers {
@@ -226,7 +226,7 @@ class ParfaitGroupServiceTest {
 
         result.groupId shouldBe 1L
         result.groupNickname shouldBe "내 닉네임"
-        result.inviteCode shouldBe "ABCD1234"
+        result.inviteCode shouldBe "ABCD12"
         result.members.map { it.memberId } shouldBe listOf(10L, 20L)
     }
 
@@ -323,7 +323,7 @@ class ParfaitGroupServiceTest {
         ParfaitGroup.reconstitute(
             id = 1L,
             name = "파르페",
-            inviteCode = "ABCD1234",
+            inviteCode = "ABCD12",
             memberLimit = memberLimit,
             createdAt = LocalDateTime.MIN,
             updatedAt = LocalDateTime.MIN,
