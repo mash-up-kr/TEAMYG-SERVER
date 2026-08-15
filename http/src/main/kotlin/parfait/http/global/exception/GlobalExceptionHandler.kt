@@ -20,7 +20,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException::class)
     fun handleBusinessException(e: BusinessException): ResponseEntity<ApiResponse<Nothing>> {
-        log.info("BusinessException: {}", e.errorCode.code, e)
+        log.info("BusinessException: {}", e.errorCode.code)
         return ResponseEntity
             .status(e.errorCode.status)
             .body(ApiResponse.error(e.errorCode))
@@ -29,7 +29,7 @@ class GlobalExceptionHandler {
     @ExceptionHandler(ParfaitGroupException::class)
     fun handleParfaitGroupException(e: ParfaitGroupException): ResponseEntity<ApiResponse<Nothing>> {
         val errorCode = ParfaitGroupApiErrorCode.from(e.error)
-        log.info("ParfaitGroupException: {}", errorCode.code, e)
+        log.info("ParfaitGroupException: {}", errorCode.code)
         return ResponseEntity
             .status(errorCode.status)
             .body(ApiResponse.error(errorCode))

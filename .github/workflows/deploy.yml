@@ -56,17 +56,23 @@ jobs:
 
       - name: Check deploy result
         run: |
-          aws ssm wait command-executed \
-            --command-id ${{ steps.deploy.outputs.command_id }} \
-            --instance-id ${{ steps.deploy.outputs.instance_id }} || true
+          # aws ssm wait command-executed의 기본 대기시간(delay 2초 × 최대 20회 ≈ 40초)은
+          # ECR 로그인·docker pull·헬스체크 재시도(최대 150초)를 포함하는 배포 커맨드보다
+          # 훨씬 짧아 항상 InProgress 상태에서 타임아웃난다. 종료 상태가 나올 때까지 직접 폴링한다.
+          for i in $(seq 1 60); do
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id ${{ steps.deploy.outputs.command_id }} \
+              --instance-id ${{ steps.deploy.outputs.instance_id }} \
+              --query "Status" --output text)
+            case "$STATUS" in
+              Pending|InProgress|Delayed) sleep 5 ;;
+              *) break ;;
+            esac
+          done
 
           aws ssm get-command-invocation \
             --command-id ${{ steps.deploy.outputs.command_id }} \
             --instance-id ${{ steps.deploy.outputs.instance_id }} \
             --query "{Status:Status, Out:StandardOutputContent, Err:StandardErrorContent}"
 
-          STATUS=$(aws ssm get-command-invocation \
-            --command-id ${{ steps.deploy.outputs.command_id }} \
-            --instance-id ${{ steps.deploy.outputs.instance_id }} \
-            --query "Status" --output text)
           [ "$STATUS" = "Success" ]
