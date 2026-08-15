@@ -30,6 +30,7 @@ import parfait.http.member.controller.TestChangeGlobalNicknameUseCaseConfig
 import parfait.http.member.controller.TestGetMyAccountUseCaseConfig
 import parfait.http.member.controller.TestWithdrawUseCaseConfig
 import parfait.http.parfait.controller.TestParfaitUseCaseConfig
+import parfait.http.parfait.controller.TestRotateParfaitCanvasesUseCaseConfig
 import parfait.http.parfaitgroup.controller.TestParfaitGroupUseCaseConfig
 import parfait.http.parfaitimage.controller.TestDeleteParfaitImageUseCaseConfig
 import parfait.http.parfaitimage.controller.TestPlaceParfaitImageUseCaseConfig
@@ -67,6 +68,7 @@ import kotlin.test.Test
     TestUpdateParfaitImageUseCaseConfig::class,
     TestUpdateParfaitImageBorderUseCaseConfig::class,
     TestDeleteParfaitImageUseCaseConfig::class,
+    TestRotateParfaitCanvasesUseCaseConfig::class,
 )
 class SecurityConfigIntegrationTest {
     @Autowired
@@ -218,6 +220,13 @@ class SecurityConfigIntegrationTest {
     @Test
     fun `약관 목록 엔드포인트는 화이트리스트에 포함되어 토큰 없이 통과한다`() {
         mockMvc.get("/api/v1/policies").andExpect {
+            status { isOk() }
+        }
+    }
+
+    @Test
+    fun `캔버스 회전 테스트 엔드포인트는 화이트리스트에 포함되어 토큰 없이 통과한다`() {
+        mockMvc.post("/api/v1/test/parfait-canvas/rotate").andExpect {
             status { isOk() }
         }
     }
