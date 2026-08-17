@@ -46,4 +46,37 @@ class ParfaitTest {
         val markEmptyException = assertFailsWith<BusinessException> { closed.markEmpty(now) }
         markEmptyException.errorCode shouldBe ParfaitErrorCode.PARFAIT_ALREADY_CLOSED
     }
+
+    @Test
+    fun `changeBackground는 COLOR 타입에 유효한 HEX 값을 설정한다`() {
+        val parfait = Parfait.createToday(parfaitGroupId = 1L, date = date, now = now)
+        val changedAt = now.plusHours(1)
+
+        val changed = parfait.changeBackground(BackgroundType.COLOR, "#FF5733", changedAt)
+
+        changed.backgroundType shouldBe BackgroundType.COLOR
+        changed.backgroundValue shouldBe "#FF5733"
+        changed.updatedAt shouldBe changedAt
+    }
+
+    @Test
+    fun `changeBackground는 IMAGE 타입에 URL 값을 그대로 설정한다`() {
+        val parfait = Parfait.createToday(parfaitGroupId = 1L, date = date, now = now)
+
+        val changed = parfait.changeBackground(BackgroundType.IMAGE, "https://s3.example/background.png", now)
+
+        changed.backgroundType shouldBe BackgroundType.IMAGE
+        changed.backgroundValue shouldBe "https://s3.example/background.png"
+    }
+
+    @Test
+    fun `changeBackground는 COLOR 타입에 잘못된 HEX 형식이면 INVALID_BACKGROUND를 던진다`() {
+        val parfait = Parfait.createToday(parfaitGroupId = 1L, date = date, now = now)
+
+        val exception =
+            assertFailsWith<BusinessException> {
+                parfait.changeBackground(BackgroundType.COLOR, "FF5733", now)
+            }
+        exception.errorCode shouldBe ParfaitErrorCode.INVALID_BACKGROUND
+    }
 }

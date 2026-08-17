@@ -32,6 +32,13 @@ class ParfaitGroupValueObjectTest {
     }
 
     @Test
+    fun `그룹 닉네임은 자음 모음 단독 입력도 허용한다`() {
+        GroupNickname.of("ㅋㅋㅋ").value shouldBe "ㅋㅋㅋ"
+        GroupNickname.of("ㅏㅑㅓ").value shouldBe "ㅏㅑㅓ"
+        GroupNickname.of("자모 ㅠㅠ").value shouldBe "자모 ㅠㅠ"
+    }
+
+    @Test
     fun `그룹 인원은 1명부터 12명까지 허용한다`() {
         GroupMemberLimit.of(1).value shouldBe 1
         GroupMemberLimit.of(12).value shouldBe 12

@@ -8,7 +8,6 @@ import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPor
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberSavePort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupSavePort
-import parfait.core.parfaitgroup.domain.GroupNickname
 import parfait.core.parfaitgroup.domain.InviteCode
 import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitgroup.domain.ParfaitGroup
@@ -62,12 +61,6 @@ class ParfaitGroupAdapter(
         parfaitGroupMemberRepository.findAllByParfaitGroupIdAndLeftAtIsNullOrderByJoinedAtAscIdAsc(groupId).map {
             it.toDomain()
         }
-
-    override fun existsByGroupIdAndNickname(
-        groupId: Long,
-        nickname: GroupNickname,
-    ): Boolean =
-        parfaitGroupMemberRepository.existsByParfaitGroupIdAndGroupNicknameAndLeftAtIsNull(groupId, nickname.value)
 
     override fun countByGroupId(groupId: Long): Int =
         Math.toIntExact(parfaitGroupMemberRepository.countByParfaitGroupIdAndLeftAtIsNull(groupId))

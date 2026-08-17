@@ -2,6 +2,8 @@ package parfait.http.parfait.controller
 
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
+import parfait.core.parfait.port.`in`.GetParfaitDetailCommand
+import parfait.core.parfait.port.`in`.GetParfaitDetailUseCase
 import parfait.core.parfait.port.`in`.GetParfaitYearsUseCase
 import parfait.core.parfait.port.`in`.GetPastParfaitsCommand
 import parfait.core.parfait.port.`in`.GetPastParfaitsUseCase
@@ -11,8 +13,8 @@ import parfait.core.parfait.port.`in`.GetTodayParfaitUseCase
 import parfait.core.parfait.port.`in`.PastParfaitResult
 
 /**
- * `GetParfaitYearsUseCase`/`GetPastParfaitsUseCase`/`GetTodayParfaitUseCase`의 실제 구현체는
- * `core` 모듈에 있고, `http`의 `TestApplication`은 `parfait.http` 패키지만 스캔하므로
+ * `GetParfaitYearsUseCase`/`GetPastParfaitsUseCase`/`GetTodayParfaitUseCase`/`GetParfaitDetailUseCase`의
+ * 실제 구현체는 `core` 모듈에 있고, `http`의 `TestApplication`은 `parfait.http` 패키지만 스캔하므로
  * 컨텍스트에 존재하지 않는다.
  *
  * 컨텍스트 로딩만 필요한 테스트(actuator, openapi, security 화이트리스트 등)에서 빈 부재로 인한
@@ -40,6 +42,13 @@ class TestParfaitUseCaseConfig {
     fun getTodayParfaitUseCase(): GetTodayParfaitUseCase =
         object : GetTodayParfaitUseCase {
             override fun get(command: GetTodayParfaitCommand): GetTodayParfaitResult =
+                throw UnsupportedOperationException("stub")
+        }
+
+    @Bean
+    fun getParfaitDetailUseCase(): GetParfaitDetailUseCase =
+        object : GetParfaitDetailUseCase {
+            override fun getDetail(command: GetParfaitDetailCommand): GetTodayParfaitResult =
                 throw UnsupportedOperationException("stub")
         }
 }

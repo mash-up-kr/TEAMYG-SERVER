@@ -21,4 +21,11 @@ class GlobalNicknameTest {
                 exception.errorCode shouldBe MemberErrorCode.INVALID_NICKNAME
             }
     }
+
+    @Test
+    fun `전역 닉네임은 자음 모음 단독 입력도 허용한다`() {
+        GlobalNickname.of("ㅋㅋㅋ").value shouldBe "ㅋㅋㅋ"
+        GlobalNickname.of("ㅏㅑㅓ").value shouldBe "ㅏㅑㅓ"
+        GlobalNickname.of("자모 ㅠㅠ").value shouldBe "자모 ㅠㅠ"
+    }
 }

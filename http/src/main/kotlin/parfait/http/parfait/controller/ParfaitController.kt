@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import parfait.common.response.ApiResponse
+import parfait.core.parfait.port.`in`.GetParfaitDetailCommand
+import parfait.core.parfait.port.`in`.GetParfaitDetailUseCase
 import parfait.core.parfait.port.`in`.GetParfaitYearsUseCase
 import parfait.core.parfait.port.`in`.GetPastParfaitsCommand
 import parfait.core.parfait.port.`in`.GetPastParfaitsUseCase
@@ -23,6 +25,7 @@ class ParfaitController(
     private val getParfaitYearsUseCase: GetParfaitYearsUseCase,
     private val getPastParfaitsUseCase: GetPastParfaitsUseCase,
     private val getTodayParfaitUseCase: GetTodayParfaitUseCase,
+    private val getParfaitDetailUseCase: GetParfaitDetailUseCase,
 ) {
     @GetMapping("/year")
     fun getYears(
@@ -61,6 +64,24 @@ class ParfaitController(
                         groupId = groupId,
                         from = from,
                         to = to,
+                    ),
+                ),
+            ),
+        )
+
+    @GetMapping("/{parfaitId}")
+    fun getDetail(
+        authentication: Authentication,
+        @PathVariable groupId: Long,
+        @PathVariable parfaitId: Long,
+    ): ApiResponse<GetTodayParfaitResponse> =
+        ApiResponse.ok(
+            GetTodayParfaitResponse.from(
+                getParfaitDetailUseCase.getDetail(
+                    GetParfaitDetailCommand(
+                        memberId = authentication.memberId(),
+                        groupId = groupId,
+                        parfaitId = parfaitId,
                     ),
                 ),
             ),

@@ -19,6 +19,7 @@ import parfait.http.image.controller.TestIssueImageUploadUrlUseCaseConfig
 import parfait.http.member.controller.TestChangeGlobalNicknameUseCaseConfig
 import parfait.http.member.controller.TestGetMyAccountUseCaseConfig
 import parfait.http.member.controller.TestWithdrawUseCaseConfig
+import parfait.http.parfait.controller.TestChangeParfaitBackgroundUseCaseConfig
 import parfait.http.parfait.controller.TestParfaitUseCaseConfig
 import parfait.http.parfait.controller.TestRotateParfaitCanvasesUseCaseConfig
 import parfait.http.parfaitgroup.controller.TestParfaitGroupUseCaseConfig
@@ -50,6 +51,7 @@ import kotlin.test.Test
     TestUpdateParfaitImageBorderUseCaseConfig::class,
     TestDeleteParfaitImageUseCaseConfig::class,
     TestRotateParfaitCanvasesUseCaseConfig::class,
+    TestChangeParfaitBackgroundUseCaseConfig::class,
 )
 class ActuatorHealthEndpointTest {
     @Autowired

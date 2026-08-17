@@ -49,7 +49,36 @@ class Parfait private constructor(
         )
     }
 
+    fun changeBackground(
+        type: BackgroundType,
+        value: String,
+        now: LocalDateTime = LocalDateTime.now(),
+    ): Parfait {
+        validateBackground(type, value)
+        return Parfait(
+            id = id,
+            parfaitGroupId = parfaitGroupId,
+            parfaitDate = parfaitDate,
+            status = status,
+            backgroundType = type,
+            backgroundValue = value,
+            createdAt = createdAt,
+            updatedAt = now,
+        )
+    }
+
     companion object {
+        private val HEX_COLOR_PATTERN = Regex("^#[0-9A-Fa-f]{6}$")
+
+        private fun validateBackground(
+            type: BackgroundType,
+            value: String,
+        ) {
+            if (type == BackgroundType.COLOR && !HEX_COLOR_PATTERN.matches(value)) {
+                throw BusinessException(ParfaitErrorCode.INVALID_BACKGROUND)
+            }
+        }
+
         fun createToday(
             parfaitGroupId: Long,
             date: LocalDate,
