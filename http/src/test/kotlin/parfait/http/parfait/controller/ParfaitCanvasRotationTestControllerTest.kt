@@ -11,8 +11,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
+import parfait.core.parfait.port.`in`.ForceRotateParfaitCanvasesUseCase
 import parfait.core.parfait.port.`in`.RotateParfaitCanvasesResult
-import parfait.core.parfait.port.`in`.RotateParfaitCanvasesUseCase
 import parfait.http.global.exception.GlobalExceptionHandler
 import parfait.http.global.security.TestMemberQueryPortConfig
 import parfait.http.global.security.TestTokenValidatePortConfig
@@ -30,11 +30,11 @@ class ParfaitCanvasRotationTestControllerTest {
     private lateinit var mockMvc: MockMvc
 
     @Autowired
-    private lateinit var rotateParfaitCanvasesUseCase: RotateParfaitCanvasesUseCase
+    private lateinit var forceRotateParfaitCanvasesUseCase: ForceRotateParfaitCanvasesUseCase
 
     @Test
     fun `호출하면 UseCase 결과를 응답 필드로 매핑한다`() {
-        every { rotateParfaitCanvasesUseCase.rotateAll() } returns
+        every { forceRotateParfaitCanvasesUseCase.forceRotateAll() } returns
             RotateParfaitCanvasesResult(closedCount = 2, emptyCount = 1, createdCount = 3, failedCount = 0)
 
         mockMvc.post("/api/v1/test/parfait-canvas/rotate").andExpect {
@@ -49,6 +49,6 @@ class ParfaitCanvasRotationTestControllerTest {
     @TestConfiguration
     class UseCaseConfig {
         @Bean
-        fun rotateParfaitCanvasesUseCase(): RotateParfaitCanvasesUseCase = mockk()
+        fun forceRotateParfaitCanvasesUseCase(): ForceRotateParfaitCanvasesUseCase = mockk()
     }
 }

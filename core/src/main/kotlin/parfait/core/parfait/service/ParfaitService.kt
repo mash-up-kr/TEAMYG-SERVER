@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import parfait.core.parfait.domain.Parfait
 import parfait.core.parfait.port.`in`.EnsureActiveCanvasUseCase
+import parfait.core.parfait.port.`in`.ForceRotateParfaitCanvasesUseCase
 import parfait.core.parfait.port.`in`.GetParfaitYearsUseCase
 import parfait.core.parfait.port.`in`.RotateParfaitCanvasesResult
 import parfait.core.parfait.port.`in`.RotateParfaitCanvasesUseCase
@@ -28,7 +29,8 @@ class ParfaitService(
     @Qualifier("canvasRotationRetryTemplate") private val retryTemplate: RetryTemplate,
 ) : GetParfaitYearsUseCase,
     EnsureActiveCanvasUseCase,
-    RotateParfaitCanvasesUseCase {
+    RotateParfaitCanvasesUseCase,
+    ForceRotateParfaitCanvasesUseCase {
     private val log = LoggerFactory.getLogger(ParfaitService::class.java)
 
     @Transactional(readOnly = true)
@@ -50,7 +52,13 @@ class ParfaitService(
         parfaitQueryPort.findByGroupIdAndDate(groupId, targetDate)
             ?: parfaitSavePort.save(Parfait.createToday(parfaitGroupId = groupId, date = targetDate))
 
-    override fun rotateAll(): RotateParfaitCanvasesResult {
+    override fun rotateAll(): RotateParfaitCanvasesResult =
+        rotateAllUsing { groupId -> parfaitCanvasRotator.rotateOne(groupId) }
+
+    override fun forceRotateAll(): RotateParfaitCanvasesResult =
+        rotateAllUsing { groupId -> parfaitCanvasRotator.forceRotateOne(groupId) }
+
+    private fun rotateAllUsing(rotate: (Long) -> RotateOneResult?): RotateParfaitCanvasesResult {
         var closed = 0
         var empty = 0
         var created = 0
@@ -58,7 +66,7 @@ class ParfaitService(
         parfaitGroupQueryPort.findAllIds().forEach { groupId ->
             try {
                 retryTemplate.execute<Unit, Exception> {
-                    parfaitCanvasRotator.rotateOne(groupId)?.let { result ->
+                    rotate(groupId)?.let { result ->
                         if (result.wasEmpty) empty++ else closed++
                         if (result.created) created++
                     }

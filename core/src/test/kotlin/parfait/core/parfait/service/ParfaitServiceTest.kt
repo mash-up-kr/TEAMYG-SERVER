@@ -106,4 +106,23 @@ class ParfaitServiceTest {
         result.createdCount shouldBe 1
         result.failedCount shouldBe 1
     }
+
+    @Test
+    fun `forceRotateAll은 그룹별로 forceRotateOne을 호출해 결과를 합산한다`() {
+        every { parfaitGroupQueryPort.findAllIds() } returns listOf(1L, 2L)
+        every {
+            parfaitCanvasRotator.forceRotateOne(1L, any())
+        } returns RotateOneResult(wasEmpty = false, created = true)
+        every {
+            parfaitCanvasRotator.forceRotateOne(2L, any())
+        } returns RotateOneResult(wasEmpty = true, created = true)
+
+        val result = service.forceRotateAll()
+
+        result.closedCount shouldBe 1
+        result.emptyCount shouldBe 1
+        result.createdCount shouldBe 2
+        result.failedCount shouldBe 0
+        verify(exactly = 0) { parfaitCanvasRotator.rotateOne(any(), any()) }
+    }
 }
