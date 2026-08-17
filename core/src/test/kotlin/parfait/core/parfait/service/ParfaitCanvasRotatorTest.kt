@@ -11,6 +11,7 @@ import parfait.core.parfait.port.out.ParfaitQueryPort
 import parfait.core.parfait.port.out.ParfaitSavePort
 import parfait.core.parfaitimage.port.out.ParfaitImageQueryPort
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class ParfaitCanvasRotatorTest {
     private val parfaitQueryPort = mockk<ParfaitQueryPort>()
@@ -62,6 +63,40 @@ class ParfaitCanvasRotatorTest {
 
         rotator.rotateOne(1L) shouldBe null
         verify(exactly = 0) { parfaitSavePort.save(any()) }
+    }
+
+    @Test
+    fun `새벽 3시 이전에 호출되면 ParfaitDay 기준 전날인 ACTIVE 캔버스도 건드리지 않는다`() {
+        // 테스트 트리거 엔드포인트처럼 새벽 3시 이전에 rotateOne이 호출되는 상황을 재현한다.
+        // 캘린더로는 이미 8/17이지만 ParfaitDay 기준으로는 아직 8/16이 안 끝났으므로,
+        // 8/16 날짜인 ACTIVE 캔버스를 마감하면 안 된다.
+        val now = LocalDateTime.of(2026, 8, 17, 1, 0, 0)
+        every {
+            parfaitQueryPort.findActiveByGroupId(1L)
+        } returns activeParfait(1L, date = LocalDate.of(2026, 8, 16))
+
+        rotator.rotateOne(1L, now) shouldBe null
+        verify(exactly = 0) { parfaitSavePort.save(any()) }
+    }
+
+    @Test
+    fun `새벽 3시 이후에 호출되면 ParfaitDay 기준 전날인 ACTIVE 캔버스를 마감하고 새 캔버스를 만든다`() {
+        val now = LocalDateTime.of(2026, 8, 17, 3, 0, 1)
+        every {
+            parfaitQueryPort.findActiveByGroupId(1L)
+        } returns activeParfait(1L, date = LocalDate.of(2026, 8, 16))
+        every { parfaitImageQueryPort.existsByParfaitId(1L) } returns false
+        every { parfaitSavePort.save(any()) } answers { firstArg() }
+        every { parfaitQueryPort.findByGroupIdAndDate(1L, LocalDate.of(2026, 8, 17)) } returns null
+
+        val result = rotator.rotateOne(1L, now)!!
+
+        result.created shouldBe true
+        verify {
+            parfaitSavePort.save(
+                match { it.status == ParfaitStatus.ACTIVE && it.parfaitDate == LocalDate.of(2026, 8, 17) },
+            )
+        }
     }
 
     @Test
