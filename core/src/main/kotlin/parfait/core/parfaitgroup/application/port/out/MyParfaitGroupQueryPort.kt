@@ -1,5 +1,6 @@
 package parfait.core.parfaitgroup.application.port.out
 
+import parfait.core.parfaitgroup.domain.NameTagChipType
 import java.time.LocalDateTime
 
 interface MyParfaitGroupQueryPort {
@@ -11,4 +12,5 @@ data class MyParfaitGroupSummary(
     val groupName: String,
     val recentImageUrl: String?,
     val recentImageUploadedAt: LocalDateTime?,
+    val lastPlacedByNametagChip: NameTagChipType?,
 )

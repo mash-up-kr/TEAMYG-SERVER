@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import parfait.core.parfaitgroup.application.port.out.MyParfaitGroupSummary
 import parfait.core.parfaitgroup.domain.GroupNickname
 import parfait.core.parfaitgroup.domain.InviteCode
+import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitgroup.domain.ParfaitGroup
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 import parfait.persistence.repository.MyParfaitGroupSummaryProjection
@@ -74,7 +75,14 @@ class ParfaitGroupAdapterTest {
 
     @Test
     fun `멤버십 조회와 저장을 그룹 멤버 리포지토리에 위임한다`() {
-        val member = ParfaitGroupMember.join(1L, 10L, "내 닉네임", now)
+        val member =
+            ParfaitGroupMember.join(
+                parfaitGroupId = 1L,
+                memberId = 10L,
+                groupNickname = "내 닉네임",
+                nametagChip = NameTagChipType.TYPE4,
+                joinedAt = now,
+            )
         every { groupMemberRepository.existsByParfaitGroupIdAndMemberId(1L, 10L) } returns true
         every { groupMemberRepository.existsByParfaitGroupIdAndGroupNicknameAndLeftAtIsNull(1L, "내 닉네임") } returns true
         every { groupMemberRepository.countByParfaitGroupIdAndLeftAtIsNull(1L) } returns 3L
@@ -95,6 +103,7 @@ class ParfaitGroupAdapterTest {
         every { projection.groupName } returns "우리 그룹"
         every { projection.recentImageUrl } returns "https://image.example/latest"
         every { projection.recentImageUploadedAt } returns now
+        every { projection.lastPlacedByNametagChip } returns "TYPE7"
         every { groupMemberRepository.findMyGroupSummaries(10L) } returns listOf(projection)
 
         adapter.findAllByMemberId(10L) shouldBe
@@ -104,6 +113,7 @@ class ParfaitGroupAdapterTest {
                     groupName = "우리 그룹",
                     recentImageUrl = "https://image.example/latest",
                     recentImageUploadedAt = now,
+                    lastPlacedByNametagChip = NameTagChipType.TYPE7,
                 ),
             )
     }
@@ -175,6 +185,43 @@ class ParfaitGroupAdapterTest {
         every { groupRepository.findAllIds() } returns listOf(1L, 2L, 3L)
 
         adapter.findAllIds() shouldBe listOf(1L, 2L, 3L)
+    }
+
+    @Test
+    fun `저장 시 Nametag-Chip을 문자열 컬럼으로 변환한다`() {
+        val member =
+            ParfaitGroupMember.join(
+                parfaitGroupId = 1L,
+                memberId = 10L,
+                groupNickname = "내 닉네임",
+                nametagChip = NameTagChipType.TYPE7,
+                joinedAt = now,
+            )
+        every { groupMemberRepository.save(any()) } answers {
+            firstArg<ParfaitGroupMemberEntity>().apply { id = 2L }
+        }
+
+        adapter.save(member)
+
+        verify { groupMemberRepository.save(match { it.nametagChip == "TYPE7" }) }
+    }
+
+    @Test
+    fun `조회한 문자열 nametag_chip을 도메인 열거형으로 변환한다`() {
+        val entity =
+            ParfaitGroupMemberEntity(
+                parfaitGroupId = 1L,
+                memberId = 10L,
+                groupNickname = "내 닉네임",
+                joinedAt = now,
+                nametagChip = "TYPE7",
+                id = 2L,
+            )
+        every { groupMemberRepository.findByParfaitGroupIdAndMemberIdAndLeftAtIsNull(1L, 10L) } returns entity
+
+        val membership = adapter.findByGroupIdAndMemberId(1L, 10L)!!
+
+        membership.nametagChip shouldBe NameTagChipType.TYPE7
     }
 
     private fun groupEntity(): ParfaitGroupEntity =
