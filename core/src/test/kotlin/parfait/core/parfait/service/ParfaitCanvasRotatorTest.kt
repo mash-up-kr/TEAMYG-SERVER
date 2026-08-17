@@ -55,6 +55,16 @@ class ParfaitCanvasRotatorTest {
     }
 
     @Test
+    fun `ACTIVE 캔버스 날짜가 오늘이면 이미 회전된 것으로 보고 건드리지 않는다`() {
+        // 자정~새벽 3시 사이 ensure()로 "오늘" 캔버스가 이미 활성 상태로 만들어진 뒤,
+        // 같은 날 배치가 다시 rotateOne을 실행하는 상황을 재현한다.
+        every { parfaitQueryPort.findActiveByGroupId(1L) } returns activeParfait(1L, date = LocalDate.now())
+
+        rotator.rotateOne(1L) shouldBe null
+        verify(exactly = 0) { parfaitSavePort.save(any()) }
+    }
+
+    @Test
     fun `토핑이 있으면 CLOSED로 마감하고 다음날 캔버스를 새로 생성한다`() {
         every { parfaitQueryPort.findActiveByGroupId(1L) } returns activeParfait(1L)
         every { parfaitImageQueryPort.existsByParfaitId(1L) } returns true
