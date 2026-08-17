@@ -82,9 +82,9 @@ class ParfaitServiceTest {
     @Test
     fun `그룹별 마감·생성 결과를 합산해 반환한다`() {
         every { parfaitGroupQueryPort.findAllIds() } returns listOf(1L, 2L, 3L)
-        every { parfaitCanvasRotator.rotateOne(1L) } returns RotateOneResult(wasEmpty = false, created = true)
-        every { parfaitCanvasRotator.rotateOne(2L) } returns RotateOneResult(wasEmpty = true, created = true)
-        every { parfaitCanvasRotator.rotateOne(3L) } returns RotateOneResult(wasEmpty = true, created = true)
+        every { parfaitCanvasRotator.rotateOne(1L, any()) } returns RotateOneResult(wasEmpty = false, created = true)
+        every { parfaitCanvasRotator.rotateOne(2L, any()) } returns RotateOneResult(wasEmpty = true, created = true)
+        every { parfaitCanvasRotator.rotateOne(3L, any()) } returns RotateOneResult(wasEmpty = true, created = true)
 
         val result = service.rotateAll()
 
@@ -97,13 +97,32 @@ class ParfaitServiceTest {
     @Test
     fun `한 그룹이 재시도를 소진해도 예외를 전파하지 않고 다음 그룹을 계속 처리한다`() {
         every { parfaitGroupQueryPort.findAllIds() } returns listOf(1L, 2L)
-        every { parfaitCanvasRotator.rotateOne(1L) } throws RuntimeException("일시적 DB 오류")
-        every { parfaitCanvasRotator.rotateOne(2L) } returns RotateOneResult(wasEmpty = false, created = true)
+        every { parfaitCanvasRotator.rotateOne(1L, any()) } throws RuntimeException("일시적 DB 오류")
+        every { parfaitCanvasRotator.rotateOne(2L, any()) } returns RotateOneResult(wasEmpty = false, created = true)
 
         val result = service.rotateAll()
 
         result.closedCount shouldBe 1
         result.createdCount shouldBe 1
         result.failedCount shouldBe 1
+    }
+
+    @Test
+    fun `forceRotateAll은 그룹별로 forceRotateOne을 호출해 결과를 합산한다`() {
+        every { parfaitGroupQueryPort.findAllIds() } returns listOf(1L, 2L)
+        every {
+            parfaitCanvasRotator.forceRotateOne(1L, any())
+        } returns RotateOneResult(wasEmpty = false, created = true)
+        every {
+            parfaitCanvasRotator.forceRotateOne(2L, any())
+        } returns RotateOneResult(wasEmpty = true, created = true)
+
+        val result = service.forceRotateAll()
+
+        result.closedCount shouldBe 1
+        result.emptyCount shouldBe 1
+        result.createdCount shouldBe 2
+        result.failedCount shouldBe 0
+        verify(exactly = 0) { parfaitCanvasRotator.rotateOne(any(), any()) }
     }
 }

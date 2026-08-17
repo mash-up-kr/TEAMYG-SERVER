@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import parfait.common.response.ApiResponse
-import parfait.core.parfait.port.`in`.RotateParfaitCanvasesUseCase
+import parfait.core.parfait.port.`in`.ForceRotateParfaitCanvasesUseCase
 import parfait.http.parfait.dto.RotateParfaitCanvasesResponse
 
 // TODO: 테스트 전용 엔드포인트 — 실제 프로덕션 오픈 전 이 컨트롤러와
@@ -15,15 +15,17 @@ import parfait.http.parfait.dto.RotateParfaitCanvasesResponse
 @RestController
 @RequestMapping("/api/v1/test/parfait-canvas")
 class ParfaitCanvasRotationTestController(
-    private val rotateParfaitCanvasesUseCase: RotateParfaitCanvasesUseCase,
+    private val forceRotateParfaitCanvasesUseCase: ForceRotateParfaitCanvasesUseCase,
 ) {
     @Operation(
         summary = "캔버스 강제 회전 (테스트 전용)",
-        description = "⚠️ 인증 없이 호출 가능 · 전체 그룹의 ACTIVE 캔버스를 즉시 마감하고 새로 생성합니다. 테스트 전용",
+        description =
+            "⚠️ 인증 없이 호출 가능 · 전체 그룹의 ACTIVE 캔버스를 즉시 마감하고 새로 생성합니다. " +
+                "정식 배치와 달리 ParfaitDay(새벽 3시) 가드를 건너뛰고 오늘 날짜 캔버스도 강제로 마감합니다. 테스트 전용",
     )
     @PostMapping("/rotate")
     fun rotate(): ApiResponse<RotateParfaitCanvasesResponse> {
-        val result = rotateParfaitCanvasesUseCase.rotateAll()
+        val result = forceRotateParfaitCanvasesUseCase.forceRotateAll()
         return ApiResponse.ok(
             RotateParfaitCanvasesResponse(
                 closedCount = result.closedCount,

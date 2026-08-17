@@ -2,6 +2,7 @@
 
 package parfait.core.parfaitgroup.application.port.`in`
 
+import parfait.core.parfaitgroup.domain.NameTagChipType
 import java.time.LocalDateTime
 
 interface GetMyParfaitGroupsUseCase {
@@ -13,4 +14,5 @@ data class MyParfaitGroupResult(
     val groupName: String,
     val recentImageUrl: String?,
     val recentImageUploadedAt: LocalDateTime?,
+    val lastPlacedByNametagChip: NameTagChipType?,
 )

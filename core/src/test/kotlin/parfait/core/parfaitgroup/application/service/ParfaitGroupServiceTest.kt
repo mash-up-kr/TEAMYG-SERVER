@@ -1,6 +1,7 @@
 package parfait.core.parfaitgroup.application.service
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -25,6 +26,7 @@ import parfait.core.parfaitgroup.application.port.out.ParfaitGroupReportSavePort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupSavePort
 import parfait.core.parfaitgroup.domain.InviteCode
 import parfait.core.parfaitgroup.domain.InviteCodeGenerator
+import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitgroup.domain.ParfaitGroup
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
@@ -67,6 +69,7 @@ class ParfaitGroupServiceTest {
         every { groupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns false
         every { groupMemberQueryPort.countByGroupId(1L) } returns 1
         every { memberQueryPort.findGlobalNicknameById(10L) } returns "멤버 닉네임"
+        every { groupMemberQueryPort.findAllByGroupId(any()) } returns emptyList()
     }
 
     @Test
@@ -193,8 +196,8 @@ class ParfaitGroupServiceTest {
     fun `내 그룹 목록은 최근 활동 순으로 조회 포트의 결과를 그대로 반환한다`() {
         every { myGroupQueryPort.findAllByMemberId(10L) } returns
             listOf(
-                MyParfaitGroupSummary(2L, "최근 그룹", "https://image.example/2", LocalDateTime.MAX),
-                MyParfaitGroupSummary(1L, "이전 그룹", null, null),
+                MyParfaitGroupSummary(2L, "최근 그룹", "https://image.example/2", LocalDateTime.MAX, NameTagChipType.TYPE7),
+                MyParfaitGroupSummary(1L, "이전 그룹", null, null, null),
             )
 
         val result = service.getAll(10L)
@@ -202,12 +205,14 @@ class ParfaitGroupServiceTest {
         result.map { it.groupId } shouldBe listOf(2L, 1L)
         result.first().recentImageUrl shouldBe "https://image.example/2"
         result.first().recentImageUploadedAt shouldBe LocalDateTime.MAX
+        result.first().lastPlacedByNametagChip shouldBe NameTagChipType.TYPE7
+        result.last().lastPlacedByNametagChip shouldBe null
     }
 
     @Test
     fun `내 그룹 상세는 내 닉네임과 전체 그룹원 및 초대코드를 반환한다`() {
-        val myMembership = membership(memberId = 10L, nickname = "내 닉네임")
-        val otherMembership = membership(memberId = 20L, nickname = "그룹원")
+        val myMembership = membership(memberId = 10L, nickname = "내 닉네임", nametagChip = NameTagChipType.TYPE1)
+        val otherMembership = membership(memberId = 20L, nickname = "그룹원", nametagChip = NameTagChipType.TYPE2)
         every { groupQueryPort.findById(1L) } returns group
         every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 10L) } returns myMembership
         every { groupMemberQueryPort.findAllByGroupId(1L) } returns listOf(myMembership, otherMembership)
@@ -215,9 +220,12 @@ class ParfaitGroupServiceTest {
         val result = service.get(memberId = 10L, groupId = 1L)
 
         result.groupId shouldBe 1L
+        result.groupName shouldBe "파르페"
         result.groupNickname shouldBe "내 닉네임"
         result.inviteCode shouldBe "ABCD12"
+        result.memberLimit shouldBe 2
         result.members.map { it.memberId } shouldBe listOf(10L, 20L)
+        result.members.map { it.nametagChip } shouldBe listOf(NameTagChipType.TYPE1, NameTagChipType.TYPE2)
     }
 
     @Test
@@ -255,6 +263,63 @@ class ParfaitGroupServiceTest {
         result.groupId shouldBe 1L
         leftMemberSlot.captured.groupNickname.value shouldBe "(알수없음)"
         (leftMemberSlot.captured.leftAt != null) shouldBe true
+    }
+
+    @Test
+    fun `그룹 참여는 점유되지 않은 Nametag-Chip을 배정한다`() {
+        every { groupMemberQueryPort.findAllByGroupId(1L) } returns
+            listOf(membership(memberId = 20L, nickname = "먼저 참여", nametagChip = NameTagChipType.TYPE1))
+        val memberSlot = slot<ParfaitGroupMember>()
+        every { groupMemberSavePort.save(capture(memberSlot)) } answers { firstArg() }
+
+        service.join(JoinParfaitGroupCommand(memberId = 10L, inviteCode = "ABCD12"))
+
+        memberSlot.captured.nametagChip shouldNotBe NameTagChipType.TYPE1
+        memberSlot.captured.nametagChip shouldNotBe null
+    }
+
+    @Test
+    fun `그룹 생성은 첫 멤버에게 Nametag-Chip을 배정한다`() {
+        every { inviteCodeGenerator.generate() } returns InviteCode.of("NEWC12")
+        every { groupQueryPort.existsByInviteCode(any()) } returns false
+        every { memberQueryPort.existsById(10L) } returns true
+        every { groupSavePort.save(any()) } answers {
+            val requested = firstArg<ParfaitGroup>()
+            ParfaitGroup.reconstitute(
+                id = 20L,
+                name = requested.name.value,
+                inviteCode = requested.inviteCode.value,
+                memberLimit = requested.memberLimit.value,
+                createdAt = requested.createdAt,
+                updatedAt = requested.updatedAt,
+            )
+        }
+        val memberSlot = slot<ParfaitGroupMember>()
+        every { groupMemberSavePort.save(capture(memberSlot)) } answers { firstArg() }
+
+        service.create(
+            CreateParfaitGroupCommand(
+                memberId = 10L,
+                groupName = "새 그룹",
+                groupNickname = "그룹 닉네임",
+                memberLimit = 12,
+            ),
+        )
+
+        memberSlot.captured.nametagChip shouldNotBe null
+    }
+
+    @Test
+    fun `그룹 나가기는 Nametag-Chip을 RELEASED로 반납한다`() {
+        val membership = membership(memberId = 10L, nickname = "내 닉네임", nametagChip = NameTagChipType.TYPE5)
+        val leftMemberSlot = slot<ParfaitGroupMember>()
+        every { groupQueryPort.findByIdForUpdate(1L) } returns group
+        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 10L) } returns membership
+        every { groupMemberLeavePort.leave(capture(leftMemberSlot)) } returns Unit
+
+        service.leave(LeaveParfaitGroupCommand(memberId = 10L, groupId = 1L))
+
+        leftMemberSlot.captured.nametagChip shouldBe NameTagChipType.RELEASED
     }
 
     @Test
@@ -309,6 +374,7 @@ class ParfaitGroupServiceTest {
     private fun membership(
         memberId: Long,
         nickname: String,
+        nametagChip: NameTagChipType? = null,
     ): ParfaitGroupMember =
         ParfaitGroupMember.reconstitute(
             id = memberId + 100L,
@@ -316,6 +382,7 @@ class ParfaitGroupServiceTest {
             memberId = memberId,
             groupNickname = nickname,
             joinedAt = LocalDateTime.MIN,
+            nametagChip = nametagChip,
         )
 
     private fun assertError(

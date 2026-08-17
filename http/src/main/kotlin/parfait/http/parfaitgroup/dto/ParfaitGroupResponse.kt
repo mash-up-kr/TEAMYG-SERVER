@@ -9,6 +9,7 @@ import parfait.core.parfaitgroup.application.port.`in`.MyParfaitGroupResult
 import parfait.core.parfaitgroup.application.port.`in`.ParfaitGroupMemberResult
 import parfait.core.parfaitgroup.application.port.`in`.PreviewParfaitGroupJoinResult
 import parfait.core.parfaitgroup.application.port.`in`.ReportParfaitGroupResult
+import parfait.core.parfaitgroup.domain.NameTagChipType
 import java.time.LocalDateTime
 
 data class PreviewParfaitGroupJoinResponse(
@@ -55,6 +56,7 @@ data class MyParfaitGroupResponse(
     val groupName: String,
     val recentImageUrl: String?,
     val recentImageUploadedAt: LocalDateTime?,
+    val lastPlacedByNametagChip: NameTagChipType?,
 ) {
     companion object {
         fun from(result: MyParfaitGroupResult): MyParfaitGroupResponse =
@@ -63,22 +65,27 @@ data class MyParfaitGroupResponse(
                 groupName = result.groupName,
                 recentImageUrl = result.recentImageUrl,
                 recentImageUploadedAt = result.recentImageUploadedAt,
+                lastPlacedByNametagChip = result.lastPlacedByNametagChip,
             )
     }
 }
 
 data class MyParfaitGroupDetailResponse(
     val groupId: Long,
+    val groupName: String,
     val groupNickname: String,
     val inviteCode: String,
+    val memberLimit: Int,
     val members: List<ParfaitGroupMemberResponse>,
 ) {
     companion object {
         fun from(result: MyParfaitGroupDetailResult): MyParfaitGroupDetailResponse =
             MyParfaitGroupDetailResponse(
                 groupId = result.groupId,
+                groupName = result.groupName,
                 groupNickname = result.groupNickname,
                 inviteCode = result.inviteCode,
+                memberLimit = result.memberLimit,
                 members = result.members.map(ParfaitGroupMemberResponse::from),
             )
     }
@@ -87,12 +94,14 @@ data class MyParfaitGroupDetailResponse(
 data class ParfaitGroupMemberResponse(
     val memberId: Long,
     val groupNickname: String,
+    val nametagChip: NameTagChipType?,
 ) {
     companion object {
         fun from(result: ParfaitGroupMemberResult): ParfaitGroupMemberResponse =
             ParfaitGroupMemberResponse(
                 memberId = result.memberId,
                 groupNickname = result.groupNickname,
+                nametagChip = result.nametagChip,
             )
     }
 }

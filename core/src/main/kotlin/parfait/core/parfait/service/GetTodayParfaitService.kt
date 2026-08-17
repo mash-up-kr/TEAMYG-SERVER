@@ -2,6 +2,7 @@ package parfait.core.parfait.service
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import parfait.core.parfait.domain.ParfaitDay
 import parfait.core.parfait.port.`in`.BackgroundResult
 import parfait.core.parfait.port.`in`.EnsureActiveCanvasUseCase
 import parfait.core.parfait.port.`in`.GetTodayParfaitCommand
@@ -15,7 +16,6 @@ import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPor
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.core.parfaitimage.port.out.ParfaitImageQueryPort
-import java.time.LocalDate
 
 @Service
 class GetTodayParfaitService(
@@ -30,7 +30,7 @@ class GetTodayParfaitService(
             throw ParfaitGroupException(ParfaitGroupError.GROUP_NOT_JOINED)
         }
 
-        val today = LocalDate.now()
+        val today = ParfaitDay.current()
         val parfait = ensureActiveCanvasUseCase.ensure(command.groupId, today)
 
         val lastClosedDate = parfaitQueryPort.findLastClosedDateByGroupId(command.groupId)
@@ -67,12 +67,13 @@ class GetTodayParfaitService(
         }
 
         val placerIds = parfaitImages.map { it.placedByGroupMemberId }.distinct()
-        val nicknameByPlacerId =
-            parfaitGroupMemberQueryPort.findAllByIds(placerIds).associate {
-                requireNotNull(it.id) to it.groupNickname.value
+        val placerById =
+            parfaitGroupMemberQueryPort.findAllByIds(placerIds).associateBy {
+                requireNotNull(it.id)
             }
 
         return parfaitImages.map { image ->
+            val placer = requireNotNull(placerById[image.placedByGroupMemberId])
             TodayParfaitImageResult(
                 parfaitImageId = image.requireId(),
                 imageId = image.imageMetaId,
@@ -88,7 +89,8 @@ class GetTodayParfaitService(
                 placedBy =
                     PlacedByResult(
                         groupMemberId = image.placedByGroupMemberId,
-                        nickname = requireNotNull(nicknameByPlacerId[image.placedByGroupMemberId]),
+                        nickname = placer.groupNickname.value,
+                        nametagChip = placer.nametagChip,
                     ),
                 createdAt = image.createdAt,
             )

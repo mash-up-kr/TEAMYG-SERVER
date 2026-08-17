@@ -9,6 +9,7 @@ import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberSavePort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupSavePort
 import parfait.core.parfaitgroup.domain.InviteCode
+import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitgroup.domain.ParfaitGroup
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 import parfait.persistence.repository.ParfaitGroupMemberRepository
@@ -86,6 +87,7 @@ class ParfaitGroupAdapter(
                 groupName = it.groupName,
                 recentImageUrl = it.recentImageUrl,
                 recentImageUploadedAt = it.recentImageUploadedAt,
+                lastPlacedByNametagChip = it.lastPlacedByNametagChip?.let(NameTagChipType::valueOf),
             )
         }
 
@@ -116,6 +118,7 @@ class ParfaitGroupAdapter(
             groupNickname = groupNickname.value,
             joinedAt = joinedAt,
             leftAt = leftAt,
+            nametagChip = nametagChip?.name,
             id = id,
         )
 
@@ -127,5 +130,6 @@ class ParfaitGroupAdapter(
             groupNickname = groupNickname,
             joinedAt = joinedAt,
             leftAt = leftAt,
+            nametagChip = nametagChip?.let(NameTagChipType::valueOf),
         )
 }

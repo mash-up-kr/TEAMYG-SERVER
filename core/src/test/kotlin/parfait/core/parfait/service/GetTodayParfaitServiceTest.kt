@@ -12,6 +12,7 @@ import parfait.core.parfait.port.`in`.EnsureActiveCanvasUseCase
 import parfait.core.parfait.port.`in`.GetTodayParfaitCommand
 import parfait.core.parfait.port.out.ParfaitQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
+import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
@@ -38,6 +39,7 @@ class GetTodayParfaitServiceTest {
     private fun groupMember(
         id: Long,
         nickname: String,
+        nametagChip: NameTagChipType? = null,
     ): ParfaitGroupMember =
         ParfaitGroupMember.reconstitute(
             id = id,
@@ -45,6 +47,7 @@ class GetTodayParfaitServiceTest {
             memberId = id * 100,
             groupNickname = nickname,
             joinedAt = LocalDateTime.now(),
+            nametagChip = nametagChip,
         )
 
     @Test
@@ -159,7 +162,7 @@ class GetTodayParfaitServiceTest {
             )
         every { parfaitImageQueryPort.findAllByParfaitId(200L) } returns listOf(placedImage)
         every { parfaitGroupMemberQueryPort.findAllByIds(listOf(11L)) } returns
-            listOf(groupMember(11L, "(알수없음)"))
+            listOf(groupMember(11L, "(알수없음)", nametagChip = NameTagChipType.TYPE9))
 
         val result = service.get(GetTodayParfaitCommand(memberId = 10L, groupId = 1L))
 
@@ -172,6 +175,10 @@ class GetTodayParfaitServiceTest {
             ?.first()
             ?.placedBy
             ?.nickname shouldBe "(알수없음)"
+        result.images
+            ?.first()
+            ?.placedBy
+            ?.nametagChip shouldBe NameTagChipType.TYPE9
     }
 
     @Test

@@ -67,12 +67,13 @@ class GetParfaitDetailService(
         }
 
         val placerIds = parfaitImages.map { it.placedByGroupMemberId }.distinct()
-        val nicknameByPlacerId =
-            parfaitGroupMemberQueryPort.findAllByIds(placerIds).associate {
-                requireNotNull(it.id) to it.groupNickname.value
+        val placerById =
+            parfaitGroupMemberQueryPort.findAllByIds(placerIds).associateBy {
+                requireNotNull(it.id)
             }
 
         return parfaitImages.map { image ->
+            val placer = requireNotNull(placerById[image.placedByGroupMemberId])
             TodayParfaitImageResult(
                 parfaitImageId = image.requireId(),
                 imageId = image.imageMetaId,
@@ -88,7 +89,8 @@ class GetParfaitDetailService(
                 placedBy =
                     PlacedByResult(
                         groupMemberId = image.placedByGroupMemberId,
-                        nickname = requireNotNull(nicknameByPlacerId[image.placedByGroupMemberId]),
+                        nickname = placer.groupNickname.value,
+                        nametagChip = placer.nametagChip,
                     ),
                 createdAt = image.createdAt,
             )

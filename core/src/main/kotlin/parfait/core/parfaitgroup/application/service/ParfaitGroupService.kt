@@ -3,6 +3,7 @@ package parfait.core.parfaitgroup.application.service
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import parfait.core.member.port.out.MemberQueryPort
+import parfait.core.parfait.domain.ParfaitDay
 import parfait.core.parfait.port.`in`.EnsureActiveCanvasUseCase
 import parfait.core.parfaitgroup.application.port.`in`.ChangeMyParfaitGroupNicknameCommand
 import parfait.core.parfaitgroup.application.port.`in`.ChangeMyParfaitGroupNicknameResult
@@ -36,12 +37,12 @@ import parfait.core.parfaitgroup.application.port.out.ParfaitGroupSavePort
 import parfait.core.parfaitgroup.domain.GroupNickname
 import parfait.core.parfaitgroup.domain.InviteCode
 import parfait.core.parfaitgroup.domain.InviteCodeGenerator
+import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitgroup.domain.ParfaitGroup
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 import parfait.core.parfaitgroup.domain.ParfaitGroupReport
-import java.time.LocalDate
 
 @Service
 class ParfaitGroupService(
@@ -82,6 +83,7 @@ class ParfaitGroupService(
                 parfaitGroupId = group.requireId(),
                 memberId = command.memberId,
                 groupNickname = nickname.value,
+                nametagChip = assignNametagChip(group.requireId()),
             ),
         )
         return JoinParfaitGroupResult(
@@ -103,12 +105,13 @@ class ParfaitGroupService(
                     memberLimit = command.memberLimit,
                 ),
             )
-        ensureActiveCanvasUseCase.ensure(savedGroup.requireId(), LocalDate.now())
+        ensureActiveCanvasUseCase.ensure(savedGroup.requireId(), ParfaitDay.current())
         parfaitGroupMemberSavePort.save(
             ParfaitGroupMember.join(
                 parfaitGroupId = savedGroup.requireId(),
                 memberId = command.memberId,
                 groupNickname = nickname.value,
+                nametagChip = assignNametagChip(savedGroup.requireId()),
             ),
         )
         return CreateParfaitGroupResult(
@@ -127,6 +130,7 @@ class ParfaitGroupService(
                 groupName = it.groupName,
                 recentImageUrl = it.recentImageUrl,
                 recentImageUploadedAt = it.recentImageUploadedAt,
+                lastPlacedByNametagChip = it.lastPlacedByNametagChip,
             )
         }
 
@@ -139,13 +143,16 @@ class ParfaitGroupService(
         val myMembership = findMembership(groupId, memberId)
         return MyParfaitGroupDetailResult(
             groupId = group.requireId(),
+            groupName = group.name.value,
             groupNickname = myMembership.groupNickname.value,
             inviteCode = group.inviteCode.value,
+            memberLimit = group.memberLimit.value,
             members =
                 parfaitGroupMemberQueryPort.findAllByGroupId(groupId).map {
                     ParfaitGroupMemberResult(
                         memberId = it.memberId,
                         groupNickname = it.groupNickname.value,
+                        nametagChip = it.nametagChip,
                     )
                 },
         )
@@ -247,5 +254,14 @@ class ParfaitGroupService(
                 return inviteCode
             }
         }
+    }
+
+    private fun assignNametagChip(groupId: Long): NameTagChipType {
+        val occupied =
+            parfaitGroupMemberQueryPort
+                .findAllByGroupId(groupId)
+                .mapNotNull { it.nametagChip }
+                .toSet()
+        return NameTagChipType.assignRandom(occupied)
     }
 }

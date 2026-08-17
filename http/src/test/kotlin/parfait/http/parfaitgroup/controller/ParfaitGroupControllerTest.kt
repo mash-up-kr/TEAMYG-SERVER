@@ -35,6 +35,7 @@ import parfait.core.parfaitgroup.application.port.`in`.PreviewParfaitGroupJoinRe
 import parfait.core.parfaitgroup.application.port.`in`.PreviewParfaitGroupJoinUseCase
 import parfait.core.parfaitgroup.application.port.`in`.ReportParfaitGroupResult
 import parfait.core.parfaitgroup.application.port.`in`.ReportParfaitGroupUseCase
+import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.http.global.exception.GlobalExceptionHandler
@@ -99,7 +100,7 @@ class ParfaitGroupControllerTest {
     }
 
     @Test
-    fun `내 그룹 목록은 최근 이미지 정보와 함께 반환한다`() {
+    fun `내 그룹 목록은 최근 이미지 정보와 마지막 토퍼의 Nametag-Chip을 함께 반환한다`() {
         every { getMyGroupsUseCase.getAll(42L) } returns
             listOf(
                 MyParfaitGroupResult(
@@ -107,6 +108,7 @@ class ParfaitGroupControllerTest {
                     groupName = "우리 그룹",
                     recentImageUrl = "https://image.example/latest",
                     recentImageUploadedAt = LocalDateTime.of(2026, 8, 1, 12, 0),
+                    lastPlacedByNametagChip = NameTagChipType.TYPE7,
                 ),
             )
 
@@ -119,6 +121,7 @@ class ParfaitGroupControllerTest {
                 jsonPath("$.data[0].groupName") { value("우리 그룹") }
                 jsonPath("$.data[0].recentImageUrl") { value("https://image.example/latest") }
                 jsonPath("$.data[0].recentImageUploadedAt") { value("2026-08-01T12:00:00") }
+                jsonPath("$.data[0].lastPlacedByNametagChip") { value("TYPE7") }
             }
     }
 
@@ -131,6 +134,7 @@ class ParfaitGroupControllerTest {
                     groupName = "이미지 없는 그룹",
                     recentImageUrl = null,
                     recentImageUploadedAt = null,
+                    lastPlacedByNametagChip = null,
                 ),
             )
 
@@ -141,17 +145,20 @@ class ParfaitGroupControllerTest {
                 status { isOk() }
                 jsonPath("$.data[0].recentImageUrl") { value(nullValue()) }
                 jsonPath("$.data[0].recentImageUploadedAt") { value(nullValue()) }
+                jsonPath("$.data[0].lastPlacedByNametagChip") { value(nullValue()) }
             }
     }
 
     @Test
-    fun `내 그룹 상세는 닉네임 그룹원 초대코드를 반환한다`() {
+    fun `내 그룹 상세는 그룹명 닉네임 그룹원 초대코드 정원과 멤버별 Nametag-Chip을 반환한다`() {
         every { getMyGroupDetailUseCase.get(42L, 1L) } returns
             MyParfaitGroupDetailResult(
                 groupId = 1L,
+                groupName = "우리 그룹",
                 groupNickname = "내 닉네임",
                 inviteCode = "ABCD12",
-                members = listOf(ParfaitGroupMemberResult(42L, "내 닉네임")),
+                memberLimit = 12,
+                members = listOf(ParfaitGroupMemberResult(42L, "내 닉네임", NameTagChipType.TYPE3)),
             )
 
         mockMvc
@@ -160,9 +167,12 @@ class ParfaitGroupControllerTest {
             }.andExpect {
                 status { isOk() }
                 jsonPath("$.data.groupId") { value(1) }
+                jsonPath("$.data.groupName") { value("우리 그룹") }
                 jsonPath("$.data.groupNickname") { value("내 닉네임") }
                 jsonPath("$.data.inviteCode") { value("ABCD12") }
+                jsonPath("$.data.memberLimit") { value(12) }
                 jsonPath("$.data.members[0].memberId") { value(42) }
+                jsonPath("$.data.members[0].nametagChip") { value("TYPE3") }
             }
     }
 

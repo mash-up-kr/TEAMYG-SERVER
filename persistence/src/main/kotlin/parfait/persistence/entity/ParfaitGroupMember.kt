@@ -30,6 +30,8 @@ class ParfaitGroupMember(
     var joinedAt: LocalDateTime = LocalDateTime.now(),
     @Column(name = "left_at")
     var leftAt: LocalDateTime? = null,
+    @Column(name = "nametag_chip", length = 10)
+    var nametagChip: String? = null,
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
