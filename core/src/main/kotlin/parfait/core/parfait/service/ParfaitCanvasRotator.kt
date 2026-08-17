@@ -24,8 +24,11 @@ class ParfaitCanvasRotator(
     fun rotateOne(groupId: Long): RotateOneResult? {
         val active = parfaitQueryPort.findActiveByGroupId(groupId) ?: return null
 
-        if (active.parfaitDate.isAfter(LocalDate.now())) {
-            return null // 가드 1: 미래 날짜 캔버스는 아직 마감 대상이 아님
+        if (!active.parfaitDate.isBefore(LocalDate.now())) {
+            return null // 가드 1: 오늘 또는 미래 날짜 캔버스는 아직 마감 대상이 아님.
+            // isAfter(오늘)만 걸러내면 "오늘" 날짜는 통과해버린다 — 자정~새벽 3시 사이
+            // ensure()로 오늘 캔버스가 이미 활성화된 뒤 배치가 도는 경우, 방금 만든 오늘
+            // 캔버스를 마감하고 내일 날짜 캔버스를 또 만들어버리는 버그로 이어진다.
         }
 
         val hasToppings = parfaitImageQueryPort.existsByParfaitId(active.requireId())
