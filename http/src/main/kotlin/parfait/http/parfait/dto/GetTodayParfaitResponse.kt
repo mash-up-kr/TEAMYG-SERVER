@@ -7,6 +7,7 @@ import parfait.core.parfait.port.`in`.GetTodayParfaitResult
 import parfait.core.parfait.port.`in`.GroupMemberResult
 import parfait.core.parfait.port.`in`.PlacedByResult
 import parfait.core.parfait.port.`in`.TodayParfaitImageResult
+import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitimage.domain.BorderType
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -92,9 +93,14 @@ data class TodayParfaitImageResponse(
 data class PlacedByResponse(
     val groupMemberId: Long,
     val nickname: String,
+    val nametagChip: NameTagChipType?,
 ) {
     companion object {
         fun from(result: PlacedByResult): PlacedByResponse =
-            PlacedByResponse(groupMemberId = result.groupMemberId, nickname = result.nickname)
+            PlacedByResponse(
+                groupMemberId = result.groupMemberId,
+                nickname = result.nickname,
+                nametagChip = result.nametagChip,
+            )
     }
 }

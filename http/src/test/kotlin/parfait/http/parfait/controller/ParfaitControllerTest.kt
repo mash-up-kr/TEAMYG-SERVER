@@ -27,6 +27,7 @@ import parfait.core.parfait.port.`in`.GroupMemberResult
 import parfait.core.parfait.port.`in`.PastParfaitResult
 import parfait.core.parfait.port.`in`.PlacedByResult
 import parfait.core.parfait.port.`in`.TodayParfaitImageResult
+import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.core.parfaitimage.domain.BorderType
@@ -172,7 +173,12 @@ class ParfaitControllerTest {
                             borderType = BorderType.SOLID,
                             borderColor = "#000000",
                             borderWidth = 2.0,
-                            placedBy = PlacedByResult(groupMemberId = 10L, nickname = "연경이"),
+                            placedBy =
+                                PlacedByResult(
+                                    groupMemberId = 10L,
+                                    nickname = "연경이",
+                                    nametagChip = NameTagChipType.TYPE6,
+                                ),
                             createdAt = LocalDateTime.of(2026, 7, 9, 14, 30, 0),
                         ),
                     ),
@@ -189,6 +195,7 @@ class ParfaitControllerTest {
                 jsonPath("$.data.groupMembers[0].nickname") { value("연경이") }
                 jsonPath("$.data.background.type") { value("COLOR") }
                 jsonPath("$.data.images[0].placedBy.nickname") { value("연경이") }
+                jsonPath("$.data.images[0].placedBy.nametagChip") { value("TYPE6") }
             }
     }
 

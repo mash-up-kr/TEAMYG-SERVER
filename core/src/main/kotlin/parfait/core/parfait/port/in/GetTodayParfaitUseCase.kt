@@ -4,6 +4,7 @@ package parfait.core.parfait.port.`in`
 
 import parfait.core.parfait.domain.BackgroundType
 import parfait.core.parfait.domain.ParfaitStatus
+import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitimage.domain.BorderType
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -56,4 +57,5 @@ data class TodayParfaitImageResult(
 data class PlacedByResult(
     val groupMemberId: Long,
     val nickname: String,
+    val nametagChip: NameTagChipType?,
 )
