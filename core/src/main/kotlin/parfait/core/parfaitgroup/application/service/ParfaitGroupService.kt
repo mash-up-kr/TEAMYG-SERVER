@@ -3,6 +3,7 @@ package parfait.core.parfaitgroup.application.service
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import parfait.core.member.port.out.MemberQueryPort
+import parfait.core.parfait.domain.ParfaitDay
 import parfait.core.parfait.port.`in`.EnsureActiveCanvasUseCase
 import parfait.core.parfaitgroup.application.port.`in`.ChangeMyParfaitGroupNicknameCommand
 import parfait.core.parfaitgroup.application.port.`in`.ChangeMyParfaitGroupNicknameResult
@@ -42,7 +43,6 @@ import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 import parfait.core.parfaitgroup.domain.ParfaitGroupReport
-import java.time.LocalDate
 
 @Service
 class ParfaitGroupService(
@@ -105,7 +105,7 @@ class ParfaitGroupService(
                     memberLimit = command.memberLimit,
                 ),
             )
-        ensureActiveCanvasUseCase.ensure(savedGroup.requireId(), LocalDate.now())
+        ensureActiveCanvasUseCase.ensure(savedGroup.requireId(), ParfaitDay.current())
         parfaitGroupMemberSavePort.save(
             ParfaitGroupMember.join(
                 parfaitGroupId = savedGroup.requireId(),
