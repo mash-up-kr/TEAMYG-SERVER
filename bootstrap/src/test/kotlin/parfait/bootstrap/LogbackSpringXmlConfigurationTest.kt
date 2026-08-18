@@ -1,11 +1,17 @@
 package parfait.bootstrap
 
 import ch.qos.logback.classic.AsyncAppender
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.LoggerContext
+import ch.qos.logback.classic.filter.ThresholdFilter
 import ch.qos.logback.classic.joran.JoranConfigurator
+import ch.qos.logback.classic.spi.LoggingEvent
+import ch.qos.logback.core.spi.FilterReply
 import org.slf4j.Logger.ROOT_LOGGER_NAME
 import parfait.external.logging.DiscordErrorAppender
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
@@ -41,4 +47,30 @@ class LogbackSpringXmlConfigurationTest {
         val wrapped = asyncDiscord.iteratorForAppenders().asSequence().single()
         assertIs<DiscordErrorAppender>(wrapped)
     }
+
+    @Test
+    fun `ASYNC_DISCORD 큐는 ERROR 미만 이벤트를 필터에서 걸러 큐 적재 자체를 막는다`() {
+        val context = LoggerContext()
+        val configurator = JoranConfigurator()
+        configurator.context = context
+
+        javaClass.getResourceAsStream("/logback-spring.xml")!!.use { input ->
+            configurator.doConfigure(input)
+        }
+
+        val root = context.getLogger(ROOT_LOGGER_NAME)
+        val asyncDiscord = root.getAppender("ASYNC_DISCORD") as AsyncAppender
+        val thresholdFilter =
+            asyncDiscord.copyOfAttachedFiltersList
+                .filterIsInstance<ThresholdFilter>()
+                .single()
+
+        assertEquals(FilterReply.DENY, thresholdFilter.decide(loggingEvent(root, Level.INFO)))
+        assertEquals(FilterReply.NEUTRAL, thresholdFilter.decide(loggingEvent(root, Level.ERROR)))
+    }
+
+    private fun loggingEvent(
+        logger: Logger,
+        level: Level,
+    ) = LoggingEvent(javaClass.name, logger, level, "message", null, null)
 }
