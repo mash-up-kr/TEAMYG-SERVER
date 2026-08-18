@@ -3,6 +3,7 @@ package parfait.core.parfait.service
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import parfait.core.exception.BusinessException
+import parfait.core.parfait.domain.ParfaitDay
 import parfait.core.parfait.exception.ParfaitErrorCode
 import parfait.core.parfait.port.`in`.GetPastParfaitsCommand
 import parfait.core.parfait.port.`in`.GetPastParfaitsUseCase
@@ -12,7 +13,6 @@ import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPor
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.core.parfaitimage.port.out.ParfaitImageQueryPort
-import java.time.LocalDate
 
 @Service
 class GetPastParfaitsService(
@@ -26,7 +26,7 @@ class GetPastParfaitsService(
             throw ParfaitGroupException(ParfaitGroupError.GROUP_NOT_JOINED)
         }
 
-        val to = command.to ?: LocalDate.now()
+        val to = command.to ?: ParfaitDay.current()
         val from = command.from ?: to.minusDays(DEFAULT_RANGE_DAYS)
         if (from.isAfter(to)) {
             throw BusinessException(ParfaitErrorCode.INVALID_DATE_RANGE)
