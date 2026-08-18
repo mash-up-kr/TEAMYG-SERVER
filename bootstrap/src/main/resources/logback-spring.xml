@@ -9,6 +9,13 @@
     <appender name="DISCORD" class="parfait.external.logging.DiscordErrorAppender" />
 
     <appender name="ASYNC_DISCORD" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- root가 INFO 이상을 전부 이 큐로 보내는데, DISCORD 자신은 ERROR만 실제로 전송한다.
+             필터 없이는 매 요청의 INFO 로그까지 큐를 채워서, neverBlock=true 특성상 큐가 꽉 찼을 때
+             정작 중요한 ERROR까지 조용히 드롭될 수 있다 — 큐에 들어가는 시점에 ERROR만 걸러
+             큐가 잡음으로 차는 것 자체를 막는다. -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
         <appender-ref ref="DISCORD" />
         <neverBlock>true</neverBlock>
     </appender>
