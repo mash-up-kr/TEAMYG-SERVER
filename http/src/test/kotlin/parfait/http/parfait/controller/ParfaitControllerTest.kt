@@ -199,7 +199,7 @@ class ParfaitControllerTest {
                 jsonPath("$.data.groupMembers[0].nickname") { value("연경이") }
                 jsonPath("$.data.background.type") { value("COLOR") }
                 jsonPath("$.data.images[0].placedBy.nickname") { value("연경이") }
-                jsonPath("$.data.images[0].placedBy.nametagChip") { value("TYPE6") }
+                jsonPath("$.data.images[0].placedBy.nameTagChip") { value("TYPE6") }
             }
     }
 

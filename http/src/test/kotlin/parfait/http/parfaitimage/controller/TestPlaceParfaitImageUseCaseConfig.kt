@@ -2,10 +2,11 @@ package parfait.http.parfaitimage.controller
 
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
+import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitimage.port.`in`.PlaceParfaitImageCommand
+import parfait.core.parfaitimage.port.`in`.PlaceParfaitImagePlacedByResult
 import parfait.core.parfaitimage.port.`in`.PlaceParfaitImageResult
 import parfait.core.parfaitimage.port.`in`.PlaceParfaitImageUseCase
-import parfait.core.parfaitimage.port.`in`.PlacedByResult
 
 /**
  * 컨텍스트 로딩만 필요한 테스트(actuator, openapi, security 화이트리스트 등)에서
@@ -26,7 +27,12 @@ class TestPlaceParfaitImageUseCaseConfig {
                     positionZ = command.positionZ,
                     scale = command.scale,
                     rotation = command.rotation,
-                    placedBy = PlacedByResult(groupMemberId = 0L, nickname = "stub"),
+                    placedBy =
+                        PlaceParfaitImagePlacedByResult(
+                            groupMemberId = 0L,
+                            nickname = "stub",
+                            nametagChip = NameTagChipType.TYPE1,
+                        ),
                 )
         }
 }

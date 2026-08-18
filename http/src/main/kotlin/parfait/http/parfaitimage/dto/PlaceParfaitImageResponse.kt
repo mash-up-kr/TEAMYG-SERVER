@@ -1,7 +1,8 @@
 package parfait.http.parfaitimage.dto
 
+import parfait.core.parfaitgroup.domain.NameTagChipType
+import parfait.core.parfaitimage.port.`in`.PlaceParfaitImagePlacedByResult
 import parfait.core.parfaitimage.port.`in`.PlaceParfaitImageResult
-import parfait.core.parfaitimage.port.`in`.PlacedByResult
 
 data class PlaceParfaitImageResponse(
     val parfaitImageId: Long,
@@ -12,7 +13,7 @@ data class PlaceParfaitImageResponse(
     val positionZ: Int,
     val scale: Double,
     val rotation: Double,
-    val placedBy: PlacedByResponse,
+    val placedBy: PlaceParfaitImagePlacedByResponse,
 ) {
     companion object {
         fun from(result: PlaceParfaitImageResult): PlaceParfaitImageResponse =
@@ -25,20 +26,22 @@ data class PlaceParfaitImageResponse(
                 positionZ = result.positionZ,
                 scale = result.scale,
                 rotation = result.rotation,
-                placedBy = PlacedByResponse.from(result.placedBy),
+                placedBy = PlaceParfaitImagePlacedByResponse.from(result.placedBy),
             )
     }
 }
 
-data class PlacedByResponse(
+data class PlaceParfaitImagePlacedByResponse(
     val groupMemberId: Long,
     val nickname: String,
+    val nameTagChip: NameTagChipType,
 ) {
     companion object {
-        fun from(result: PlacedByResult): PlacedByResponse =
-            PlacedByResponse(
+        fun from(result: PlaceParfaitImagePlacedByResult): PlaceParfaitImagePlacedByResponse =
+            PlaceParfaitImagePlacedByResponse(
                 groupMemberId = result.groupMemberId,
                 nickname = result.nickname,
+                nameTagChip = result.nametagChip,
             )
     }
 }

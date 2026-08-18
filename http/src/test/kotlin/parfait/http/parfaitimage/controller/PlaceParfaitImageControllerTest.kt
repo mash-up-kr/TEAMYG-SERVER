@@ -16,12 +16,13 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
 import parfait.core.exception.BusinessException
 import parfait.core.image.exception.ImageErrorCode
+import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.core.parfaitimage.exception.ParfaitImageErrorCode
+import parfait.core.parfaitimage.port.`in`.PlaceParfaitImagePlacedByResult
 import parfait.core.parfaitimage.port.`in`.PlaceParfaitImageResult
 import parfait.core.parfaitimage.port.`in`.PlaceParfaitImageUseCase
-import parfait.core.parfaitimage.port.`in`.PlacedByResult
 import parfait.http.global.exception.GlobalExceptionHandler
 import parfait.http.global.security.TestMemberQueryPortConfig
 import parfait.http.global.security.TestTokenValidatePortConfig
@@ -73,7 +74,12 @@ class PlaceParfaitImageControllerTest {
                 positionZ = 1,
                 scale = 1.0,
                 rotation = 0.0,
-                placedBy = PlacedByResult(groupMemberId = 10L, nickname = "연경이"),
+                placedBy =
+                    PlaceParfaitImagePlacedByResult(
+                        groupMemberId = 10L,
+                        nickname = "연경이",
+                        nametagChip = NameTagChipType.TYPE6,
+                    ),
             )
 
         mockMvc
@@ -86,6 +92,7 @@ class PlaceParfaitImageControllerTest {
                 jsonPath("$.data.parfaitImageId") { value(201) }
                 jsonPath("$.data.placedBy.groupMemberId") { value(10) }
                 jsonPath("$.data.placedBy.nickname") { value("연경이") }
+                jsonPath("$.data.placedBy.nameTagChip") { value("TYPE6") }
             }
 
         verify {

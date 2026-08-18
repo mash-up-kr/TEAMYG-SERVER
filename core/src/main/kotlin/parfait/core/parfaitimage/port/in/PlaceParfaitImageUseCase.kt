@@ -2,6 +2,7 @@
 
 package parfait.core.parfaitimage.port.`in`
 
+import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitimage.domain.BorderType
 
 interface PlaceParfaitImageUseCase {
@@ -32,10 +33,11 @@ data class PlaceParfaitImageResult(
     val positionZ: Int,
     val scale: Double,
     val rotation: Double,
-    val placedBy: PlacedByResult,
+    val placedBy: PlaceParfaitImagePlacedByResult,
 )
 
-data class PlacedByResult(
+data class PlaceParfaitImagePlacedByResult(
     val groupMemberId: Long,
     val nickname: String,
+    val nametagChip: NameTagChipType,
 )
