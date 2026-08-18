@@ -37,7 +37,11 @@ class GetParfaitDetailService(
 
         val groupMembers =
             parfaitGroupMemberQueryPort.findAllByGroupId(command.groupId).map {
-                GroupMemberResult(id = requireNotNull(it.id), nickname = it.groupNickname.value)
+                GroupMemberResult(
+                    id = requireNotNull(it.id),
+                    nickname = it.groupNickname.value,
+                    nametagChip = it.nametagChip,
+                )
             }
 
         val images = buildImages(parfait.requireId())

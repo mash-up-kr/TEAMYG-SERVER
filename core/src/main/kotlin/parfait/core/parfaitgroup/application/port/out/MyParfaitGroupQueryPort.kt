@@ -11,6 +11,6 @@ data class MyParfaitGroupSummary(
     val groupId: Long,
     val groupName: String,
     val recentImageUrl: String?,
-    val recentImageUploadedAt: LocalDateTime?,
-    val lastPlacedByNametagChip: NameTagChipType?,
+    val recentImageUploadedAt: LocalDateTime,
+    val lastPlacedByNametagChip: NameTagChipType,
 )

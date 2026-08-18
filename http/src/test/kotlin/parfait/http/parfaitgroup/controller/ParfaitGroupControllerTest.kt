@@ -126,15 +126,15 @@ class ParfaitGroupControllerTest {
     }
 
     @Test
-    fun `최근 이미지가 없는 그룹도 nullable 필드를 생략하지 않고 null로 응답한다`() {
+    fun `최근 이미지가 없는 그룹은 recentImageUrl만 null이고 나머지는 생성자 정보로 채워진다`() {
         every { getMyGroupsUseCase.getAll(42L) } returns
             listOf(
                 MyParfaitGroupResult(
                     groupId = 1L,
                     groupName = "이미지 없는 그룹",
                     recentImageUrl = null,
-                    recentImageUploadedAt = null,
-                    lastPlacedByNametagChip = null,
+                    recentImageUploadedAt = LocalDateTime.of(2026, 8, 1, 0, 0),
+                    lastPlacedByNametagChip = NameTagChipType.TYPE3,
                 ),
             )
 
@@ -144,8 +144,8 @@ class ParfaitGroupControllerTest {
             }.andExpect {
                 status { isOk() }
                 jsonPath("$.data[0].recentImageUrl") { value(nullValue()) }
-                jsonPath("$.data[0].recentImageUploadedAt") { value(nullValue()) }
-                jsonPath("$.data[0].lastPlacedByNametagChip") { value(nullValue()) }
+                jsonPath("$.data[0].recentImageUploadedAt") { value("2026-08-01T00:00:00") }
+                jsonPath("$.data[0].lastPlacedByNametagChip") { value("TYPE3") }
             }
     }
 
@@ -222,6 +222,9 @@ class ParfaitGroupControllerTest {
                 groupName = "우리 그룹",
                 inviteCode = "ABCD12",
                 memberLimit = 12,
+                recentImageUrl = null,
+                recentImageUploadedAt = LocalDateTime.of(2026, 8, 1, 0, 0),
+                lastPlacedByNametagChip = NameTagChipType.TYPE1,
             )
 
         mockMvc

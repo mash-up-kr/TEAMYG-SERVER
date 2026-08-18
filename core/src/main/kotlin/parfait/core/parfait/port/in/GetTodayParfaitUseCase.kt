@@ -31,6 +31,7 @@ data class GetTodayParfaitResult(
 data class GroupMemberResult(
     val id: Long,
     val nickname: String,
+    val nametagChip: NameTagChipType,
 )
 
 data class BackgroundResult(
@@ -57,5 +58,5 @@ data class TodayParfaitImageResult(
 data class PlacedByResult(
     val groupMemberId: Long,
     val nickname: String,
-    val nametagChip: NameTagChipType?,
+    val nametagChip: NameTagChipType,
 )

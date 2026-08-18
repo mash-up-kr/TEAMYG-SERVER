@@ -7,7 +7,7 @@ class ParfaitGroupMember private constructor(
     val parfaitGroupId: Long,
     val memberId: Long,
     val groupNickname: GroupNickname,
-    val nametagChip: NameTagChipType?,
+    val nametagChip: NameTagChipType,
     val joinedAt: LocalDateTime,
     val leftAt: LocalDateTime?,
 ) {
@@ -28,7 +28,7 @@ class ParfaitGroupMember private constructor(
             parfaitGroupId = parfaitGroupId,
             memberId = memberId,
             groupNickname = GroupNickname.unknown(),
-            nametagChip = NameTagChipType.RELEASED,
+            nametagChip = NameTagChipType.DEFAULT,
             joinedAt = joinedAt,
             leftAt = leftAt,
         )
@@ -58,10 +58,11 @@ class ParfaitGroupMember private constructor(
             groupNickname: String,
             joinedAt: LocalDateTime,
             leftAt: LocalDateTime? = null,
-            // 마지막 파라미터 + 기본값 null로 둔다: parfaitimage/member 테스트의 기존 호출부들이
+            // 마지막 파라미터 + 기본값을 둔다: parfaitimage/member 테스트의 기존 호출부들이
             // (id, parfaitGroupId, memberId, groupNickname, joinedAt) 5개만 위치 인자로 넘기므로,
-            // 순서를 바꾸거나 앞으로 옮기면 그 호출부들이 전부 깨진다.
-            nametagChip: NameTagChipType? = null,
+            // 순서를 바꾸거나 앞으로 옮기면 그 호출부들이 전부 깨진다. nametagChip은 always-non-null
+            // 불변식이라 기본값은 null이 아니라 DEFAULT를 쓴다.
+            nametagChip: NameTagChipType = NameTagChipType.DEFAULT,
         ): ParfaitGroupMember =
             ParfaitGroupMember(
                 id = id,
