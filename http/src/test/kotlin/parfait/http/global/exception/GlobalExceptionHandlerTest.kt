@@ -127,6 +127,15 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    fun `지원하지 않는 HTTP 메서드로 요청하면 500이 아니라 405와 METHOD_NOT_ALLOWED로 응답한다`() {
+        mockMvc.post("/test/business-error").andExpect {
+            status { isMethodNotAllowed() }
+            jsonPath("$.success") { value(false) }
+            jsonPath("$.code") { value("METHOD_NOT_ALLOWED") }
+        }
+    }
+
+    @Test
     fun `Bean Validation에 실패하면 400과 INVALID_REQUEST로 응답한다`() {
         mockMvc
             .post("/test/valid-body") {
