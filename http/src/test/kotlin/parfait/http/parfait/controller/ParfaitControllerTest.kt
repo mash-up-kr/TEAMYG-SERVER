@@ -159,8 +159,8 @@ class ParfaitControllerTest {
                 lastClosedDate = LocalDate.of(2026, 7, 8),
                 groupMembers =
                     listOf(
-                        GroupMemberResult(id = 10L, nickname = "연경이"),
-                        GroupMemberResult(id = 11L, nickname = "서휘"),
+                        GroupMemberResult(id = 10L, nickname = "연경이", nametagChip = NameTagChipType.TYPE1),
+                        GroupMemberResult(id = 11L, nickname = "서휘", nametagChip = NameTagChipType.TYPE2),
                     ),
                 background = BackgroundResult(type = BackgroundType.COLOR, value = "#FFFFFF"),
                 images =
@@ -249,7 +249,10 @@ class ParfaitControllerTest {
                 date = LocalDate.of(2026, 7, 7),
                 status = ParfaitStatus.CLOSED,
                 lastClosedDate = LocalDate.of(2026, 7, 7),
-                groupMembers = listOf(GroupMemberResult(id = 10L, nickname = "연경이")),
+                groupMembers =
+                    listOf(
+                        GroupMemberResult(id = 10L, nickname = "연경이", nametagChip = NameTagChipType.TYPE1),
+                    ),
                 background = BackgroundResult(type = BackgroundType.COLOR, value = "#FFFFFF"),
                 images = null,
             )

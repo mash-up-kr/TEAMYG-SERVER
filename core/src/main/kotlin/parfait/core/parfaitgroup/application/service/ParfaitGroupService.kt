@@ -106,12 +106,13 @@ class ParfaitGroupService(
                 ),
             )
         ensureActiveCanvasUseCase.ensure(savedGroup.requireId(), ParfaitDay.current())
+        val creatorNametagChip = assignNametagChip(savedGroup.requireId())
         parfaitGroupMemberSavePort.save(
             ParfaitGroupMember.join(
                 parfaitGroupId = savedGroup.requireId(),
                 memberId = command.memberId,
                 groupNickname = nickname.value,
-                nametagChip = assignNametagChip(savedGroup.requireId()),
+                nametagChip = creatorNametagChip,
             ),
         )
         return CreateParfaitGroupResult(
@@ -119,6 +120,9 @@ class ParfaitGroupService(
             groupName = savedGroup.name.value,
             inviteCode = savedGroup.inviteCode.value,
             memberLimit = savedGroup.memberLimit.value,
+            recentImageUrl = null,
+            recentImageUploadedAt = savedGroup.updatedAt,
+            lastPlacedByNametagChip = creatorNametagChip,
         )
     }
 

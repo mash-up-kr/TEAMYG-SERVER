@@ -19,7 +19,7 @@ class ParfaitGroupMemberTest {
     }
 
     @Test
-    fun `탈퇴하면 Nametag-Chip이 RELEASED로 반납된다`() {
+    fun `탈퇴하면 Nametag-Chip이 DEFAULT로 반납된다`() {
         val member =
             ParfaitGroupMember.join(
                 parfaitGroupId = 1L,
@@ -30,7 +30,7 @@ class ParfaitGroupMemberTest {
 
         val left = member.leave(LocalDateTime.of(2026, 8, 17, 0, 0))
 
-        left.nametagChip shouldBe NameTagChipType.RELEASED
+        left.nametagChip shouldBe NameTagChipType.DEFAULT
         left.leftAt shouldBe LocalDateTime.of(2026, 8, 17, 0, 0)
     }
 }

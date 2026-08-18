@@ -39,6 +39,9 @@ data class CreateParfaitGroupResponse(
     val groupName: String,
     val inviteCode: String,
     val memberLimit: Int,
+    val recentImageUrl: String?,
+    val recentImageUploadedAt: LocalDateTime,
+    val lastPlacedByNametagChip: NameTagChipType,
 ) {
     companion object {
         fun from(result: CreateParfaitGroupResult): CreateParfaitGroupResponse =
@@ -47,6 +50,9 @@ data class CreateParfaitGroupResponse(
                 groupName = result.groupName,
                 inviteCode = result.inviteCode,
                 memberLimit = result.memberLimit,
+                recentImageUrl = result.recentImageUrl,
+                recentImageUploadedAt = result.recentImageUploadedAt,
+                lastPlacedByNametagChip = result.lastPlacedByNametagChip,
             )
     }
 }
@@ -55,8 +61,8 @@ data class MyParfaitGroupResponse(
     val groupId: Long,
     val groupName: String,
     val recentImageUrl: String?,
-    val recentImageUploadedAt: LocalDateTime?,
-    val lastPlacedByNametagChip: NameTagChipType?,
+    val recentImageUploadedAt: LocalDateTime,
+    val lastPlacedByNametagChip: NameTagChipType,
 ) {
     companion object {
         fun from(result: MyParfaitGroupResult): MyParfaitGroupResponse =
@@ -94,7 +100,7 @@ data class MyParfaitGroupDetailResponse(
 data class ParfaitGroupMemberResponse(
     val memberId: Long,
     val groupNickname: String,
-    val nametagChip: NameTagChipType?,
+    val nametagChip: NameTagChipType,
 ) {
     companion object {
         fun from(result: ParfaitGroupMemberResult): ParfaitGroupMemberResponse =

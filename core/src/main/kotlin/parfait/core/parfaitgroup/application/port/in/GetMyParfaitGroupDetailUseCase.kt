@@ -23,5 +23,5 @@ data class MyParfaitGroupDetailResult(
 data class ParfaitGroupMemberResult(
     val memberId: Long,
     val groupNickname: String,
-    val nametagChip: NameTagChipType?,
+    val nametagChip: NameTagChipType,
 )
