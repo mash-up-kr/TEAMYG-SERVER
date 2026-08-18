@@ -121,7 +121,7 @@ class ParfaitGroupControllerTest {
                 jsonPath("$.data[0].groupName") { value("우리 그룹") }
                 jsonPath("$.data[0].recentImageUrl") { value("https://image.example/latest") }
                 jsonPath("$.data[0].recentImageUploadedAt") { value("2026-08-01T12:00:00") }
-                jsonPath("$.data[0].lastPlacedByNametagChip") { value("TYPE7") }
+                jsonPath("$.data[0].lastPlacedByNameTagChip") { value("TYPE7") }
             }
     }
 
@@ -145,7 +145,7 @@ class ParfaitGroupControllerTest {
                 status { isOk() }
                 jsonPath("$.data[0].recentImageUrl") { value(nullValue()) }
                 jsonPath("$.data[0].recentImageUploadedAt") { value("2026-08-01T00:00:00") }
-                jsonPath("$.data[0].lastPlacedByNametagChip") { value("TYPE3") }
+                jsonPath("$.data[0].lastPlacedByNameTagChip") { value("TYPE3") }
             }
     }
 
@@ -172,7 +172,7 @@ class ParfaitGroupControllerTest {
                 jsonPath("$.data.inviteCode") { value("ABCD12") }
                 jsonPath("$.data.memberLimit") { value(12) }
                 jsonPath("$.data.members[0].memberId") { value(42) }
-                jsonPath("$.data.members[0].nametagChip") { value("TYPE3") }
+                jsonPath("$.data.members[0].nameTagChip") { value("TYPE3") }
             }
     }
 

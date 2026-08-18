@@ -41,7 +41,7 @@ data class CreateParfaitGroupResponse(
     val memberLimit: Int,
     val recentImageUrl: String?,
     val recentImageUploadedAt: LocalDateTime,
-    val lastPlacedByNametagChip: NameTagChipType,
+    val lastPlacedByNameTagChip: NameTagChipType,
 ) {
     companion object {
         fun from(result: CreateParfaitGroupResult): CreateParfaitGroupResponse =
@@ -52,7 +52,7 @@ data class CreateParfaitGroupResponse(
                 memberLimit = result.memberLimit,
                 recentImageUrl = result.recentImageUrl,
                 recentImageUploadedAt = result.recentImageUploadedAt,
-                lastPlacedByNametagChip = result.lastPlacedByNametagChip,
+                lastPlacedByNameTagChip = result.lastPlacedByNametagChip,
             )
     }
 }
@@ -62,7 +62,7 @@ data class MyParfaitGroupResponse(
     val groupName: String,
     val recentImageUrl: String?,
     val recentImageUploadedAt: LocalDateTime,
-    val lastPlacedByNametagChip: NameTagChipType,
+    val lastPlacedByNameTagChip: NameTagChipType,
 ) {
     companion object {
         fun from(result: MyParfaitGroupResult): MyParfaitGroupResponse =
@@ -71,7 +71,7 @@ data class MyParfaitGroupResponse(
                 groupName = result.groupName,
                 recentImageUrl = result.recentImageUrl,
                 recentImageUploadedAt = result.recentImageUploadedAt,
-                lastPlacedByNametagChip = result.lastPlacedByNametagChip,
+                lastPlacedByNameTagChip = result.lastPlacedByNametagChip,
             )
     }
 }
@@ -100,14 +100,14 @@ data class MyParfaitGroupDetailResponse(
 data class ParfaitGroupMemberResponse(
     val memberId: Long,
     val groupNickname: String,
-    val nametagChip: NameTagChipType,
+    val nameTagChip: NameTagChipType,
 ) {
     companion object {
         fun from(result: ParfaitGroupMemberResult): ParfaitGroupMemberResponse =
             ParfaitGroupMemberResponse(
                 memberId = result.memberId,
                 groupNickname = result.groupNickname,
-                nametagChip = result.nametagChip,
+                nameTagChip = result.nametagChip,
             )
     }
 }

@@ -14,9 +14,9 @@ import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.core.parfaitimage.domain.ParfaitImage
 import parfait.core.parfaitimage.exception.ParfaitImageErrorCode
 import parfait.core.parfaitimage.port.`in`.PlaceParfaitImageCommand
+import parfait.core.parfaitimage.port.`in`.PlaceParfaitImagePlacedByResult
 import parfait.core.parfaitimage.port.`in`.PlaceParfaitImageResult
 import parfait.core.parfaitimage.port.`in`.PlaceParfaitImageUseCase
-import parfait.core.parfaitimage.port.`in`.PlacedByResult
 import parfait.core.parfaitimage.port.out.ParfaitImageQueryPort
 import parfait.core.parfaitimage.port.out.ParfaitImageSavePort
 
@@ -89,9 +89,10 @@ class PlaceParfaitImageService(
             scale = saved.scale,
             rotation = saved.rotation,
             placedBy =
-                PlacedByResult(
+                PlaceParfaitImagePlacedByResult(
                     groupMemberId = requireNotNull(groupMember.id),
                     nickname = groupMember.groupNickname.value,
+                    nametagChip = groupMember.nametagChip,
                 ),
         )
     }

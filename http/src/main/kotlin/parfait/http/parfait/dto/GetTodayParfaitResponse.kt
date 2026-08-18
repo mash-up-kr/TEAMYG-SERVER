@@ -38,11 +38,11 @@ data class GetTodayParfaitResponse(
 data class GroupMemberResponse(
     val id: Long,
     val nickname: String,
-    val nametagChip: NameTagChipType,
+    val nameTagChip: NameTagChipType,
 ) {
     companion object {
         fun from(result: GroupMemberResult): GroupMemberResponse =
-            GroupMemberResponse(id = result.id, nickname = result.nickname, nametagChip = result.nametagChip)
+            GroupMemberResponse(id = result.id, nickname = result.nickname, nameTagChip = result.nametagChip)
     }
 }
 
@@ -94,14 +94,14 @@ data class TodayParfaitImageResponse(
 data class PlacedByResponse(
     val groupMemberId: Long,
     val nickname: String,
-    val nametagChip: NameTagChipType,
+    val nameTagChip: NameTagChipType,
 ) {
     companion object {
         fun from(result: PlacedByResult): PlacedByResponse =
             PlacedByResponse(
                 groupMemberId = result.groupMemberId,
                 nickname = result.nickname,
-                nametagChip = result.nametagChip,
+                nameTagChip = result.nametagChip,
             )
     }
 }
