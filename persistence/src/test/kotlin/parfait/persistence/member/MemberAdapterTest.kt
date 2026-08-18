@@ -3,11 +3,14 @@ package parfait.persistence.member
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.transaction.annotation.Transactional
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -41,6 +44,58 @@ class MemberAdapterTest {
 
     @Autowired
     private lateinit var memberRepository: MemberRepository
+
+    @PersistenceContext
+    private lateinit var entityManager: EntityManager
+
+    @Test
+    fun `탈퇴시키면 영속성 컨텍스트를 거치지 않은 raw 조회에서도 provider_user_id가 실제로 바뀌어 있다`() {
+        val adapter = MemberAdapter(memberRepository)
+        val saved =
+            memberRepository.save(
+                Member(
+                    loginProvider = LoginProvider.KAKAO,
+                    providerUserId = "raw-check-user-1",
+                    globalNickname = "탈퇴raw회원",
+                ),
+            )
+
+        adapter.deleteById(saved.id!!)
+
+        val rawProviderUserId =
+            entityManager
+                .createNativeQuery("SELECT provider_user_id FROM member WHERE id = :id")
+                .setParameter("id", saved.id)
+                .singleResult as String
+
+        rawProviderUserId shouldBe "withdrawn_${saved.id}"
+    }
+
+    @Test
+    @Transactional
+    fun `MemberService처럼 단일 트랜잭션 안에서 탈퇴시켜도 rename이 flush에 반영된다`() {
+        val adapter = MemberAdapter(memberRepository)
+        val saved =
+            memberRepository.save(
+                Member(
+                    loginProvider = LoginProvider.KAKAO,
+                    providerUserId = "single-tx-user-1",
+                    globalNickname = "탈퇴단일트랜잭션회원",
+                ),
+            )
+        entityManager.flush()
+
+        adapter.deleteById(saved.id!!)
+        entityManager.flush()
+
+        val rawProviderUserId =
+            entityManager
+                .createNativeQuery("SELECT provider_user_id FROM member WHERE id = :id")
+                .setParameter("id", saved.id)
+                .singleResult as String
+
+        rawProviderUserId shouldBe "withdrawn_${saved.id}"
+    }
 
     @Test
     fun `memberRepository의 existsById 결과를 그대로 반환한다`() {
