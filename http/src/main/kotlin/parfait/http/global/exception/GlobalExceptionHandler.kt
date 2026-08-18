@@ -3,6 +3,7 @@ package parfait.http.global.exception
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -46,6 +47,14 @@ class GlobalExceptionHandler {
         return ResponseEntity
             .status(CommonErrorCode.INVALID_REQUEST.status)
             .body(ApiResponse.error(CommonErrorCode.INVALID_REQUEST))
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
+    fun handleMethodNotSupported(e: HttpRequestMethodNotSupportedException): ResponseEntity<ApiResponse<Nothing>> {
+        log.info("Method not supported: {}", e.message)
+        return ResponseEntity
+            .status(CommonErrorCode.METHOD_NOT_ALLOWED.status)
+            .body(ApiResponse.error(CommonErrorCode.METHOD_NOT_ALLOWED))
     }
 
     @ExceptionHandler(Exception::class)
