@@ -6,6 +6,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import parfait.core.exception.BusinessException
+import parfait.core.parfait.domain.ParfaitDay
 import parfait.core.parfait.exception.ParfaitErrorCode
 import parfait.core.parfait.port.`in`.GetPastParfaitsCommand
 import parfait.core.parfait.port.out.ParfaitQueryPort
@@ -52,7 +53,7 @@ class GetPastParfaitsServiceTest {
     @Test
     fun `from과 to를 생략하면 오늘부터 30일 전까지 기본 범위로 조회한다`() {
         every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
-        val today = LocalDate.now()
+        val today = ParfaitDay.current()
         every {
             parfaitQueryPort.findAllByGroupIdAndDateRange(1L, today.minusDays(30), today)
         } returns emptyList()

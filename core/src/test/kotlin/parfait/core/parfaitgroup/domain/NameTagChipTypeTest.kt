@@ -24,12 +24,12 @@ class NameTagChipTypeTest {
     @Test
     fun `12종이 모두 점유되면 배정할 수 없다`() {
         assertFailsWith<IllegalStateException> {
-            NameTagChipType.assignRandom((NameTagChipType.entries - NameTagChipType.RELEASED).toSet())
+            NameTagChipType.assignRandom((NameTagChipType.entries - NameTagChipType.DEFAULT).toSet())
         }
     }
 
     @Test
     fun `타입 개수는 그룹 정원 최대치와 같은 12종이다`() {
-        (NameTagChipType.entries - NameTagChipType.RELEASED).size shouldBe GroupMemberLimit.MAX
+        (NameTagChipType.entries - NameTagChipType.DEFAULT).size shouldBe GroupMemberLimit.MAX
     }
 }

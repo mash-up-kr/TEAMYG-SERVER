@@ -39,7 +39,7 @@ class GetTodayParfaitServiceTest {
     private fun groupMember(
         id: Long,
         nickname: String,
-        nametagChip: NameTagChipType? = null,
+        nametagChip: NameTagChipType = NameTagChipType.DEFAULT,
     ): ParfaitGroupMember =
         ParfaitGroupMember.reconstitute(
             id = id,

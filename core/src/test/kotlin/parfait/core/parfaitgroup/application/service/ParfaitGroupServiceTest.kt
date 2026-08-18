@@ -157,6 +157,9 @@ class ParfaitGroupServiceTest {
         result.groupName shouldBe "새 그룹"
         result.inviteCode shouldBe "NEWC12"
         result.memberLimit shouldBe 12
+        result.recentImageUrl shouldBe null
+        result.recentImageUploadedAt shouldNotBe null
+        result.lastPlacedByNametagChip shouldNotBe null
         memberSlot.captured.parfaitGroupId shouldBe 20L
         memberSlot.captured.memberId shouldBe 10L
         memberSlot.captured.groupNickname.value shouldBe "그룹 닉네임"
@@ -197,7 +200,7 @@ class ParfaitGroupServiceTest {
         every { myGroupQueryPort.findAllByMemberId(10L) } returns
             listOf(
                 MyParfaitGroupSummary(2L, "최근 그룹", "https://image.example/2", LocalDateTime.MAX, NameTagChipType.TYPE7),
-                MyParfaitGroupSummary(1L, "이전 그룹", null, null, null),
+                MyParfaitGroupSummary(1L, "이전 그룹", null, LocalDateTime.MIN, NameTagChipType.TYPE3),
             )
 
         val result = service.getAll(10L)
@@ -206,7 +209,7 @@ class ParfaitGroupServiceTest {
         result.first().recentImageUrl shouldBe "https://image.example/2"
         result.first().recentImageUploadedAt shouldBe LocalDateTime.MAX
         result.first().lastPlacedByNametagChip shouldBe NameTagChipType.TYPE7
-        result.last().lastPlacedByNametagChip shouldBe null
+        result.last().lastPlacedByNametagChip shouldBe NameTagChipType.TYPE3
     }
 
     @Test
@@ -310,7 +313,7 @@ class ParfaitGroupServiceTest {
     }
 
     @Test
-    fun `그룹 나가기는 Nametag-Chip을 RELEASED로 반납한다`() {
+    fun `그룹 나가기는 Nametag-Chip을 DEFAULT로 반납한다`() {
         val membership = membership(memberId = 10L, nickname = "내 닉네임", nametagChip = NameTagChipType.TYPE5)
         val leftMemberSlot = slot<ParfaitGroupMember>()
         every { groupQueryPort.findByIdForUpdate(1L) } returns group
@@ -319,7 +322,7 @@ class ParfaitGroupServiceTest {
 
         service.leave(LeaveParfaitGroupCommand(memberId = 10L, groupId = 1L))
 
-        leftMemberSlot.captured.nametagChip shouldBe NameTagChipType.RELEASED
+        leftMemberSlot.captured.nametagChip shouldBe NameTagChipType.DEFAULT
     }
 
     @Test
@@ -374,7 +377,7 @@ class ParfaitGroupServiceTest {
     private fun membership(
         memberId: Long,
         nickname: String,
-        nametagChip: NameTagChipType? = null,
+        nametagChip: NameTagChipType = NameTagChipType.DEFAULT,
     ): ParfaitGroupMember =
         ParfaitGroupMember.reconstitute(
             id = memberId + 100L,

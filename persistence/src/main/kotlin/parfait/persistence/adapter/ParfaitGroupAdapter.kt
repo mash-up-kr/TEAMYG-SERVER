@@ -87,7 +87,7 @@ class ParfaitGroupAdapter(
                 groupName = it.groupName,
                 recentImageUrl = it.recentImageUrl,
                 recentImageUploadedAt = it.recentImageUploadedAt,
-                lastPlacedByNametagChip = it.lastPlacedByNametagChip?.let(NameTagChipType::valueOf),
+                lastPlacedByNametagChip = NameTagChipType.valueOf(it.lastPlacedByNametagChip),
             )
         }
 
@@ -118,7 +118,7 @@ class ParfaitGroupAdapter(
             groupNickname = groupNickname.value,
             joinedAt = joinedAt,
             leftAt = leftAt,
-            nametagChip = nametagChip?.name,
+            nametagChip = nametagChip.name,
             id = id,
         )
 
@@ -130,6 +130,6 @@ class ParfaitGroupAdapter(
             groupNickname = groupNickname,
             joinedAt = joinedAt,
             leftAt = leftAt,
-            nametagChip = nametagChip?.let(NameTagChipType::valueOf),
+            nametagChip = NameTagChipType.valueOf(nametagChip),
         )
 }
