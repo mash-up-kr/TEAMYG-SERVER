@@ -12,6 +12,10 @@ import parfait.core.image.domain.ImageType
 import parfait.core.image.port.out.ImageDeletePort
 import parfait.core.image.port.out.ImageMetaQueryPort
 import parfait.core.image.port.out.ImageMetaSavePort
+import parfait.core.parfait.domain.Parfait
+import parfait.core.parfait.domain.ParfaitStatus
+import parfait.core.parfait.exception.ParfaitErrorCode
+import parfait.core.parfait.port.out.ParfaitQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 import parfait.core.parfaitimage.domain.BorderType
@@ -20,11 +24,13 @@ import parfait.core.parfaitimage.exception.ParfaitImageErrorCode
 import parfait.core.parfaitimage.port.`in`.DeleteParfaitImageCommand
 import parfait.core.parfaitimage.port.out.ParfaitImageDeletePort
 import parfait.core.parfaitimage.port.out.ParfaitImageQueryPort
+import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.test.assertFailsWith
 
 class DeleteParfaitImageServiceTest {
     private val parfaitGroupMemberQueryPort = mockk<ParfaitGroupMemberQueryPort>()
+    private val parfaitQueryPort = mockk<ParfaitQueryPort>()
     private val parfaitImageQueryPort = mockk<ParfaitImageQueryPort>()
     private val parfaitImageDeletePort = mockk<ParfaitImageDeletePort>(relaxed = true)
     private val imageMetaQueryPort = mockk<ImageMetaQueryPort>()
@@ -33,6 +39,7 @@ class DeleteParfaitImageServiceTest {
     private val service =
         DeleteParfaitImageService(
             parfaitGroupMemberQueryPort = parfaitGroupMemberQueryPort,
+            parfaitQueryPort = parfaitQueryPort,
             parfaitImageQueryPort = parfaitImageQueryPort,
             parfaitImageDeletePort = parfaitImageDeletePort,
             imageMetaQueryPort = imageMetaQueryPort,
@@ -80,6 +87,18 @@ class DeleteParfaitImageServiceTest {
             updatedAt = LocalDateTime.now(),
         )
 
+    private fun activeParfait(status: ParfaitStatus = ParfaitStatus.ACTIVE): Parfait =
+        Parfait.reconstitute(
+            id = 5L,
+            parfaitGroupId = 1L,
+            parfaitDate = LocalDate.of(2026, 7, 9),
+            status = status,
+            backgroundType = null,
+            backgroundValue = null,
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
+        )
+
     private fun command() =
         DeleteParfaitImageCommand(
             memberId = 42L,
@@ -92,6 +111,7 @@ class DeleteParfaitImageServiceTest {
     fun `참조 수가 0이 되면 배치를 삭제하고 S3 이미지도 삭제한다`() {
         every { parfaitImageQueryPort.findById(201L) } returns placedImage()
         every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns owner
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
         every { imageMetaQueryPort.findById(77L) } returns imageMeta(referenceCount = 1)
         every { imageMetaSavePort.save(any()) } answers { firstArg() }
 
@@ -106,6 +126,7 @@ class DeleteParfaitImageServiceTest {
     fun `참조 수가 남아 있으면 S3 이미지는 삭제하지 않는다`() {
         every { parfaitImageQueryPort.findById(201L) } returns placedImage()
         every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns owner
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
         every { imageMetaQueryPort.findById(77L) } returns imageMeta(referenceCount = 2)
         every { imageMetaSavePort.save(any()) } answers { firstArg() }
 
@@ -113,6 +134,26 @@ class DeleteParfaitImageServiceTest {
 
         verify { imageMetaSavePort.save(match { it.referenceCount == 1L }) }
         verify(exactly = 0) { imageDeletePort.delete(any()) }
+    }
+
+    @Test
+    fun `그룹 소속의 파르페가 아니면 PARFAIT_NOT_FOUND 예외를 던진다`() {
+        every { parfaitImageQueryPort.findById(201L) } returns placedImage()
+        every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns owner
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns null
+
+        val exception = assertFailsWith<BusinessException> { service.delete(command()) }
+        exception.errorCode shouldBe ParfaitImageErrorCode.PARFAIT_NOT_FOUND
+    }
+
+    @Test
+    fun `이미 마감된 파르페면 PARFAIT_ALREADY_CLOSED 예외를 던진다`() {
+        every { parfaitImageQueryPort.findById(201L) } returns placedImage()
+        every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns owner
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait(status = ParfaitStatus.CLOSED)
+
+        val exception = assertFailsWith<BusinessException> { service.delete(command()) }
+        exception.errorCode shouldBe ParfaitErrorCode.PARFAIT_ALREADY_CLOSED
     }
 
     @Test

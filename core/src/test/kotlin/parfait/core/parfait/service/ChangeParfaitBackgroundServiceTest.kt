@@ -160,6 +160,25 @@ class ChangeParfaitBackgroundServiceTest {
     }
 
     @Test
+    fun `이미 마감된 파르페면 PARFAIT_ALREADY_CLOSED를 던진다`() {
+        every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
+        every { parfaitQueryPort.findByIdAndGroupId(98L, 1L) } returns
+            Parfait.reconstitute(
+                id = 98L,
+                parfaitGroupId = 1L,
+                parfaitDate = LocalDate.of(2026, 7, 7),
+                status = ParfaitStatus.CLOSED,
+                backgroundType = null,
+                backgroundValue = null,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now(),
+            )
+
+        val exception = assertFailsWith<BusinessException> { service.change(command()) }
+        exception.errorCode shouldBe ParfaitErrorCode.PARFAIT_ALREADY_CLOSED
+    }
+
+    @Test
     fun `존재하지 않거나 다른 그룹 소속인 파르페면 PARFAIT_NOT_FOUND를 던진다`() {
         every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
         every { parfaitQueryPort.findByIdAndGroupId(98L, 1L) } returns null
