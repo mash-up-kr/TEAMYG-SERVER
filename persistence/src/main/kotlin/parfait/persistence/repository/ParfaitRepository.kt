@@ -14,11 +14,6 @@ interface ParfaitRepository : JpaRepository<Parfait, Long> {
         @Param("groupId") groupId: Long,
     ): List<Int>
 
-    fun existsByIdAndParfaitGroupId(
-        id: Long,
-        parfaitGroupId: Long,
-    ): Boolean
-
     fun findAllByParfaitGroupIdAndParfaitDateBetweenOrderByParfaitDateDesc(
         parfaitGroupId: Long,
         from: LocalDate,
