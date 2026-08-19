@@ -19,11 +19,6 @@ class ParfaitAdapter(
     override fun findDistinctYearsByGroupId(groupId: Long): List<Int> =
         parfaitRepository.findDistinctYearsByParfaitGroupId(groupId)
 
-    override fun existsByIdAndGroupId(
-        parfaitId: Long,
-        groupId: Long,
-    ): Boolean = parfaitRepository.existsByIdAndParfaitGroupId(parfaitId, groupId)
-
     override fun findAllByGroupIdAndDateRange(
         groupId: Long,
         from: LocalDate,

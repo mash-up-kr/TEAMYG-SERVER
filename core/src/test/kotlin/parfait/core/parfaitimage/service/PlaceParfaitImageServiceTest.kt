@@ -12,6 +12,9 @@ import parfait.core.image.domain.ImageType
 import parfait.core.image.exception.ImageErrorCode
 import parfait.core.image.port.out.ImageMetaQueryPort
 import parfait.core.image.port.out.ImageMetaSavePort
+import parfait.core.parfait.domain.Parfait
+import parfait.core.parfait.domain.ParfaitStatus
+import parfait.core.parfait.exception.ParfaitErrorCode
 import parfait.core.parfait.port.out.ParfaitQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
@@ -23,6 +26,7 @@ import parfait.core.parfaitimage.exception.ParfaitImageErrorCode
 import parfait.core.parfaitimage.port.`in`.PlaceParfaitImageCommand
 import parfait.core.parfaitimage.port.out.ParfaitImageQueryPort
 import parfait.core.parfaitimage.port.out.ParfaitImageSavePort
+import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.test.assertFailsWith
 
@@ -50,6 +54,18 @@ class PlaceParfaitImageServiceTest {
             memberId = 42L,
             groupNickname = "연경이",
             joinedAt = LocalDateTime.now(),
+        )
+
+    private fun activeParfait(status: ParfaitStatus = ParfaitStatus.ACTIVE): Parfait =
+        Parfait.reconstitute(
+            id = 5L,
+            parfaitGroupId = 1L,
+            parfaitDate = LocalDate.of(2026, 7, 9),
+            status = status,
+            backgroundType = null,
+            backgroundValue = null,
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
         )
 
     private fun confirmedImage(): ImageMeta =
@@ -85,7 +101,7 @@ class PlaceParfaitImageServiceTest {
 
     private fun stubHappyPathPrerequisites() {
         every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns groupMember
-        every { parfaitQueryPort.existsByIdAndGroupId(5L, 1L) } returns true
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
         every { imageMetaQueryPort.findById(77L) } returns confirmedImage()
         every { imageMetaSavePort.save(any()) } answers { firstArg() }
         every { parfaitImageSavePort.save(any()) } answers {
@@ -171,16 +187,25 @@ class PlaceParfaitImageServiceTest {
     @Test
     fun `그룹 소속의 파르페가 아니면 PARFAIT_NOT_FOUND 예외를 던진다`() {
         every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns groupMember
-        every { parfaitQueryPort.existsByIdAndGroupId(5L, 1L) } returns false
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns null
 
         val exception = assertFailsWith<BusinessException> { service.place(command()) }
         exception.errorCode shouldBe ParfaitImageErrorCode.PARFAIT_NOT_FOUND
     }
 
     @Test
+    fun `이미 마감된 파르페면 PARFAIT_ALREADY_CLOSED 예외를 던진다`() {
+        every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns groupMember
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait(status = ParfaitStatus.CLOSED)
+
+        val exception = assertFailsWith<BusinessException> { service.place(command()) }
+        exception.errorCode shouldBe ParfaitErrorCode.PARFAIT_ALREADY_CLOSED
+    }
+
+    @Test
     fun `존재하지 않는 이미지면 IMAGE_NOT_FOUND 예외를 던진다`() {
         every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns groupMember
-        every { parfaitQueryPort.existsByIdAndGroupId(5L, 1L) } returns true
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
         every { imageMetaQueryPort.findById(77L) } returns null
 
         val exception = assertFailsWith<BusinessException> { service.place(command()) }
@@ -190,7 +215,7 @@ class PlaceParfaitImageServiceTest {
     @Test
     fun `아직 확인되지 않은(PENDING) 이미지면 IMAGE_NOT_CONFIRMED 예외를 던진다`() {
         every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns groupMember
-        every { parfaitQueryPort.existsByIdAndGroupId(5L, 1L) } returns true
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
         every { imageMetaQueryPort.findById(77L) } returns
             ImageMeta.reconstitute(
                 id = 77L,

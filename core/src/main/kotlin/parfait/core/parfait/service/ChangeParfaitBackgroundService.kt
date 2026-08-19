@@ -7,6 +7,7 @@ import parfait.core.image.domain.ImageStatus
 import parfait.core.image.exception.ImageErrorCode
 import parfait.core.image.port.out.ImageMetaQueryPort
 import parfait.core.parfait.domain.BackgroundType
+import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.exception.ParfaitErrorCode
 import parfait.core.parfait.port.`in`.BackgroundResult
 import parfait.core.parfait.port.`in`.ChangeParfaitBackgroundCommand
@@ -33,6 +34,9 @@ class ChangeParfaitBackgroundService(
         val parfait =
             parfaitQueryPort.findByIdAndGroupId(command.parfaitId, command.groupId)
                 ?: throw BusinessException(ParfaitErrorCode.PARFAIT_NOT_FOUND)
+        if (parfait.status != ParfaitStatus.ACTIVE) {
+            throw BusinessException(ParfaitErrorCode.PARFAIT_ALREADY_CLOSED)
+        }
 
         val resolvedValue = resolveValue(command)
 

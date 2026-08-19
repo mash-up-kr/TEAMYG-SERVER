@@ -6,6 +6,9 @@ import parfait.core.exception.BusinessException
 import parfait.core.image.port.out.ImageDeletePort
 import parfait.core.image.port.out.ImageMetaQueryPort
 import parfait.core.image.port.out.ImageMetaSavePort
+import parfait.core.parfait.domain.ParfaitStatus
+import parfait.core.parfait.exception.ParfaitErrorCode
+import parfait.core.parfait.port.out.ParfaitQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitimage.exception.ParfaitImageErrorCode
 import parfait.core.parfaitimage.port.`in`.DeleteParfaitImageCommand
@@ -16,6 +19,7 @@ import parfait.core.parfaitimage.port.out.ParfaitImageQueryPort
 @Service
 class DeleteParfaitImageService(
     private val parfaitGroupMemberQueryPort: ParfaitGroupMemberQueryPort,
+    private val parfaitQueryPort: ParfaitQueryPort,
     private val parfaitImageQueryPort: ParfaitImageQueryPort,
     private val parfaitImageDeletePort: ParfaitImageDeletePort,
     private val imageMetaQueryPort: ImageMetaQueryPort,
@@ -33,6 +37,13 @@ class DeleteParfaitImageService(
         val groupMember = parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(command.groupId, command.memberId)
         if (groupMember == null || groupMember.id != parfaitImage.placedByGroupMemberId) {
             throw BusinessException(ParfaitImageErrorCode.PARFAIT_IMAGE_NOT_OWNED)
+        }
+
+        val parfait =
+            parfaitQueryPort.findByIdAndGroupId(command.parfaitId, command.groupId)
+                ?: throw BusinessException(ParfaitImageErrorCode.PARFAIT_NOT_FOUND)
+        if (parfait.status != ParfaitStatus.ACTIVE) {
+            throw BusinessException(ParfaitErrorCode.PARFAIT_ALREADY_CLOSED)
         }
 
         parfaitImageDeletePort.deleteById(parfaitImage.requireId())
