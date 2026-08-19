@@ -7,6 +7,8 @@ import parfait.core.image.domain.ImageStatus
 import parfait.core.image.exception.ImageErrorCode
 import parfait.core.image.port.out.ImageMetaQueryPort
 import parfait.core.image.port.out.ImageMetaSavePort
+import parfait.core.parfait.domain.ParfaitStatus
+import parfait.core.parfait.exception.ParfaitErrorCode
 import parfait.core.parfait.port.out.ParfaitQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
@@ -35,8 +37,11 @@ class PlaceParfaitImageService(
             parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(command.groupId, command.memberId)
                 ?: throw ParfaitGroupException(ParfaitGroupError.GROUP_NOT_JOINED)
 
-        if (!parfaitQueryPort.existsByIdAndGroupId(command.parfaitId, command.groupId)) {
-            throw BusinessException(ParfaitImageErrorCode.PARFAIT_NOT_FOUND)
+        val parfait =
+            parfaitQueryPort.findByIdAndGroupId(command.parfaitId, command.groupId)
+                ?: throw BusinessException(ParfaitImageErrorCode.PARFAIT_NOT_FOUND)
+        if (parfait.status != ParfaitStatus.ACTIVE) {
+            throw BusinessException(ParfaitErrorCode.PARFAIT_ALREADY_CLOSED)
         }
 
         val imageMeta =
