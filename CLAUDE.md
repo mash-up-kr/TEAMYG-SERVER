@@ -40,4 +40,5 @@ Spring Boot(Kotlin) 기반 프로젝트. Gradle 멀티모듈 + 헥사고날 아�
 | 브랜치 생성 | `docs/conventions/branch-naming.md` |
 | 커밋 메시지 작성 | `docs/conventions/commit-message.md` |
 | PR 생성, 본문 작성 | `docs/conventions/pull-request.md` |
+| 운영 DB Flyway 전환 (1회성 절차) | `docs/operations/flyway-cutover.md` |
 
