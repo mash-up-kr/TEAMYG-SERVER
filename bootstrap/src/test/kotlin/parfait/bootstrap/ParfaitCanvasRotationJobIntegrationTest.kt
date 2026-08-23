@@ -28,16 +28,14 @@ import java.time.LocalDate
  * 배치 메타테이블)까지 통째로 태워보는 종단 테스트.
  *
  * 기존 배치 관련 테스트는 전부 [parfait.core.parfait.port.`in`.RotateParfaitCanvasesUseCase]를
- * 경계에서 mock 처리한다. 그래서 "배치 메타테이블이 실제로 존재하는가"라는 문제
- * (flyway가 꺼져 있어 V12가 적용되지 않고, JPA ddl-auto도 배치 테이블을 만들어주지 않는 문제)를
- * 어떤 테스트도 잡아내지 못했고, 이번 최종 리뷰에서 설정 파일을 읽다가 뒤늦게 발견됐다.
+ * 경계에서 mock 처리한다. 그래서 "배치 메타테이블이 실제로 존재하는가"라는 문제를
+ * 어떤 테스트도 잡아내지 못했고, 설정 파일을 읽다가 뒤늦게 발견됐다.
  *
- * 그래서 이 테스트는 flyway를 켜서 우회하지 않고, 실제 배포 설정을 그대로 둔 채
- * (spring.flyway.enabled=false, bootstrap/application.yaml의
- * spring.batch.jdbc.initialize-schema=always 그대로) 배치 메타테이블이 스스로 초기화되어
- * Job이 끝까지 도는지를 검증한다. flyway를 테스트에서만 켜는 방식은 "V1~V12가 빈 DB에
- * 적용되는지"는 검증하지만(그건 FlywayMigrationTest의 몫), 실제 운영 환경에서 무엇이
- * 배치 메타테이블을 만드는지는 검증하지 못한다.
+ * 이 테스트는 실제 배포 설정을 그대로 둔 채(bootstrap/application.yaml의
+ * spring.flyway.enabled=true, spring.batch.jdbc.initialize-schema=never) 배치 메타테이블이
+ * 마련되어 Job이 끝까지 도는지를 검증한다. 즉 V12가 메타테이블의 단일 소유자라는 사실을
+ * 종단으로 확인하는 자리다. 테스트에서만 설정을 바꿔 우회하면 "무엇이 배치 메타테이블을
+ * 만드는가"라는 정작 중요한 질문을 검증하지 못한다.
  */
 @Testcontainers
 @SpringBatchTest
