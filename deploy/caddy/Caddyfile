@@ -1,0 +1,24 @@
+# EC2에서 TLS를 종단하는 리버스 프록시 설정.
+#
+# 애플리케이션 컨테이너는 `--network host`로 8080을 직접 잡으므로 Caddy도 같은 host 네트워크에
+# 띄우고 127.0.0.1:8080으로 넘긴다. 인증서는 Let's Encrypt에서 자동 발급·갱신되고 /data 볼륨에
+# 남는다 — 컨테이너를 지워도 볼륨만 살아 있으면 재발급하지 않는다.
+#
+# 도메인·이메일은 `docker run -e`로 주입한다. 배포 절차는 docs/operations/https-setup.md 참조.
+
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	reverse_proxy 127.0.0.1:8080
+
+	log {
+		output file /data/access.log {
+			roll_size 10MiB
+			roll_keep 5
+		}
+	}
+}
