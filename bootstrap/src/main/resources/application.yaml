@@ -1,3 +1,9 @@
+server:
+  # TLS는 앞단 Caddy가 종단하고 평문 8080으로 프록시한다. 이 설정이 없으면 애플리케이션이 스킴을
+  # http로 인식해 Swagger UI가 광고하는 서버 URL 등 절대 경로가 http://로 나가고 브라우저가 막는다.
+  # X-Forwarded-* 를 무조건 신뢰하므로, 8080은 반드시 외부에 닫아 둔다(docs/operations/https-setup.md).
+  forward-headers-strategy: framework
+
 spring:
   application:
     name: parfait
