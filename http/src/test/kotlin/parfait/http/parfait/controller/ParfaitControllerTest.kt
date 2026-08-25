@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import parfait.core.exception.BusinessException
 import parfait.core.parfait.domain.BackgroundType
+import parfait.core.parfait.domain.OwnerType
 import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.exception.ParfaitErrorCode
 import parfait.core.parfait.port.`in`.BackgroundResult
@@ -182,6 +183,7 @@ class ParfaitControllerTest {
                                     groupMemberId = 10L,
                                     nickname = "연경이",
                                     nametagChip = NameTagChipType.TYPE6,
+                                    ownerType = OwnerType.ME,
                                 ),
                             createdAt = LocalDateTime.of(2026, 7, 9, 14, 30, 0),
                         ),
@@ -200,6 +202,7 @@ class ParfaitControllerTest {
                 jsonPath("$.data.background.type") { value("COLOR") }
                 jsonPath("$.data.images[0].placedBy.nickname") { value("연경이") }
                 jsonPath("$.data.images[0].placedBy.nameTagChip") { value("TYPE6") }
+                jsonPath("$.data.images[0].placedBy.ownerType") { value("ME") }
             }
     }
 
