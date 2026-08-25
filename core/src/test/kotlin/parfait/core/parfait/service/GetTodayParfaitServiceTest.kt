@@ -6,6 +6,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import parfait.core.parfait.domain.BackgroundType
+import parfait.core.parfait.domain.OwnerType
 import parfait.core.parfait.domain.Parfait
 import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.port.`in`.EnsureActiveCanvasUseCase
@@ -179,6 +180,60 @@ class GetTodayParfaitServiceTest {
             ?.first()
             ?.placedBy
             ?.nametagChip shouldBe NameTagChipType.TYPE9
+        result.images
+            ?.first()
+            ?.placedBy
+            ?.ownerType shouldBe OwnerType.OTHER
+    }
+
+    @Test
+    fun `본인이 배치한 토핑은 ownerType이 ME이다`() {
+        every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 1100L) } returns true
+        every { ensureActiveCanvasUseCase.ensure(1L, any()) } returns
+            Parfait.reconstitute(
+                id = 300L,
+                parfaitGroupId = 1L,
+                parfaitDate = LocalDate.now(),
+                status = ParfaitStatus.ACTIVE,
+                backgroundType = null,
+                backgroundValue = null,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now(),
+            )
+        every { parfaitQueryPort.findLastClosedDateByGroupId(1L) } returns null
+        every { parfaitGroupMemberQueryPort.findAllByGroupId(1L) } returns
+            listOf(groupMember(11L, "연경이"))
+
+        val placedImage =
+            ParfaitImage.reconstitute(
+                id = 301L,
+                parfaitId = 300L,
+                imageMetaId = 77L,
+                placedByGroupMemberId = 11L,
+                imageUrl = "https://parfait-bucket.s3.../nukki/user1/550e8400.png",
+                positionX = 120.5,
+                positionY = 340.2,
+                positionZ = 1,
+                scale = 1.0,
+                rotation = 0.0,
+                borderType = BorderType.SOLID,
+                borderColor = "#000000",
+                borderWidth = 2.0,
+                createdAt = LocalDateTime.of(2026, 7, 9, 14, 30, 0),
+                updatedAt = LocalDateTime.of(2026, 7, 9, 14, 30, 0),
+            )
+        every { parfaitImageQueryPort.findAllByParfaitId(300L) } returns listOf(placedImage)
+        every { parfaitGroupMemberQueryPort.findAllByIds(listOf(11L)) } returns
+            listOf(groupMember(11L, "연경이"))
+
+        // groupMember(11L, ...)의 memberId는 11L * 100 = 1100L이므로, 요청자 memberId도 1100L로
+        // 맞춰 "본인이 배치한 토핑" 상황을 만든다.
+        val result = service.get(GetTodayParfaitCommand(memberId = 1100L, groupId = 1L))
+
+        result.images
+            ?.first()
+            ?.placedBy
+            ?.ownerType shouldBe OwnerType.ME
     }
 
     @Test

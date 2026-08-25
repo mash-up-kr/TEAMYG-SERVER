@@ -2,6 +2,7 @@ package parfait.core.parfait.service
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import parfait.core.parfait.domain.OwnerType
 import parfait.core.parfait.domain.ParfaitDay
 import parfait.core.parfait.port.`in`.BackgroundResult
 import parfait.core.parfait.port.`in`.EnsureActiveCanvasUseCase
@@ -44,7 +45,7 @@ class GetTodayParfaitService(
                 )
             }
 
-        val images = buildImages(parfait.requireId())
+        val images = buildImages(parfait.requireId(), command.memberId)
 
         val background =
             if (parfait.backgroundType != null && parfait.backgroundValue != null) {
@@ -64,7 +65,10 @@ class GetTodayParfaitService(
         )
     }
 
-    private fun buildImages(parfaitId: Long): List<TodayParfaitImageResult>? {
+    private fun buildImages(
+        parfaitId: Long,
+        requesterMemberId: Long,
+    ): List<TodayParfaitImageResult>? {
         val parfaitImages = parfaitImageQueryPort.findAllByParfaitId(parfaitId)
         if (parfaitImages.isEmpty()) {
             return null
@@ -95,6 +99,7 @@ class GetTodayParfaitService(
                         groupMemberId = image.placedByGroupMemberId,
                         nickname = placer.groupNickname.value,
                         nametagChip = placer.nametagChip,
+                        ownerType = if (placer.memberId == requesterMemberId) OwnerType.ME else OwnerType.OTHER,
                     ),
                 createdAt = image.createdAt,
             )

@@ -1,6 +1,7 @@
 package parfait.http.parfait.dto
 
 import parfait.core.parfait.domain.BackgroundType
+import parfait.core.parfait.domain.OwnerType
 import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.port.`in`.BackgroundResult
 import parfait.core.parfait.port.`in`.GetTodayParfaitResult
@@ -95,6 +96,7 @@ data class PlacedByResponse(
     val groupMemberId: Long,
     val nickname: String,
     val nameTagChip: NameTagChipType,
+    val ownerType: OwnerType,
 ) {
     companion object {
         fun from(result: PlacedByResult): PlacedByResponse =
@@ -102,6 +104,7 @@ data class PlacedByResponse(
                 groupMemberId = result.groupMemberId,
                 nickname = result.nickname,
                 nameTagChip = result.nametagChip,
+                ownerType = result.ownerType,
             )
     }
 }
