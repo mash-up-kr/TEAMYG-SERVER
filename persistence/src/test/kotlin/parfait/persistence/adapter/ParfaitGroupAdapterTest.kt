@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import parfait.core.parfait.domain.ParfaitDay
 import parfait.core.parfaitgroup.application.port.out.MyParfaitGroupSummary
 import parfait.core.parfaitgroup.domain.InviteCode
 import parfait.core.parfaitgroup.domain.NameTagChipType
@@ -101,7 +102,7 @@ class ParfaitGroupAdapterTest {
         every { projection.recentImageUrl } returns "https://image.example/latest"
         every { projection.recentImageUploadedAt } returns now
         every { projection.lastPlacedByNametagChip } returns "TYPE7"
-        every { groupMemberRepository.findMyGroupSummaries(10L) } returns listOf(projection)
+        every { groupMemberRepository.findMyGroupSummaries(10L, ParfaitDay.current()) } returns listOf(projection)
 
         adapter.findAllByMemberId(10L) shouldBe
             listOf(
