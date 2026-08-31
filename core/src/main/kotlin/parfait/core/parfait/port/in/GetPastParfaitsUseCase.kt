@@ -2,6 +2,7 @@
 
 package parfait.core.parfait.port.`in`
 
+import parfait.core.parfait.domain.ParfaitStatus
 import java.time.LocalDate
 
 interface GetPastParfaitsUseCase {
@@ -18,6 +19,7 @@ data class GetPastParfaitsCommand(
 data class PastParfaitResult(
     val parfaitId: Long,
     val date: LocalDate,
+    val status: ParfaitStatus,
     val thumbnailUrl: String?,
     val imageCount: Int,
 )

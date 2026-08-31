@@ -1,5 +1,6 @@
 package parfait.http.parfait.dto
 
+import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.port.`in`.PastParfaitResult
 import java.time.LocalDate
 
@@ -15,6 +16,7 @@ data class PastParfaitsResponse(
 data class PastParfaitResponse(
     val parfaitId: Long,
     val date: LocalDate,
+    val status: ParfaitStatus,
     val thumbnailUrl: String?,
     val imageCount: Int,
 ) {
@@ -23,6 +25,7 @@ data class PastParfaitResponse(
             PastParfaitResponse(
                 parfaitId = result.parfaitId,
                 date = result.date,
+                status = result.status,
                 thumbnailUrl = result.thumbnailUrl,
                 imageCount = result.imageCount,
             )

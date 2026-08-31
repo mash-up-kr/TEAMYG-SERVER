@@ -42,6 +42,7 @@ class GetPastParfaitsService(
             PastParfaitResult(
                 parfaitId = it.id,
                 date = it.date,
+                status = it.status,
                 thumbnailUrl = null,
                 imageCount = imageCounts[it.id] ?: 0,
             )

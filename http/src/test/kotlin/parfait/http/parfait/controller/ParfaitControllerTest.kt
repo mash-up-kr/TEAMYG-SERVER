@@ -72,6 +72,7 @@ class ParfaitControllerTest {
                 PastParfaitResult(
                     parfaitId = 98L,
                     date = LocalDate.of(2026, 7, 7),
+                    status = ParfaitStatus.CLOSED,
                     thumbnailUrl = "https://parfait-bucket.s3.../completed/group1/2026-07-07.png",
                     imageCount = 4,
                 ),
@@ -86,6 +87,7 @@ class ParfaitControllerTest {
                 status { isOk() }
                 jsonPath("$.data.parfaits[0].parfaitId") { value(98) }
                 jsonPath("$.data.parfaits[0].date") { value("2026-07-07") }
+                jsonPath("$.data.parfaits[0].status") { value("CLOSED") }
                 jsonPath("$.data.parfaits[0].imageCount") { value(4) }
             }
 
