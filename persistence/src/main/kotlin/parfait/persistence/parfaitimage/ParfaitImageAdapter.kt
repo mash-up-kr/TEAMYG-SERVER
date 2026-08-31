@@ -23,6 +23,13 @@ class ParfaitImageAdapter(
     override fun findById(parfaitImageId: Long): ParfaitImage? =
         parfaitImageRepository.findById(parfaitImageId).orElse(null)?.toDomain()
 
+    override fun findAllByIds(parfaitImageIds: Collection<Long>): List<ParfaitImage> {
+        if (parfaitImageIds.isEmpty()) {
+            return emptyList()
+        }
+        return parfaitImageRepository.findAllById(parfaitImageIds).map { it.toDomain() }
+    }
+
     override fun countAllByParfaitIds(parfaitIds: Collection<Long>): Map<Long, Int> {
         if (parfaitIds.isEmpty()) {
             return emptyMap()
@@ -39,6 +46,9 @@ class ParfaitImageAdapter(
 
     override fun save(parfaitImage: ParfaitImage): ParfaitImage =
         parfaitImageRepository.save(parfaitImage.toEntity()).toDomain()
+
+    override fun saveAll(parfaitImages: List<ParfaitImage>): List<ParfaitImage> =
+        parfaitImageRepository.saveAll(parfaitImages.map { it.toEntity() }).map { it.toDomain() }
 
     override fun deleteById(parfaitImageId: Long) {
         parfaitImageRepository.deleteById(parfaitImageId)

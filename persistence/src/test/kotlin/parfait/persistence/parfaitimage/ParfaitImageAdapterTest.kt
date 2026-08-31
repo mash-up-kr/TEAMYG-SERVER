@@ -213,6 +213,101 @@ class ParfaitImageAdapterTest {
     }
 
     @Test
+    fun `id 목록으로 조회하면 존재하는 배치만 반환한다`() {
+        val (memberId, groupMemberId) = setUpGroupMember("J")
+        val parfaitId = setUpParfait(groupMemberId)
+        val imageMetaIdA = setUpConfirmedImageMeta(memberId, "J1")
+        val imageMetaIdB = setUpConfirmedImageMeta(memberId, "J2")
+        val savedA =
+            parfaitImageAdapter.save(
+                ParfaitImage.place(
+                    parfaitId = parfaitId,
+                    imageMetaId = imageMetaIdA,
+                    placedByGroupMemberId = groupMemberId,
+                    imageUrl = "https://s3.example/nukki/user1/uuidJ1.png",
+                    positionX = 10.0,
+                    positionY = 10.0,
+                    positionZ = 0,
+                    scale = 1.0,
+                    rotation = 0.0,
+                    borderType = BorderType.NONE,
+                    borderColor = null,
+                    borderWidth = null,
+                ),
+            )
+        val savedB =
+            parfaitImageAdapter.save(
+                ParfaitImage.place(
+                    parfaitId = parfaitId,
+                    imageMetaId = imageMetaIdB,
+                    placedByGroupMemberId = groupMemberId,
+                    imageUrl = "https://s3.example/nukki/user1/uuidJ2.png",
+                    positionX = 20.0,
+                    positionY = 20.0,
+                    positionZ = 1,
+                    scale = 1.0,
+                    rotation = 0.0,
+                    borderType = BorderType.NONE,
+                    borderColor = null,
+                    borderWidth = null,
+                ),
+            )
+
+        val found = parfaitImageAdapter.findAllByIds(listOf(savedA.requireId(), savedB.requireId(), -1L))
+
+        found.map { it.requireId() }.toSet() shouldBe setOf(savedA.requireId(), savedB.requireId())
+    }
+
+    @Test
+    fun `빈 id 목록으로 조회하면 빈 목록을 반환한다`() {
+        parfaitImageAdapter.findAllByIds(emptyList()) shouldBe emptyList()
+    }
+
+    @Test
+    fun `여러 건을 한 번에 저장하면 각각 id가 채워진 도메인 객체를 반환한다`() {
+        val (memberId, groupMemberId) = setUpGroupMember("K")
+        val parfaitId = setUpParfait(groupMemberId)
+        val imageMetaIdA = setUpConfirmedImageMeta(memberId, "K1")
+        val imageMetaIdB = setUpConfirmedImageMeta(memberId, "K2")
+        val placedA =
+            ParfaitImage.place(
+                parfaitId = parfaitId,
+                imageMetaId = imageMetaIdA,
+                placedByGroupMemberId = groupMemberId,
+                imageUrl = "https://s3.example/nukki/user1/uuidK1.png",
+                positionX = 1.0,
+                positionY = 1.0,
+                positionZ = 0,
+                scale = 1.0,
+                rotation = 0.0,
+                borderType = BorderType.NONE,
+                borderColor = null,
+                borderWidth = null,
+            )
+        val placedB =
+            ParfaitImage.place(
+                parfaitId = parfaitId,
+                imageMetaId = imageMetaIdB,
+                placedByGroupMemberId = groupMemberId,
+                imageUrl = "https://s3.example/nukki/user1/uuidK2.png",
+                positionX = 2.0,
+                positionY = 2.0,
+                positionZ = 1,
+                scale = 1.0,
+                rotation = 0.0,
+                borderType = BorderType.NONE,
+                borderColor = null,
+                borderWidth = null,
+            )
+
+        val saved = parfaitImageAdapter.saveAll(listOf(placedA, placedB))
+
+        saved.size shouldBe 2
+        saved.forEach { it.id shouldBe it.requireId() }
+        saved.map { it.positionX } shouldBe listOf(1.0, 2.0)
+    }
+
+    @Test
     fun `parfaitId로 조회하면 해당 파르페에 배치된 토핑 전체를 반환한다`() {
         val (memberId, groupMemberId) = setUpGroupMember("D")
         val (_, otherGroupMemberId) = setUpGroupMember("E")

@@ -10,6 +10,8 @@ interface ParfaitImageQueryPort {
 
     fun findById(parfaitImageId: Long): ParfaitImage?
 
+    fun findAllByIds(parfaitImageIds: Collection<Long>): List<ParfaitImage>
+
     fun countAllByParfaitIds(parfaitIds: Collection<Long>): Map<Long, Int>
 
     fun findAllByParfaitId(parfaitId: Long): List<ParfaitImage>
