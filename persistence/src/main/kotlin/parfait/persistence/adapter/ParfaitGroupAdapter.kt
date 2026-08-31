@@ -1,6 +1,7 @@
 package parfait.persistence.adapter
 
 import org.springframework.stereotype.Component
+import parfait.core.parfait.domain.ParfaitDay
 import parfait.core.parfaitgroup.application.port.out.MyParfaitGroupQueryPort
 import parfait.core.parfaitgroup.application.port.out.MyParfaitGroupSummary
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberLeavePort
@@ -81,7 +82,7 @@ class ParfaitGroupAdapter(
         }
 
     override fun findAllByMemberId(memberId: Long): List<MyParfaitGroupSummary> =
-        parfaitGroupMemberRepository.findMyGroupSummaries(memberId).map {
+        parfaitGroupMemberRepository.findMyGroupSummaries(memberId, ParfaitDay.current()).map {
             MyParfaitGroupSummary(
                 groupId = it.groupId,
                 groupName = it.groupName,
