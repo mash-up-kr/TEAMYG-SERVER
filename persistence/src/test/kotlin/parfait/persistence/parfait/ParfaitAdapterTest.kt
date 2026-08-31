@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import parfait.core.parfait.domain.Parfait
+import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.port.out.ParfaitSummary
 import parfait.persistence.repository.ParfaitRepository
 import java.time.LocalDate
@@ -51,7 +52,10 @@ class ParfaitAdapterTest {
 
         val result = adapter.findAllByGroupIdAndDateRange(1L, from, to)
 
-        result shouldBe listOf(ParfaitSummary(id = 98L, date = LocalDate.of(2026, 7, 7)))
+        result shouldBe
+            listOf(
+                ParfaitSummary(id = 98L, date = LocalDate.of(2026, 7, 7), status = ParfaitStatus.ACTIVE),
+            )
     }
 
     @Test

@@ -7,6 +7,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import parfait.core.exception.BusinessException
 import parfait.core.parfait.domain.ParfaitDay
+import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.exception.ParfaitErrorCode
 import parfait.core.parfait.port.`in`.GetPastParfaitsCommand
 import parfait.core.parfait.port.out.ParfaitQueryPort
@@ -32,8 +33,8 @@ class GetPastParfaitsServiceTest {
         val to = LocalDate.of(2026, 7, 31)
         every { parfaitQueryPort.findAllByGroupIdAndDateRange(1L, from, to) } returns
             listOf(
-                ParfaitSummary(id = 98L, date = LocalDate.of(2026, 7, 7)),
-                ParfaitSummary(id = 97L, date = LocalDate.of(2026, 7, 6)),
+                ParfaitSummary(id = 98L, date = LocalDate.of(2026, 7, 7), status = ParfaitStatus.ACTIVE),
+                ParfaitSummary(id = 97L, date = LocalDate.of(2026, 7, 6), status = ParfaitStatus.EMPTY),
             )
         every { parfaitImageQueryPort.countAllByParfaitIds(listOf(98L, 97L)) } returns mapOf(98L to 4)
 
@@ -44,9 +45,11 @@ class GetPastParfaitsServiceTest {
 
         result.size shouldBe 2
         result[0].parfaitId shouldBe 98L
+        result[0].status shouldBe ParfaitStatus.ACTIVE
         result[0].imageCount shouldBe 4
         result[0].thumbnailUrl shouldBe null
         result[1].parfaitId shouldBe 97L
+        result[1].status shouldBe ParfaitStatus.EMPTY
         result[1].imageCount shouldBe 0
     }
 

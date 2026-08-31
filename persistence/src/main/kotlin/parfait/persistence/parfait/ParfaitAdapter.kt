@@ -25,7 +25,11 @@ class ParfaitAdapter(
         to: LocalDate,
     ): List<ParfaitSummary> =
         parfaitRepository.findAllByParfaitGroupIdAndParfaitDateBetweenOrderByParfaitDateDesc(groupId, from, to).map {
-            ParfaitSummary(id = requireNotNull(it.id), date = it.parfaitDate)
+            ParfaitSummary(
+                id = requireNotNull(it.id),
+                date = it.parfaitDate,
+                status = ParfaitStatus.valueOf(it.status),
+            )
         }
 
     override fun findByGroupIdAndDate(

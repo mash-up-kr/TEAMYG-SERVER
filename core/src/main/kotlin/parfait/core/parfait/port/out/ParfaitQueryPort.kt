@@ -1,6 +1,7 @@
 package parfait.core.parfait.port.out
 
 import parfait.core.parfait.domain.Parfait
+import parfait.core.parfait.domain.ParfaitStatus
 import java.time.LocalDate
 
 interface ParfaitQueryPort {
@@ -34,4 +35,5 @@ interface ParfaitQueryPort {
 data class ParfaitSummary(
     val id: Long,
     val date: LocalDate,
+    val status: ParfaitStatus,
 )
