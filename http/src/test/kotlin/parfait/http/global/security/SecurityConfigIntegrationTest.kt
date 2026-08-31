@@ -37,6 +37,7 @@ import parfait.http.parfaitimage.controller.TestDeleteParfaitImageUseCaseConfig
 import parfait.http.parfaitimage.controller.TestPlaceParfaitImageUseCaseConfig
 import parfait.http.parfaitimage.controller.TestUpdateParfaitImageBorderUseCaseConfig
 import parfait.http.parfaitimage.controller.TestUpdateParfaitImageUseCaseConfig
+import parfait.http.parfaitimage.controller.TestUpdateParfaitImagesUseCaseConfig
 import kotlin.test.Test
 
 @SpringBootTest(
@@ -67,6 +68,7 @@ import kotlin.test.Test
     TestConfirmImageUploadUseCaseConfig::class,
     TestPlaceParfaitImageUseCaseConfig::class,
     TestUpdateParfaitImageUseCaseConfig::class,
+    TestUpdateParfaitImagesUseCaseConfig::class,
     TestUpdateParfaitImageBorderUseCaseConfig::class,
     TestDeleteParfaitImageUseCaseConfig::class,
     TestRotateParfaitCanvasesUseCaseConfig::class,
