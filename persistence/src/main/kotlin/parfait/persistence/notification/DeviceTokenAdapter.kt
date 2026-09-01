@@ -34,6 +34,10 @@ class DeviceTokenAdapter(
         deviceTokenRepository.deleteByMemberIdAndSessionId(memberId, sessionId)
     }
 
+    override fun deleteAllByMemberId(memberId: Long) {
+        deviceTokenRepository.deleteByMemberId(memberId)
+    }
+
     private fun DeviceTokenEntity.toDomain(): DeviceToken =
         DeviceToken(
             token = token,

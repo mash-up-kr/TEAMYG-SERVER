@@ -151,4 +151,31 @@ class DeviceTokenAdapterTest {
 
         adapter.delete(memberId = memberId1, sessionId = "s1")
     }
+
+    @Test
+    fun `deleteAllByMemberId는 해당 회원의 토큰만 지우고 없어도 예외가 없다`() {
+        adapter.save(
+            DeviceToken.register(
+                memberId = memberId1,
+                sessionId = "s1",
+                token = "tok-1",
+                platform = DevicePlatform.IOS,
+            ),
+        )
+        adapter.save(
+            DeviceToken.register(
+                memberId = memberId2,
+                sessionId = "s2",
+                token = "tok-2",
+                platform = DevicePlatform.ANDROID,
+            ),
+        )
+
+        adapter.deleteAllByMemberId(memberId1)
+
+        adapter.findByToken("tok-1").shouldBeNull()
+        adapter.findByToken("tok-2").shouldNotBeNull()
+
+        adapter.deleteAllByMemberId(memberId1)
+    }
 }

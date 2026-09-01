@@ -18,6 +18,7 @@ import parfait.core.member.port.out.MemberAccount
 import parfait.core.member.port.out.MemberDeletePort
 import parfait.core.member.port.out.MemberNicknameUpdatePort
 import parfait.core.member.port.out.MemberQueryPort
+import parfait.core.notification.port.out.DeviceTokenDeletePort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberLeavePort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
@@ -31,6 +32,7 @@ class MemberServiceTest {
     private val parfaitGroupMemberQueryPort = mockk<ParfaitGroupMemberQueryPort>()
     private val parfaitGroupMemberLeavePort = mockk<ParfaitGroupMemberLeavePort>(relaxed = true)
     private val tokenDeletePort = mockk<TokenDeletePort>(relaxed = true)
+    private val deviceTokenDeletePort = mockk<DeviceTokenDeletePort>(relaxed = true)
     private val service =
         MemberService(
             memberNicknameUpdatePort = memberNicknameUpdatePort,
@@ -39,6 +41,7 @@ class MemberServiceTest {
             parfaitGroupMemberQueryPort = parfaitGroupMemberQueryPort,
             parfaitGroupMemberLeavePort = parfaitGroupMemberLeavePort,
             tokenDeletePort = tokenDeletePort,
+            deviceTokenDeletePort = deviceTokenDeletePort,
         )
     private val now = LocalDateTime.of(2026, 8, 11, 12, 0)
 
@@ -87,10 +90,12 @@ class MemberServiceTest {
         verify { memberDeletePort.deleteById(42L) }
         verify { parfaitGroupMemberLeavePort.leave(match { it.parfaitGroupId == 100L && it.leftAt != null }) }
         verify(exactly = 0) { tokenDeletePort.deleteAllByMemberId(any()) }
+        verify(exactly = 0) { deviceTokenDeletePort.deleteAllByMemberId(any()) }
 
         triggerAfterCommit()
 
         verify { tokenDeletePort.deleteAllByMemberId(42L) }
+        verify { deviceTokenDeletePort.deleteAllByMemberId(42L) }
     }
 
     @Test
@@ -116,6 +121,7 @@ class MemberServiceTest {
         verify(exactly = 0) { memberDeletePort.deleteById(any()) }
         verify(exactly = 0) { parfaitGroupMemberQueryPort.findAllMembershipsByMemberId(any()) }
         verify(exactly = 0) { tokenDeletePort.deleteAllByMemberId(any()) }
+        verify(exactly = 0) { deviceTokenDeletePort.deleteAllByMemberId(any()) }
     }
 
     @Test
@@ -128,6 +134,18 @@ class MemberServiceTest {
         triggerAfterCommit()
 
         verify { memberDeletePort.deleteById(47L) }
+    }
+
+    @Test
+    fun `커밋 후 기기 토큰 정리가 실패해도 예외를 던지지 않는다`() {
+        every { memberQueryPort.existsById(48L) } returns true
+        every { parfaitGroupMemberQueryPort.findAllMembershipsByMemberId(48L) } returns emptyList()
+        every { deviceTokenDeletePort.deleteAllByMemberId(48L) } throws RuntimeException("device token delete failed")
+
+        service.withdraw(48L)
+        triggerAfterCommit()
+
+        verify { memberDeletePort.deleteById(48L) }
     }
 
     @Test

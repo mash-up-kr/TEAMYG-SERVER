@@ -5,4 +5,6 @@ interface DeviceTokenDeletePort {
         memberId: Long,
         sessionId: String,
     )
+
+    fun deleteAllByMemberId(memberId: Long)
 }

@@ -10,4 +10,6 @@ interface DeviceTokenRepository : JpaRepository<DeviceToken, Long> {
         memberId: Long,
         sessionId: String,
     ): Long
+
+    fun deleteByMemberId(memberId: Long): Long
 }
