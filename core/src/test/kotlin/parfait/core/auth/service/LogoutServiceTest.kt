@@ -10,29 +10,33 @@ import parfait.core.auth.port.out.RefreshTokenClaims
 import parfait.core.auth.port.out.TokenDeletePort
 import parfait.core.auth.port.out.TokenValidatePort
 import parfait.core.exception.BusinessException
+import parfait.core.notification.port.out.DeviceTokenDeletePort
 import kotlin.test.assertFailsWith
 
 class LogoutServiceTest {
     private val tokenValidatePort = mockk<TokenValidatePort>()
     private val tokenDeletePort = mockk<TokenDeletePort>(relaxed = true)
+    private val deviceTokenDeletePort = mockk<DeviceTokenDeletePort>(relaxed = true)
     private val service =
         LogoutService(
             tokenValidatePort = tokenValidatePort,
             tokenDeletePort = tokenDeletePort,
+            deviceTokenDeletePort = deviceTokenDeletePort,
         )
 
     @Test
-    fun `본인의 refreshToken이면 저장된 세션을 삭제한다`() {
+    fun `본인의 refreshToken이면 저장된 세션과 해당 세션의 기기 토큰을 삭제한다`() {
         every { tokenValidatePort.validateRefreshToken("refresh-token") } returns
             RefreshTokenClaims(memberId = 42L, sessionId = "session-1")
 
         service.logout(memberId = 42L, refreshToken = "refresh-token")
 
         verify { tokenDeletePort.delete(42L, "session-1") }
+        verify { deviceTokenDeletePort.delete(42L, "session-1") }
     }
 
     @Test
-    fun `다른 회원의 refreshToken이면 FORBIDDEN_REFRESH_TOKEN 예외를 던진다`() {
+    fun `다른 회원의 refreshToken이면 FORBIDDEN_REFRESH_TOKEN 예외를 던지고 아무것도 삭제하지 않는다`() {
         every { tokenValidatePort.validateRefreshToken("other-token") } returns
             RefreshTokenClaims(memberId = 99L, sessionId = "session-1")
 
@@ -43,6 +47,7 @@ class LogoutServiceTest {
 
         exception.errorCode shouldBe AuthErrorCode.FORBIDDEN_REFRESH_TOKEN
         verify(exactly = 0) { tokenDeletePort.delete(any(), any()) }
+        verify(exactly = 0) { deviceTokenDeletePort.delete(any(), any()) }
     }
 
     @Test

@@ -69,6 +69,20 @@ class FlywayMigrationTest {
         backfilled.toSet().size shouldBe 2
     }
 
+    @Test
+    fun `V17은 device_token 테이블을 token 유니크 제약과 인덱스와 함께 생성한다`() {
+        migrate(mysql.databaseName)
+
+        val snapshot = snapshot(mysql.databaseName)
+
+        snapshot.any { it.startsWith("COLUMN|device_token|token|varchar(512)|NO|") } shouldBe true
+        snapshot.any { it.startsWith("COLUMN|device_token|session_id|varchar(64)|YES|") } shouldBe true
+        snapshot.any { it.startsWith("COLUMN|device_token|platform|varchar(20)|NO|") } shouldBe true
+        snapshot.any { it == "CONSTRAINT|device_token|uk_device_token_token|UNIQUE" } shouldBe true
+        snapshot.any { it == "CONSTRAINT|device_token|fk_device_token_member|FOREIGN KEY" } shouldBe true
+        snapshot.any { it.startsWith("INDEX|device_token|idx_device_token_member_session_id|") } shouldBe true
+    }
+
     /** V15까지 적용한 뒤 운영에서 관측된 드리프트를 얹은 DB를 만든다. */
     private fun driftedDatabase(name: String): String {
         connect(mysql.databaseName).use { it.createStatement().execute("CREATE DATABASE $name") }

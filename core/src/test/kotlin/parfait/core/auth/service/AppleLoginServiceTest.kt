@@ -31,7 +31,7 @@ class AppleLoginServiceTest {
     fun `기존 회원이면 액세스-리프레시 토큰을 발급한다`() {
         every { appleIdTokenVerifyPort.verify("id-token", "nonce-1") } returns "apple-sub-1"
         every { memberQueryPort.findMemberIdByProvider(LoginProvider.APPLE, "apple-sub-1") } returns 42L
-        every { tokenIssuePort.createAccessToken(42L) } returns "access-token"
+        every { tokenIssuePort.createAccessToken(42L, any()) } returns "access-token"
         every { tokenIssuePort.createRefreshToken(42L, any()) } returns "refresh-token"
 
         val result = service.login("id-token", "nonce-1")

@@ -17,6 +17,7 @@ import parfait.core.member.port.`in`.WithdrawUseCase
 import parfait.core.member.port.out.MemberDeletePort
 import parfait.core.member.port.out.MemberNicknameUpdatePort
 import parfait.core.member.port.out.MemberQueryPort
+import parfait.core.notification.port.out.DeviceTokenDeletePort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberLeavePort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 
@@ -28,6 +29,7 @@ class MemberService(
     private val parfaitGroupMemberQueryPort: ParfaitGroupMemberQueryPort,
     private val parfaitGroupMemberLeavePort: ParfaitGroupMemberLeavePort,
     private val tokenDeletePort: TokenDeletePort,
+    private val deviceTokenDeletePort: DeviceTokenDeletePort,
 ) : ChangeGlobalNicknameUseCase,
     WithdrawUseCase,
     GetMyAccountUseCase {
@@ -58,6 +60,8 @@ class MemberService(
                 override fun afterCommit() {
                     runCatching { tokenDeletePort.deleteAllByMemberId(memberId) }
                         .onFailure { log.warn("탈퇴 후 refresh token 정리 실패: memberId={}", memberId, it) }
+                    runCatching { deviceTokenDeletePort.deleteAllByMemberId(memberId) }
+                        .onFailure { log.warn("탈퇴 후 기기 토큰 정리 실패: memberId={}", memberId, it) }
                 }
             },
         )

@@ -31,7 +31,7 @@ class KakaoLoginServiceTest {
     fun `기존 회원이면 액세스-리프레시 토큰을 발급하고 저장한 뒤 ExistingMember를 반환한다`() {
         every { kakaoIdTokenVerifyPort.verify("id-token", "nonce-1") } returns "kakao-sub-1"
         every { memberQueryPort.findMemberIdByProvider(LoginProvider.KAKAO, "kakao-sub-1") } returns 42L
-        every { tokenIssuePort.createAccessToken(42L) } returns "access-token"
+        every { tokenIssuePort.createAccessToken(42L, any()) } returns "access-token"
         every { tokenIssuePort.createRefreshToken(42L, any()) } returns "refresh-token"
 
         val result = service.login("id-token", "nonce-1")

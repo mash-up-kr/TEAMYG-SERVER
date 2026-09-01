@@ -39,7 +39,7 @@ class ReissueServiceTest {
             RefreshTokenClaims(memberId = 42L, sessionId = "session-1")
         every { tokenQueryPort.findRefreshToken(42L, "session-1") } returns "refresh-token"
         every { memberQueryPort.existsById(42L) } returns true
-        every { tokenIssuePort.createAccessToken(42L) } returns "new-access-token"
+        every { tokenIssuePort.createAccessToken(42L, "session-1") } returns "new-access-token"
         every { tokenIssuePort.createRefreshToken(42L, "session-1") } returns "new-refresh-token"
 
         val result = service.reissue("refresh-token")

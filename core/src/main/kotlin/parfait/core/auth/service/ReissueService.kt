@@ -32,7 +32,7 @@ class ReissueService(
             throw BusinessException(AuthErrorCode.MEMBER_NOT_FOUND)
         }
 
-        val newAccessToken = tokenIssuePort.createAccessToken(claims.memberId)
+        val newAccessToken = tokenIssuePort.createAccessToken(claims.memberId, claims.sessionId)
         val newRefreshToken = tokenIssuePort.createRefreshToken(claims.memberId, claims.sessionId)
         tokenSavePort.save(claims.memberId, claims.sessionId, newRefreshToken, refreshTokenTtlSeconds)
 

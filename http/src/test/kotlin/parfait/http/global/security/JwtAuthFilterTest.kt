@@ -11,6 +11,7 @@ import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.servlet.HandlerExceptionResolver
 import parfait.core.auth.exception.AuthErrorCode
+import parfait.core.auth.port.out.AccessTokenClaims
 import parfait.core.auth.port.out.TokenValidatePort
 import parfait.core.exception.BusinessException
 import parfait.core.member.port.out.MemberQueryPort
@@ -69,7 +70,7 @@ class JwtAuthFilterTest {
         request.addHeader("Authorization", "Bearer valid-token")
         val response = MockHttpServletResponse()
         val chain = FilterChain { _, _ -> error("체인이 호출되면 안 된다") }
-        every { tokenValidatePort.validateAccessToken("valid-token") } returns 42L
+        every { tokenValidatePort.validateAccessToken("valid-token") } returns AccessTokenClaims(42L, null)
         every { memberQueryPort.existsById(42L) } returns false
 
         filter.doFilter(request, response, chain)
@@ -91,12 +92,13 @@ class JwtAuthFilterTest {
         val response = MockHttpServletResponse()
         var chainCalled = false
         val chain = FilterChain { _, _ -> chainCalled = true }
-        every { tokenValidatePort.validateAccessToken("valid-token") } returns 42L
+        every { tokenValidatePort.validateAccessToken("valid-token") } returns AccessTokenClaims(42L, "session-1")
         every { memberQueryPort.existsById(42L) } returns true
 
         filter.doFilter(request, response, chain)
 
         assertEquals(true, chainCalled)
         assertEquals("42", SecurityContextHolder.getContext().authentication!!.name)
+        assertEquals("session-1", SecurityContextHolder.getContext().authentication!!.credentials)
     }
 }
