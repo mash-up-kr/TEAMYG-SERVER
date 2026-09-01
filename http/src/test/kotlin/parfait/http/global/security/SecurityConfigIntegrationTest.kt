@@ -18,6 +18,7 @@ import parfait.core.auth.port.out.TokenIssuePort
 import parfait.core.member.port.out.MemberAccount
 import parfait.core.member.port.out.MemberQueryPort
 import parfait.http.TestApplication
+import parfait.http.api.notification.controller.TestDeviceTokenUseCaseConfig
 import parfait.http.auth.controller.TestAppleLoginUseCaseConfig
 import parfait.http.auth.controller.TestKakaoLoginUseCaseConfig
 import parfait.http.auth.controller.TestLogoutUseCaseConfig
@@ -71,6 +72,7 @@ import kotlin.test.Test
     TestUpdateParfaitImagesUseCaseConfig::class,
     TestUpdateParfaitImageBorderUseCaseConfig::class,
     TestDeleteParfaitImageUseCaseConfig::class,
+    TestDeviceTokenUseCaseConfig::class,
     TestRotateParfaitCanvasesUseCaseConfig::class,
     TestChangeParfaitBackgroundUseCaseConfig::class,
 )

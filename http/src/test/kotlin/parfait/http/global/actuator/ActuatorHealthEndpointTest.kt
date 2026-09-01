@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import parfait.http.TestApplication
+import parfait.http.api.notification.controller.TestDeviceTokenUseCaseConfig
 import parfait.http.auth.controller.TestAppleLoginUseCaseConfig
 import parfait.http.auth.controller.TestKakaoLoginUseCaseConfig
 import parfait.http.auth.controller.TestLogoutUseCaseConfig
@@ -52,6 +53,7 @@ import kotlin.test.Test
     TestUpdateParfaitImagesUseCaseConfig::class,
     TestUpdateParfaitImageBorderUseCaseConfig::class,
     TestDeleteParfaitImageUseCaseConfig::class,
+    TestDeviceTokenUseCaseConfig::class,
     TestRotateParfaitCanvasesUseCaseConfig::class,
     TestChangeParfaitBackgroundUseCaseConfig::class,
 )
