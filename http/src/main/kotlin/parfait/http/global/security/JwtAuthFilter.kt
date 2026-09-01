@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import org.springframework.web.servlet.HandlerExceptionResolver
 import parfait.core.auth.exception.AuthErrorCode
+import parfait.core.auth.port.out.AccessTokenClaims
 import parfait.core.auth.port.out.TokenValidatePort
 import parfait.core.exception.BusinessException
 import parfait.core.member.port.out.MemberQueryPort
@@ -27,9 +28,10 @@ class JwtAuthFilter(
     ) {
         try {
             extractToken(request)?.let { token ->
-                val memberId = authenticate(token)
+                val claims = authenticate(token)
+                // principal은 memberId 문자열 유지, sessionId는 credentials 슬롯에 실어 컨트롤러가 꺼내 쓴다
                 SecurityContextHolder.getContext().authentication =
-                    UsernamePasswordAuthenticationToken(memberId.toString(), null, emptyList())
+                    UsernamePasswordAuthenticationToken(claims.memberId.toString(), claims.sessionId, emptyList())
             }
             filterChain.doFilter(request, response)
         } catch (e: BusinessException) {
@@ -45,11 +47,11 @@ class JwtAuthFilter(
         return header.removePrefix("Bearer ")
     }
 
-    private fun authenticate(token: String): Long {
-        val memberId = tokenValidatePort.validateAccessToken(token)
-        if (!memberQueryPort.existsById(memberId)) {
+    private fun authenticate(token: String): AccessTokenClaims {
+        val claims = tokenValidatePort.validateAccessToken(token)
+        if (!memberQueryPort.existsById(claims.memberId)) {
             throw BusinessException(AuthErrorCode.MEMBER_NOT_FOUND)
         }
-        return memberId
+        return claims
     }
 }

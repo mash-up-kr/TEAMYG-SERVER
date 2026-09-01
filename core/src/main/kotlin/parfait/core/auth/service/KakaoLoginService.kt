@@ -32,7 +32,7 @@ class KakaoLoginService(
             KakaoLoginResult.NewUser(registrationToken)
         } else {
             val sessionId = UUID.randomUUID().toString()
-            val accessToken = tokenIssuePort.createAccessToken(memberId)
+            val accessToken = tokenIssuePort.createAccessToken(memberId, sessionId)
             val refreshToken = tokenIssuePort.createRefreshToken(memberId, sessionId)
             tokenSavePort.save(memberId, sessionId, refreshToken, refreshTokenTtlSeconds)
             KakaoLoginResult.ExistingMember(accessToken, refreshToken, accessTokenExpiresInSeconds)

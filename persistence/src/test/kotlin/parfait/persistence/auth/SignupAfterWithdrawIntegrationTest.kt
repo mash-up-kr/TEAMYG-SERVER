@@ -85,7 +85,7 @@ class SignupAfterWithdrawIntegrationTest {
             listOf(CurrentTerms(tos.id!!, TosType.TERMS_OF_SERVICE, "이용약관", "https://x", true))
 
         val tokenIssuePort = mockk<TokenIssuePort>()
-        every { tokenIssuePort.createAccessToken(any()) } returns "access"
+        every { tokenIssuePort.createAccessToken(any(), any()) } returns "access"
         every { tokenIssuePort.createRefreshToken(any(), any()) } returns "refresh"
 
         val tokenSavePort = mockk<TokenSavePort>(relaxed = true)

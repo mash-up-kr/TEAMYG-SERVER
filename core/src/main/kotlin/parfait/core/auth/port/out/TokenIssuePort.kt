@@ -3,7 +3,10 @@ package parfait.core.auth.port.out
 import parfait.core.auth.domain.LoginProvider
 
 interface TokenIssuePort {
-    fun createAccessToken(memberId: Long): String
+    fun createAccessToken(
+        memberId: Long,
+        sessionId: String,
+    ): String
 
     fun createRefreshToken(
         memberId: Long,

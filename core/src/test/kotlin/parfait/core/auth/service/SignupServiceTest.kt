@@ -65,7 +65,7 @@ class SignupServiceTest {
         every { memberQueryPort.findMemberIdByProvider(LoginProvider.KAKAO, "kakao-sub-1") } returns null
         every { nicknameGenerator.generate() } returns "달콤한푸딩"
         every { memberRegistrar.register(any(), any(), any(), any()) } returns 42L
-        every { tokenIssuePort.createAccessToken(42L) } returns "access-token"
+        every { tokenIssuePort.createAccessToken(42L, any()) } returns "access-token"
         every { tokenIssuePort.createRefreshToken(42L, any()) } returns "refresh-token"
     }
 

@@ -23,12 +23,29 @@ class JwtTokenAdapterTest {
         )
 
     @Test
-    fun `액세스 토큰을 발급하고 검증하면 같은 memberId를 반환한다`() {
-        val accessToken = adapter.createAccessToken(memberId = 42L)
+    fun `액세스 토큰을 발급하고 검증하면 memberId와 sessionId를 반환한다`() {
+        val accessToken = adapter.createAccessToken(memberId = 42L, sessionId = "session-1")
 
-        val memberId = adapter.validateAccessToken(accessToken)
+        val claims = adapter.validateAccessToken(accessToken)
 
-        assertEquals(42L, memberId)
+        assertEquals(42L, claims.memberId)
+        assertEquals("session-1", claims.sessionId)
+    }
+
+    @Test
+    fun `sessionId 클레임이 없는 액세스 토큰을 검증하면 sessionId는 null이다`() {
+        val legacyToken =
+            Jwts
+                .builder()
+                .subject("42")
+                .claim("type", "ACCESS")
+                .signWith(Keys.hmacShaKeyFor(TEST_SECRET_KEY.toByteArray()), Jwts.SIG.HS256)
+                .compact()
+
+        val claims = adapter.validateAccessToken(legacyToken)
+
+        assertEquals(42L, claims.memberId)
+        assertEquals(null, claims.sessionId)
     }
 
     @Test
@@ -66,7 +83,7 @@ class JwtTokenAdapterTest {
                 refreshTokenExpirationSeconds = -5,
                 registrationTokenExpirationSeconds = -5,
             )
-        val expiredToken = expiredAdapter.createAccessToken(memberId = 42L)
+        val expiredToken = expiredAdapter.createAccessToken(memberId = 42L, sessionId = "session-1")
 
         val exception =
             assertFailsWith<BusinessException> {
@@ -77,7 +94,7 @@ class JwtTokenAdapterTest {
 
     @Test
     fun `액세스 토큰을 validateRefreshToken에 넣으면 INVALID_TOKEN 예외를 던진다`() {
-        val accessToken = adapter.createAccessToken(memberId = 42L)
+        val accessToken = adapter.createAccessToken(memberId = 42L, sessionId = "session-1")
 
         val exception =
             assertFailsWith<BusinessException> {
@@ -166,7 +183,7 @@ class JwtTokenAdapterTest {
 
     @Test
     fun `액세스 토큰을 validateRegistrationToken에 넣으면 INVALID_TOKEN 예외를 던진다`() {
-        val accessToken = adapter.createAccessToken(memberId = 42L)
+        val accessToken = adapter.createAccessToken(memberId = 42L, sessionId = "session-1")
 
         val exception =
             assertFailsWith<BusinessException> {

@@ -153,7 +153,7 @@ class SecurityConfigIntegrationTest {
 
     @Test
     fun `존재하지 않는 회원의 토큰이면 401과 MEMBER_NOT_FOUND로 응답한다`() {
-        val token = tokenIssuePort.createAccessToken(memberId = 999L)
+        val token = tokenIssuePort.createAccessToken(memberId = 999L, sessionId = "integration-session")
 
         mockMvc
             .get("/test/protected") {
@@ -166,7 +166,7 @@ class SecurityConfigIntegrationTest {
 
     @Test
     fun `존재하는 회원의 유효한 토큰이면 인증에 성공해 200을 응답한다`() {
-        val token = tokenIssuePort.createAccessToken(memberId = 1L)
+        val token = tokenIssuePort.createAccessToken(memberId = 1L, sessionId = "integration-session")
 
         mockMvc
             .get("/test/protected") {
@@ -237,7 +237,7 @@ class SecurityConfigIntegrationTest {
 
     @Test
     fun `로그아웃 엔드포인트는 화이트리스트가 아니라 유효한 토큰이 있어야 204를 응답한다`() {
-        val token = tokenIssuePort.createAccessToken(memberId = 1L)
+        val token = tokenIssuePort.createAccessToken(memberId = 1L, sessionId = "integration-session")
 
         mockMvc
             .post("/api/v1/auth/logout") {
