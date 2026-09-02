@@ -38,6 +38,14 @@ class DeviceTokenAdapter(
         deviceTokenRepository.deleteByMemberId(memberId)
     }
 
+    @Transactional(readOnly = true)
+    override fun findByMemberId(memberId: Long): List<DeviceToken> =
+        deviceTokenRepository.findByMemberId(memberId).map { it.toDomain() }
+
+    override fun deleteByToken(token: String) {
+        deviceTokenRepository.deleteByToken(token)
+    }
+
     private fun DeviceTokenEntity.toDomain(): DeviceToken =
         DeviceToken(
             token = token,
