@@ -37,6 +37,7 @@ class PlaceParfaitImageServiceTest {
     private val imageMetaSavePort = mockk<ImageMetaSavePort>()
     private val parfaitImageQueryPort = mockk<ParfaitImageQueryPort>()
     private val parfaitImageSavePort = mockk<ParfaitImageSavePort>()
+    private val toppingPlacedNotifier = mockk<parfait.core.notification.service.ToppingPlacedNotifier>(relaxed = true)
     private val service =
         PlaceParfaitImageService(
             parfaitGroupMemberQueryPort = parfaitGroupMemberQueryPort,
@@ -45,6 +46,7 @@ class PlaceParfaitImageServiceTest {
             imageMetaSavePort = imageMetaSavePort,
             parfaitImageQueryPort = parfaitImageQueryPort,
             parfaitImageSavePort = parfaitImageSavePort,
+            toppingPlacedNotifier = toppingPlacedNotifier,
         )
 
     private val groupMember =
@@ -242,5 +244,41 @@ class PlaceParfaitImageServiceTest {
                 service.place(command(borderType = BorderType.SOLID, borderColor = null, borderWidth = null))
             }
         exception.errorCode shouldBe ParfaitImageErrorCode.INVALID_BORDER
+    }
+
+    @Test
+    fun `신규 등록이면 토핑 알림 notifier 를 1회 호출한다`() {
+        stubHappyPathPrerequisites()
+        every { parfaitImageQueryPort.findByParfaitIdAndImageMetaId(5L, 77L) } returns null
+
+        service.place(command())
+
+        verify(exactly = 1) {
+            toppingPlacedNotifier.notify(
+                match {
+                    it.groupId == 1L &&
+                        it.parfaitId == 5L &&
+                        it.parfaitDate == java.time.LocalDate.of(2026, 7, 9) &&
+                        it.actorMemberId == 42L
+                },
+                any(),
+                any(),
+            )
+        }
+    }
+
+    @Test
+    fun `재배치면 토핑 알림 notifier 를 호출하지 않는다`() {
+        every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns groupMember
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
+        every { imageMetaQueryPort.findById(77L) } returns confirmedImage()
+        val existing = mockk<ParfaitImage>(relaxed = true)
+        every { existing.reposition(any(), any(), any(), any(), any(), any(), any(), any(), any()) } returns existing
+        every { parfaitImageQueryPort.findByParfaitIdAndImageMetaId(5L, 77L) } returns existing
+        every { parfaitImageSavePort.save(any()) } answers { firstArg() }
+
+        service.place(command())
+
+        verify(exactly = 0) { toppingPlacedNotifier.notify(any(), any(), any()) }
     }
 }
