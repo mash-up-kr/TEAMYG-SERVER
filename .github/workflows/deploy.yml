@@ -45,7 +45,10 @@ jobs:
               "sudo docker stop parfait || true",
               "sudo docker rm parfait || true",
               "sudo docker pull 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com/parfait:latest",
-              "sudo docker run -d --name parfait --network host --env-file /home/ubuntu/TEAMYG-SERVER/.env --restart always 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com/parfait:latest",
+              "# FCM 키: Firebase 콘솔 > 프로젝트 설정 > 서비스 계정 > 새 비공개 키 생성 →",
+              "#   scp 로 /home/ubuntu/TEAMYG-SERVER/parfait-firebase-key.json (chmod 600)",
+              "test -s /home/ubuntu/TEAMYG-SERVER/parfait-firebase-key.json || { echo FCM key missing: /home/ubuntu/TEAMYG-SERVER/parfait-firebase-key.json; exit 1; }",
+              "sudo docker run -d --name parfait --network host --env-file /home/ubuntu/TEAMYG-SERVER/.env -v /home/ubuntu/TEAMYG-SERVER/parfait-firebase-key.json:/app/parfait-firebase-key.json:ro --restart always 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com/parfait:latest",
               "for i in $(seq 1 30); do curl -sf --max-time 2 http://localhost:8080/health && exit 0; [ $i -lt 30 ] && sleep 5; done; echo Health check failed; exit 1"
             ]' \
             --query "Command.CommandId" \

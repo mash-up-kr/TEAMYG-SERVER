@@ -53,6 +53,9 @@ aws:
     region: ap-northeast-2
     presigned-url-expiration-seconds: 900
 
+fcm:
+  credentials-path: classpath:fcm/local-firebase-key.json
+
 springdoc:
   api-docs:
     path: /v3/api-docs
