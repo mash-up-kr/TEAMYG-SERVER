@@ -42,4 +42,5 @@ Spring Boot(Kotlin) 기반 프로젝트. Gradle 멀티모듈 + 헥사고날 아�
 | PR 생성, 본문 작성 | `docs/conventions/pull-request.md` |
 | 운영 DB Flyway 전환 (1회성 절차) | `docs/operations/flyway-cutover.md` |
 | 도메인 HTTPS·리버스 프록시 구성 | `docs/operations/https-setup.md` |
+| FCM 서비스 계정 키 운영 배치 (1회성 절차) | `docs/operations/fcm-key-setup.md` |
 
