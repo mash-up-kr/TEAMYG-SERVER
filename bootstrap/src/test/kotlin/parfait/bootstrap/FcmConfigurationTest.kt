@@ -38,6 +38,14 @@ class FcmConfigurationTest {
         assertEquals("0 0 4 * * *", properties.getProperty("notification.outbox.purge-cron"))
     }
 
+    @Test
+    fun `공통 설정은 리마인드 오전·저녁 cron 을 정의한다`() {
+        val properties = loadProperties("application.yaml")
+
+        assertEquals("0 0 10 * * *", properties.getProperty("notification.reminder.morning-cron"))
+        assertEquals("0 0 20 * * *", properties.getProperty("notification.reminder.evening-cron"))
+    }
+
     private fun loadProperties(fileName: String) =
         YamlPropertySourceLoader()
             .load(fileName, ClassPathResource(fileName))
