@@ -15,4 +15,5 @@ data class OutboxBatchOutcome(
     val cancelled: Int,
     val retried: Int,
     val failed: Int,
+    val cancelledByReason: Map<String, Int> = emptyMap(),
 )
