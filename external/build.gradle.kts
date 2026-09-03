@@ -15,6 +15,7 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":common"))
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework:spring-tx")
     implementation("com.nimbusds:nimbus-jose-jwt:10.7")
     implementation("software.amazon.awssdk:s3:2.46.18")
     implementation("com.google.firebase:firebase-admin:9.9.0")
