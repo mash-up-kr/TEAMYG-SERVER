@@ -23,6 +23,9 @@ interface NotificationOutboxRepository : JpaRepository<NotificationOutboxEntity,
         @Param("limit") limit: Int,
     ): List<NotificationOutboxEntity>
 
+    /** 넘어온 dedup_key 중 이미 큐잉된 행만 조회한다 (saveAll 의 생산자 멱등 pre-filter 용). */
+    fun findAllByDedupKeyIn(dedupKeys: Collection<String>): List<NotificationOutboxEntity>
+
     @Modifying
     @Query(
         value = """
