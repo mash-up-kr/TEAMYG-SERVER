@@ -48,15 +48,42 @@ class OutboxPollingWorker(
 
     internal fun drain() {
         scheduled.set(false)
-        var i = 0
-        while (i++ < MAX_ITERATIONS) {
+        var iterations = 0
+        var claimedTotal = 0
+        var sentTotal = 0
+        var failedTotal = 0
+        var retriedTotal = 0
+        var cancelledTotal = 0
+        val cancelledByReasonTotal = mutableMapOf<String, Int>()
+
+        while (iterations < MAX_ITERATIONS) {
+            iterations++
             val outcome =
                 runCatching { useCase.processDueBatch() }
                     .getOrElse {
                         log.error("notification_outbox 폴링 배치 실패", it)
                         return
                     }
-            if (outcome.claimed == 0) return
+            claimedTotal += outcome.claimed
+            sentTotal += outcome.sent
+            failedTotal += outcome.failed
+            retriedTotal += outcome.retried
+            cancelledTotal += outcome.cancelled
+            outcome.cancelledByReason.forEach { (k, v) -> cancelledByReasonTotal.merge(k, v, Int::plus) }
+            if (outcome.claimed == 0) break
+        }
+
+        if (claimedTotal > 0) {
+            log.info(
+                "outbox drain 완료 - iterations={} claimed={} sent={} cancelled={} retried={} failed={} byReason={}",
+                iterations,
+                claimedTotal,
+                sentTotal,
+                cancelledTotal,
+                retriedTotal,
+                failedTotal,
+                cancelledByReasonTotal,
+            )
         }
     }
 

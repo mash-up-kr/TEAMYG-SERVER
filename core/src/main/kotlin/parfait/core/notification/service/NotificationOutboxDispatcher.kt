@@ -3,6 +3,7 @@ package parfait.core.notification.service
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import parfait.core.notification.domain.FcmErrorCodes
 import parfait.core.notification.domain.NotificationMessageFactory
 import parfait.core.notification.domain.OutboxBackoff
 import parfait.core.notification.exception.NotificationSendException
@@ -40,7 +41,9 @@ class NotificationOutboxDispatcher(
 
     private companion object {
         const val CLAIM_BATCH_SIZE = 50
-        val DEAD_TOKEN_CODES = setOf("UNREGISTERED", "INVALID_ARGUMENT", "SENDER_ID_MISMATCH")
+        const val CANCELLED_GROUP_DELETED = "CANCELLED_GROUP_DELETED"
+        const val CANCELLED_RECEIVER_LEFT = "CANCELLED_RECEIVER_LEFT"
+        const val NO_DEVICE_TOKEN = "NO_DEVICE_TOKEN"
     }
 
     @Transactional
@@ -50,6 +53,16 @@ class NotificationOutboxDispatcher(
         var cancelled = 0
         var retried = 0
         var failed = 0
+        val cancelledByReason = mutableMapOf<String, Int>()
+
+        fun cancel(
+            id: Long,
+            reason: String,
+        ) {
+            pollPort.markSent(id, now, reason)
+            cancelled++
+            cancelledByReason.merge(reason, 1, Int::plus)
+        }
 
         for (row in batch) {
             val id = requireNotNull(row.id)
@@ -57,15 +70,13 @@ class NotificationOutboxDispatcher(
 
             val group = groupQueryPort.findById(p.groupId)
             if (group == null) { // E-04
-                pollPort.markSent(id, now, "CANCELLED_GROUP_DELETED")
-                cancelled++
+                cancel(id, CANCELLED_GROUP_DELETED)
                 continue
             }
 
             val receiver = groupMemberQueryPort.findByGroupIdAndMemberId(p.groupId, row.receiverMemberId)
             if (receiver == null || receiver.leftAt != null) { // E-03
-                pollPort.markSent(id, now, "CANCELLED_RECEIVER_LEFT")
-                cancelled++
+                cancel(id, CANCELLED_RECEIVER_LEFT)
                 continue
             }
 
@@ -74,8 +85,7 @@ class NotificationOutboxDispatcher(
 
             val tokens = deviceTokenQueryPort.findByMemberId(row.receiverMemberId)
             if (tokens.isEmpty()) { // E-02
-                pollPort.markSent(id, now, "NO_DEVICE_TOKEN")
-                cancelled++
+                cancel(id, NO_DEVICE_TOKEN)
                 continue
             }
 
@@ -92,7 +102,7 @@ class NotificationOutboxDispatcher(
                         lastError = "${ex?.errorCode ?: e::class.simpleName}: ${e.message}".take(500)
                         when {
                             // E-10/E-12
-                            ex?.errorCode in DEAD_TOKEN_CODES -> deviceTokenDeletePort.deleteByToken(t.token)
+                            ex?.errorCode in FcmErrorCodes.DEAD_TOKEN -> deviceTokenDeletePort.deleteByToken(t.token)
                             ex == null || ex.retryable -> anyRetryable = true
                         }
                     }
@@ -122,12 +132,25 @@ class NotificationOutboxDispatcher(
             }
         }
 
+        if (batch.isNotEmpty()) {
+            log.info(
+                "outbox 배치 처리 - claimed={} sent={} cancelled={} retried={} failed={} byReason={}",
+                batch.size,
+                sent,
+                cancelled,
+                retried,
+                failed,
+                cancelledByReason,
+            )
+        }
+
         return OutboxBatchOutcome(
             claimed = batch.size,
             sent = sent,
             cancelled = cancelled,
             retried = retried,
             failed = failed,
+            cancelledByReason = cancelledByReason,
         )
     }
 }

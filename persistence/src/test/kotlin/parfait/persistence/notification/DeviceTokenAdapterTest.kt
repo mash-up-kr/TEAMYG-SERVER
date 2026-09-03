@@ -202,4 +202,27 @@ class DeviceTokenAdapterTest {
         adapter.findByToken("tok-b").shouldNotBeNull()
         adapter.deleteByToken("no-such")
     }
+
+    @Test
+    fun `deleteByTokenIn 은 목록의 토큰만 지우고 삭제 행 수를 반환한다`() {
+        adapter.save(DeviceToken.register(memberId1, "s1", "tok-a", DevicePlatform.IOS))
+        adapter.save(DeviceToken.register(memberId1, "s2", "tok-b", DevicePlatform.ANDROID))
+        adapter.save(DeviceToken.register(memberId2, "s3", "tok-c", DevicePlatform.IOS))
+
+        val deleted = adapter.deleteByTokenIn(listOf("tok-a", "tok-c", "no-such"))
+
+        deleted shouldBe 2
+        adapter.findByToken("tok-a").shouldBeNull()
+        adapter.findByToken("tok-b").shouldNotBeNull()
+        adapter.findByToken("tok-c").shouldBeNull()
+    }
+
+    @Test
+    fun `deleteByTokenIn 은 빈 목록이면 아무것도 안 지운다`() {
+        adapter.save(DeviceToken.register(memberId1, "s1", "tok-a", DevicePlatform.IOS))
+
+        adapter.deleteByTokenIn(emptyList()) shouldBe 0
+
+        adapter.findByToken("tok-a").shouldNotBeNull()
+    }
 }

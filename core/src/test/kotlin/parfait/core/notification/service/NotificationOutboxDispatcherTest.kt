@@ -1,5 +1,6 @@
 package parfait.core.notification.service
 
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -101,7 +102,7 @@ class NotificationOutboxDispatcherTest {
 
         dispatcher.processDueBatch(now)
 
-        verify { senderPort.send("tok-1", match { it.title == "우리팀 파르페에 체리 얹을 타이밍!" && it.body == "닉7님이 새 토핑을 쌓았어요" }) }
+        verify { senderPort.send("tok-1", match { it.title == "우리팀 파르페에 체리 하나 톡!" && it.body == "닉7님이 새 토핑을 쌓았어요" }) }
         verify { pollPort.markSent(1L, now, null) }
     }
 
@@ -218,5 +219,20 @@ class NotificationOutboxDispatcherTest {
 
         verify { deviceTokenDeletePort.deleteByToken("dead") }
         verify { pollPort.markSent(1L, now, null) }
+    }
+
+    @Test
+    fun `취소 사유가 cancelledByReason 에 사유별로 집계된다`() {
+        every { pollPort.claimBatch(any(), now) } returns
+            listOf(row(id = 1L, receiver = 11L), row(id = 2L, receiver = 22L))
+        every { groupQueryPort.findById(1L) } returnsMany listOf(null, group())
+        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 22L) } returns member(22L)
+        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 7L) } returns member(7L)
+        every { deviceTokenQueryPort.findByMemberId(22L) } returns emptyList()
+
+        val outcome = dispatcher.processDueBatch(now)
+
+        outcome.cancelled shouldBe 2
+        outcome.cancelledByReason shouldBe mapOf("CANCELLED_GROUP_DELETED" to 1, "NO_DEVICE_TOKEN" to 1)
     }
 }

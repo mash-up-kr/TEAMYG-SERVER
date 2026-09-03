@@ -2,11 +2,14 @@ package parfait.bootstrap
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.batch.core.BatchStatus
+import org.springframework.batch.core.job.Job
 import org.springframework.batch.test.JobOperatorTestUtils
 import org.springframework.batch.test.context.SpringBatchTest
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
@@ -67,10 +70,20 @@ class ParfaitCanvasRotationJobIntegrationTest {
         }
     }
 
-    // @SpringBatchTest는 컨텍스트에 Job 빈이 정확히 1개일 때만 이걸 자동으로 주입해준다.
-    // 이 모듈 조합에는 parfaitCanvasRotationJob 하나뿐이라 별도 설정 없이 연결된다.
+    // @SpringBatchTest는 컨텍스트에 Job 빈이 정확히 1개일 때만 jobOperatorTestUtils.job을 자동으로 채워준다.
+    // 이제 dailyReminderJob이라는 두 번째 Job 빈이 생겨서 자동 주입이 되지 않으므로,
+    // 아래 @BeforeEach에서 parfaitCanvasRotationJob을 명시적으로 바인딩한다.
     @Autowired
     private lateinit var jobOperatorTestUtils: JobOperatorTestUtils
+
+    @Autowired
+    @Qualifier("parfaitCanvasRotationJob")
+    private lateinit var rotationJob: Job
+
+    @BeforeEach
+    fun bindJob() {
+        jobOperatorTestUtils.job = rotationJob
+    }
 
     // persistence 어댑터를 직접 참조하지 않고 core 포트로만 데이터를 셋업/검증한다.
     // 헥사고날 경계를 지키면서도 실제 어댑터(빈)를 그대로 태우므로 배치 자체의 검증 목적에는 충분하다.

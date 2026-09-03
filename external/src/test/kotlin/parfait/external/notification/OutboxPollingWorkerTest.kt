@@ -11,7 +11,10 @@ class OutboxPollingWorkerTest {
     private val useCase = mockk<ProcessNotificationOutboxUseCase>()
     private val worker = OutboxPollingWorker(useCase)
 
-    private fun outcome(claimed: Int) = OutboxBatchOutcome(claimed, claimed, 0, 0, 0)
+    private fun outcome(
+        claimed: Int,
+        cancelledByReason: Map<String, Int> = emptyMap(),
+    ) = OutboxBatchOutcome(claimed, claimed, 0, 0, 0, cancelledByReason)
 
     @Test
     fun `drain 은 claimed 가 0 이 될 때까지 반복 호출한다`() {
@@ -36,5 +39,19 @@ class OutboxPollingWorkerTest {
         every { useCase.processDueBatch(any()) } throws RuntimeException("boom")
 
         worker.drain() // 예외가 전파되지 않아야 함
+    }
+
+    @Test
+    fun `drain 은 iteration 간 cancelledByReason 을 병합한다`() {
+        every { useCase.processDueBatch(any()) } returnsMany
+            listOf(
+                outcome(50, mapOf("NO_DEVICE_TOKEN" to 50)),
+                outcome(3, mapOf("NO_DEVICE_TOKEN" to 2, "CANCELLED_RECEIVER_LEFT" to 1)),
+                outcome(0),
+            )
+
+        worker.drain()
+
+        verify(exactly = 3) { useCase.processDueBatch(any()) }
     }
 }

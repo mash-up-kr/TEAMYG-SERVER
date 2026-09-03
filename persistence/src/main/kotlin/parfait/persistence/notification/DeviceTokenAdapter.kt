@@ -46,6 +46,11 @@ class DeviceTokenAdapter(
         deviceTokenRepository.deleteByToken(token)
     }
 
+    override fun deleteByTokenIn(tokens: Collection<String>): Int {
+        if (tokens.isEmpty()) return 0
+        return deviceTokenRepository.deleteByTokenIn(tokens).toInt()
+    }
+
     private fun DeviceTokenEntity.toDomain(): DeviceToken =
         DeviceToken(
             token = token,

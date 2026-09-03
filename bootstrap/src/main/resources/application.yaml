@@ -67,6 +67,9 @@ notification:
     poll-interval-ms: 2000
     retention-days: 7
     purge-cron: "0 0 4 * * *"
+  reminder:
+    morning-cron: "0 0 10 * * *"
+    evening-cron: "0 0 20 * * *"
 
 springdoc:
   api-docs:
