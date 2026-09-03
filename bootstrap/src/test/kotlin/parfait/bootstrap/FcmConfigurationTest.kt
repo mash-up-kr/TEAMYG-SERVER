@@ -29,6 +29,15 @@ class FcmConfigurationTest {
         }
     }
 
+    @Test
+    fun `공통 설정은 notification outbox 폴 주기, 보관일, purge cron 을 정의한다`() {
+        val properties = loadProperties("application.yaml")
+
+        assertEquals("2000", properties.getProperty("notification.outbox.poll-interval-ms").toString())
+        assertEquals("7", properties.getProperty("notification.outbox.retention-days").toString())
+        assertEquals("0 0 4 * * *", properties.getProperty("notification.outbox.purge-cron"))
+    }
+
     private fun loadProperties(fileName: String) =
         YamlPropertySourceLoader()
             .load(fileName, ClassPathResource(fileName))
