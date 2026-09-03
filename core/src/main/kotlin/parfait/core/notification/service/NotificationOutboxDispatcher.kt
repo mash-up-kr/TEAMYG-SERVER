@@ -1,5 +1,6 @@
 package parfait.core.notification.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import parfait.core.notification.domain.NotificationMessageFactory
@@ -15,6 +16,16 @@ import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPor
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupQueryPort
 import java.time.LocalDateTime
 
+/**
+ * claim 한 배치를 `@Transactional` 안에서 순회하며 FCM 발송하고 결과를 마킹한다.
+ *
+ * 주의(락 보유 시간): `claimBatch` 는 최대 [CLAIM_BATCH_SIZE] 행을 `FOR UPDATE` 로 잡고, 그 락은
+ * 이 트랜잭션이 끝날 때까지 유지된다. firebase-admin 9.9.0 은 모든 messaging 요청에
+ * `DEFAULT_RETRY_CONFIG`(maxRetries=4, 503 재시도, `Retry-After` 최대 60s 준수)를 강제하며 이를 끄는
+ * 공개 API 가 없다. 따라서 FCM 백엔드 장애 시 단 한 번의 `senderPort.send()` 가 최대 ~4분 블록될 수 있고,
+ * 그동안 claim 한 행 락과 DB 커넥션을 계속 쥔다(스펙 §4 추정치 "~100~300ms" 와 크게 다름). FCM 장애가
+ * 지속되면 스펙 §11 의 옵션 B(클레임 트랜잭션 밖 발송)로 전환한다.
+ */
 @Service
 class NotificationOutboxDispatcher(
     private val pollPort: NotificationOutboxPollPort,
@@ -25,6 +36,8 @@ class NotificationOutboxDispatcher(
     private val senderPort: NotificationSenderPort,
     private val messageFactory: NotificationMessageFactory,
 ) : ProcessNotificationOutboxUseCase {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     private companion object {
         const val CLAIM_BATCH_SIZE = 50
         val DEAD_TOKEN_CODES = setOf("UNREGISTERED", "INVALID_ARGUMENT", "SENDER_ID_MISMATCH")
@@ -70,11 +83,13 @@ class NotificationOutboxDispatcher(
 
             var anySuccess = false
             var anyRetryable = false
+            var lastError: String? = null
             for (t in tokens) {
                 runCatching { senderPort.send(t.token, message) }
                     .onSuccess { anySuccess = true }
                     .onFailure { e ->
                         val ex = e as? NotificationSendException
+                        lastError = "${ex?.errorCode ?: e::class.simpleName}: ${e.message}".take(500)
                         when {
                             // E-10/E-12
                             ex?.errorCode in DEAD_TOKEN_CODES -> deviceTokenDeletePort.deleteByToken(t.token)
@@ -90,11 +105,18 @@ class NotificationOutboxDispatcher(
                 }
                 anyRetryable && row.attempts + 1 < OutboxBackoff.MAX_ATTEMPTS -> {
                     val next = row.attempts + 1
-                    pollPort.markRetry(id, next, now.plus(OutboxBackoff.nextDelay(next)), "retryable send failure")
+                    pollPort.markRetry(
+                        id,
+                        next,
+                        now.plus(OutboxBackoff.nextDelay(next)),
+                        lastError ?: "retryable send failure",
+                    )
+                    log.warn("outbox 재시도 예약 id={} attempts={} error={}", id, next, lastError)
                     retried++
                 }
                 else -> {
-                    pollPort.markFailed(id, "all tokens failed")
+                    pollPort.markFailed(id, lastError ?: "all tokens failed")
+                    log.warn("outbox 발송 실패(종료) id={} error={}", id, lastError)
                     failed++
                 }
             }
