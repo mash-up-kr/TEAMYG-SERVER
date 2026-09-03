@@ -1,5 +1,6 @@
 package parfait.persistence.notification
 
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -177,5 +178,28 @@ class DeviceTokenAdapterTest {
         adapter.findByToken("tok-2").shouldNotBeNull()
 
         adapter.deleteAllByMemberId(memberId1)
+    }
+
+    @Test
+    fun `findByMemberId 는 해당 회원의 토큰을 모두 반환한다`() {
+        adapter.save(DeviceToken.register(memberId1, "s1", "tok-a", DevicePlatform.IOS))
+        adapter.save(DeviceToken.register(memberId1, "s2", "tok-b", DevicePlatform.ANDROID))
+        adapter.save(DeviceToken.register(memberId2, "s3", "tok-c", DevicePlatform.IOS))
+
+        val tokens = adapter.findByMemberId(memberId1)
+
+        tokens.map { it.token } shouldContainExactlyInAnyOrder listOf("tok-a", "tok-b")
+    }
+
+    @Test
+    fun `deleteByToken 은 해당 토큰만 지우고 없어도 예외가 없다`() {
+        adapter.save(DeviceToken.register(memberId1, "s1", "tok-a", DevicePlatform.IOS))
+        adapter.save(DeviceToken.register(memberId1, "s2", "tok-b", DevicePlatform.ANDROID))
+
+        adapter.deleteByToken("tok-a")
+
+        adapter.findByToken("tok-a").shouldBeNull()
+        adapter.findByToken("tok-b").shouldNotBeNull()
+        adapter.deleteByToken("no-such")
     }
 }

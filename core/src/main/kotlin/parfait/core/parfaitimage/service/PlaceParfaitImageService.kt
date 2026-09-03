@@ -7,6 +7,8 @@ import parfait.core.image.domain.ImageStatus
 import parfait.core.image.exception.ImageErrorCode
 import parfait.core.image.port.out.ImageMetaQueryPort
 import parfait.core.image.port.out.ImageMetaSavePort
+import parfait.core.notification.domain.ToppingPlacedPayload
+import parfait.core.notification.service.ToppingPlacedNotifier
 import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.exception.ParfaitErrorCode
 import parfait.core.parfait.port.out.ParfaitQueryPort
@@ -30,6 +32,7 @@ class PlaceParfaitImageService(
     private val imageMetaSavePort: ImageMetaSavePort,
     private val parfaitImageQueryPort: ParfaitImageQueryPort,
     private val parfaitImageSavePort: ParfaitImageSavePort,
+    private val toppingPlacedNotifier: ToppingPlacedNotifier,
 ) : PlaceParfaitImageUseCase {
     @Transactional
     override fun place(command: PlaceParfaitImageCommand): PlaceParfaitImageResult {
@@ -82,6 +85,16 @@ class PlaceParfaitImageService(
 
         if (existing == null) {
             imageMetaSavePort.save(imageMeta.incrementReferenceCount())
+            toppingPlacedNotifier.notify(
+                payload =
+                    ToppingPlacedPayload(
+                        groupId = command.groupId,
+                        parfaitId = command.parfaitId,
+                        parfaitDate = parfait.parfaitDate,
+                        actorMemberId = command.memberId,
+                    ),
+                toppingId = saved.requireId(),
+            )
         }
 
         return PlaceParfaitImageResult(

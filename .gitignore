@@ -43,3 +43,9 @@ out/
 .claude/settings.local.json
 .env
 docs/superpowers
+
+### FCM ###
+# 운영 서비스 계정 키 (컨테이너에 마운트, 저장소에 넣지 않음)
+parfait-firebase-key.json
+# 로컬·테스트용 가짜 키 (external:generateLocalFcmKey 가 빌드 시 생성)
+external/src/main/resources/fcm/local-firebase-key.json

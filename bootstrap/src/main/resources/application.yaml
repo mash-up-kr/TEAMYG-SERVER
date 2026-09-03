@@ -34,6 +34,12 @@ spring:
     jdbc:
       # Spring Batch 메타테이블은 V12가 소유한다. always로 두면 Flyway와 이중 초기화가 된다.
       initialize-schema: never
+  task:
+    scheduling:
+      pool:
+        # 기본 풀은 1. OutboxRetentionSweeper(04:00)·ParfaitCanvasRotationScheduler(03:00) 가
+        # 그 스레드를 점유하면 OutboxPollingWorker.tick() 이 밀려 재시도 예약 행이 지연된다.
+        size: 2
 
 jwt:
   access-token-expiration-seconds: 3600
@@ -52,6 +58,15 @@ aws:
   s3:
     region: ap-northeast-2
     presigned-url-expiration-seconds: 900
+
+fcm:
+  credentials-path: classpath:fcm/local-firebase-key.json
+
+notification:
+  outbox:
+    poll-interval-ms: 2000
+    retention-days: 7
+    purge-cron: "0 0 4 * * *"
 
 springdoc:
   api-docs:
