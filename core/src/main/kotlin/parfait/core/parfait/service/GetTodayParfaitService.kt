@@ -14,6 +14,7 @@ import parfait.core.parfait.port.`in`.PlacedByResult
 import parfait.core.parfait.port.`in`.TodayParfaitImageResult
 import parfait.core.parfait.port.out.ParfaitQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
+import parfait.core.parfaitgroup.application.port.out.ParfaitGroupQueryPort
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.core.parfaitimage.port.out.ParfaitImageQueryPort
@@ -21,6 +22,7 @@ import parfait.core.parfaitimage.port.out.ParfaitImageQueryPort
 @Service
 class GetTodayParfaitService(
     private val parfaitGroupMemberQueryPort: ParfaitGroupMemberQueryPort,
+    private val parfaitGroupQueryPort: ParfaitGroupQueryPort,
     private val parfaitQueryPort: ParfaitQueryPort,
     private val ensureActiveCanvasUseCase: EnsureActiveCanvasUseCase,
     private val parfaitImageQueryPort: ParfaitImageQueryPort,
@@ -30,6 +32,10 @@ class GetTodayParfaitService(
         if (!parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(command.groupId, command.memberId)) {
             throw ParfaitGroupException(ParfaitGroupError.GROUP_NOT_JOINED)
         }
+
+        val group =
+            parfaitGroupQueryPort.findById(command.groupId)
+                ?: throw ParfaitGroupException(ParfaitGroupError.GROUP_NOT_FOUND)
 
         val today = ParfaitDay.current()
         val parfait = ensureActiveCanvasUseCase.ensure(command.groupId, today)
@@ -56,6 +62,7 @@ class GetTodayParfaitService(
 
         return GetTodayParfaitResult(
             parfaitId = parfait.requireId(),
+            groupName = group.name.value,
             date = parfait.parfaitDate,
             status = parfait.status,
             lastClosedDate = lastClosedDate,

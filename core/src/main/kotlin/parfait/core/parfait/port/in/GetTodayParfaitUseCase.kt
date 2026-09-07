@@ -21,6 +21,7 @@ data class GetTodayParfaitCommand(
 
 data class GetTodayParfaitResult(
     val parfaitId: Long,
+    val groupName: String,
     val date: LocalDate,
     val status: ParfaitStatus,
     val lastClosedDate: LocalDate?,

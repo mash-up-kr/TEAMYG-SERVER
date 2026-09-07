@@ -157,6 +157,7 @@ class ParfaitControllerTest {
         every { getTodayParfaitUseCase.get(any()) } returns
             GetTodayParfaitResult(
                 parfaitId = 100L,
+                groupName = "팀연경 테스트 방",
                 date = LocalDate.of(2026, 7, 9),
                 status = ParfaitStatus.ACTIVE,
                 lastClosedDate = LocalDate.of(2026, 7, 8),
@@ -198,6 +199,7 @@ class ParfaitControllerTest {
             }.andExpect {
                 status { isOk() }
                 jsonPath("$.data.parfaitId") { value(100) }
+                jsonPath("$.data.groupName") { value("팀연경 테스트 방") }
                 jsonPath("$.data.status") { value("ACTIVE") }
                 jsonPath("$.data.lastClosedDate") { value("2026-07-08") }
                 jsonPath("$.data.groupMembers[0].nickname") { value("연경이") }
@@ -213,6 +215,7 @@ class ParfaitControllerTest {
         every { getTodayParfaitUseCase.get(any()) } returns
             GetTodayParfaitResult(
                 parfaitId = 100L,
+                groupName = "팀연경 테스트 방",
                 date = LocalDate.of(2026, 7, 9),
                 status = ParfaitStatus.ACTIVE,
                 lastClosedDate = null,
@@ -251,6 +254,7 @@ class ParfaitControllerTest {
         every { getParfaitDetailUseCase.getDetail(any()) } returns
             GetTodayParfaitResult(
                 parfaitId = 98L,
+                groupName = "팀연경 테스트 방",
                 date = LocalDate.of(2026, 7, 7),
                 status = ParfaitStatus.CLOSED,
                 lastClosedDate = LocalDate.of(2026, 7, 7),
@@ -268,6 +272,7 @@ class ParfaitControllerTest {
             }.andExpect {
                 status { isOk() }
                 jsonPath("$.data.parfaitId") { value(98) }
+                jsonPath("$.data.groupName") { value("팀연경 테스트 방") }
                 jsonPath("$.data.status") { value("CLOSED") }
                 jsonPath("$.data.background.type") { value("COLOR") }
             }
