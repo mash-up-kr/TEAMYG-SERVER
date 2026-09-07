@@ -13,6 +13,8 @@ import parfait.core.parfait.exception.ParfaitErrorCode
 import parfait.core.parfait.port.`in`.GetParfaitDetailCommand
 import parfait.core.parfait.port.out.ParfaitQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
+import parfait.core.parfaitgroup.application.port.out.ParfaitGroupQueryPort
+import parfait.core.parfaitgroup.domain.ParfaitGroup
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
@@ -25,9 +27,26 @@ import kotlin.test.assertFailsWith
 
 class GetParfaitDetailServiceTest {
     private val parfaitGroupMemberQueryPort = mockk<ParfaitGroupMemberQueryPort>()
+    private val parfaitGroupQueryPort = mockk<ParfaitGroupQueryPort>()
     private val parfaitQueryPort = mockk<ParfaitQueryPort>()
     private val parfaitImageQueryPort = mockk<ParfaitImageQueryPort>()
-    private val service = GetParfaitDetailService(parfaitGroupMemberQueryPort, parfaitQueryPort, parfaitImageQueryPort)
+    private val service =
+        GetParfaitDetailService(
+            parfaitGroupMemberQueryPort,
+            parfaitGroupQueryPort,
+            parfaitQueryPort,
+            parfaitImageQueryPort,
+        )
+
+    private fun group(name: String = "팀연경 테스트 방"): ParfaitGroup =
+        ParfaitGroup.reconstitute(
+            id = 1L,
+            name = name,
+            inviteCode = "ABC123",
+            memberLimit = 8,
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
+        )
 
     private fun groupMember(
         id: Long,
@@ -60,6 +79,7 @@ class GetParfaitDetailServiceTest {
     @Test
     fun `그룹원, 배경, 이미지를 포함한 파르페 상세를 반환한다`() {
         every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
+        every { parfaitGroupQueryPort.findById(1L) } returns group()
         every { parfaitQueryPort.findByIdAndGroupId(98L, 1L) } returns
             parfait(status = ParfaitStatus.CLOSED, backgroundType = BackgroundType.COLOR, backgroundValue = "#FFFFFF")
         every { parfaitQueryPort.findLastClosedDateByGroupId(1L) } returns LocalDate.of(2026, 7, 7)
@@ -89,6 +109,7 @@ class GetParfaitDetailServiceTest {
         val result = service.getDetail(GetParfaitDetailCommand(memberId = 10L, groupId = 1L, parfaitId = 98L))
 
         result.parfaitId shouldBe 98L
+        result.groupName shouldBe "팀연경 테스트 방"
         result.status shouldBe ParfaitStatus.CLOSED
         result.lastClosedDate shouldBe LocalDate.of(2026, 7, 7)
         result.groupMembers.single().nickname shouldBe "연경이"
@@ -102,6 +123,7 @@ class GetParfaitDetailServiceTest {
     @Test
     fun `배치된 토핑이 없으면 images는 null이다`() {
         every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
+        every { parfaitGroupQueryPort.findById(1L) } returns group()
         every { parfaitQueryPort.findByIdAndGroupId(98L, 1L) } returns parfait()
         every { parfaitQueryPort.findLastClosedDateByGroupId(1L) } returns null
         every { parfaitGroupMemberQueryPort.findAllByGroupId(1L) } returns emptyList()
@@ -116,6 +138,7 @@ class GetParfaitDetailServiceTest {
     @Test
     fun `내가 배치한 토핑과 다른 멤버가 배치한 토핑의 ownerType을 구분한다`() {
         every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 1000L) } returns true
+        every { parfaitGroupQueryPort.findById(1L) } returns group()
         every { parfaitQueryPort.findByIdAndGroupId(98L, 1L) } returns parfait()
         every { parfaitQueryPort.findLastClosedDateByGroupId(1L) } returns null
         every { parfaitGroupMemberQueryPort.findAllByGroupId(1L) } returns
@@ -178,6 +201,7 @@ class GetParfaitDetailServiceTest {
     @Test
     fun `존재하지 않거나 다른 그룹 소속인 파르페면 PARFAIT_NOT_FOUND를 던진다`() {
         every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
+        every { parfaitGroupQueryPort.findById(1L) } returns group()
         every { parfaitQueryPort.findByIdAndGroupId(98L, 1L) } returns null
 
         val exception =

@@ -15,6 +15,7 @@ import java.time.LocalDateTime
 
 data class GetTodayParfaitResponse(
     val parfaitId: Long,
+    val groupName: String,
     val date: LocalDate,
     val status: ParfaitStatus,
     val lastClosedDate: LocalDate?,
@@ -26,6 +27,7 @@ data class GetTodayParfaitResponse(
         fun from(result: GetTodayParfaitResult): GetTodayParfaitResponse =
             GetTodayParfaitResponse(
                 parfaitId = result.parfaitId,
+                groupName = result.groupName,
                 date = result.date,
                 status = result.status,
                 lastClosedDate = result.lastClosedDate,
