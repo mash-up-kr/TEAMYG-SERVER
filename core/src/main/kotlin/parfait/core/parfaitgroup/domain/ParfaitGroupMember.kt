@@ -22,6 +22,21 @@ class ParfaitGroupMember private constructor(
             leftAt = leftAt,
         )
 
+    fun rejoin(
+        groupNickname: String,
+        nametagChip: NameTagChipType,
+        joinedAt: LocalDateTime = LocalDateTime.now(),
+    ): ParfaitGroupMember =
+        ParfaitGroupMember(
+            id = id,
+            parfaitGroupId = parfaitGroupId,
+            memberId = memberId,
+            groupNickname = GroupNickname.of(groupNickname),
+            nametagChip = nametagChip,
+            joinedAt = joinedAt,
+            leftAt = null,
+        )
+
     fun leave(leftAt: LocalDateTime = LocalDateTime.now()): ParfaitGroupMember =
         ParfaitGroupMember(
             id = id,

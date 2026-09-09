@@ -353,6 +353,23 @@ class ParfaitGroupMemberRepositoryQueryTest {
         orderedGroupIds shouldBe listOf(freshGroup.id, activeGroup.id, quietGroup.id)
     }
 
+    @Test
+    fun `탈퇴한 멤버는 existsByParfaitGroupIdAndMemberIdAndLeftAtIsNull이 false를 반환한다`() {
+        val member = saveMember("exists-left-member", "탈퇴자")
+        val group = parfaitGroupRepository.save(ParfaitGroup(name = "탈퇴테스트그룹", inviteCode = "LEFT01", memberLimit = 12))
+        val groupMember = saveGroupMember(requireNotNull(group.id), requireNotNull(member.id), "탈퇴자닉", "TYPE1")
+        groupMember.leftAt = LocalDateTime.now()
+        parfaitGroupMemberRepository.save(groupMember)
+
+        val exists =
+            parfaitGroupMemberRepository.existsByParfaitGroupIdAndMemberIdAndLeftAtIsNull(
+                requireNotNull(group.id),
+                requireNotNull(member.id),
+            )
+
+        exists shouldBe false
+    }
+
     private fun saveMember(
         providerUserId: String,
         nickname: String,

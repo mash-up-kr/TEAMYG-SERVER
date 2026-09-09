@@ -78,14 +78,23 @@ class ParfaitGroupService(
     override fun join(command: JoinParfaitGroupCommand): JoinParfaitGroupResult {
         val group = findGroup(InviteCode.of(command.inviteCode), forUpdate = true)
         val nickname = validateJoin(group, command.memberId)
-        parfaitGroupMemberSavePort.save(
-            ParfaitGroupMember.join(
+        val nametagChip = assignNametagChip(group.requireId())
+        val previousMembership =
+            parfaitGroupMemberQueryPort.findAnyByGroupIdAndMemberId(
+                group.requireId(),
+                command.memberId,
+            )
+        val membership =
+            previousMembership?.rejoin(
+                groupNickname = nickname.value,
+                nametagChip = nametagChip,
+            ) ?: ParfaitGroupMember.join(
                 parfaitGroupId = group.requireId(),
                 memberId = command.memberId,
                 groupNickname = nickname.value,
-                nametagChip = assignNametagChip(group.requireId()),
-            ),
-        )
+                nametagChip = nametagChip,
+            )
+        parfaitGroupMemberSavePort.save(membership)
         return JoinParfaitGroupResult(
             groupId = group.requireId(),
             groupName = group.name.value,

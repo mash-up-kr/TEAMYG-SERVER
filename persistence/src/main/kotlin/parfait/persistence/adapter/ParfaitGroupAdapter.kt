@@ -50,13 +50,18 @@ class ParfaitGroupAdapter(
     override fun existsByGroupIdAndMemberId(
         groupId: Long,
         memberId: Long,
-    ): Boolean = parfaitGroupMemberRepository.existsByParfaitGroupIdAndMemberId(groupId, memberId)
+    ): Boolean = parfaitGroupMemberRepository.existsByParfaitGroupIdAndMemberIdAndLeftAtIsNull(groupId, memberId)
 
     override fun findByGroupIdAndMemberId(
         groupId: Long,
         memberId: Long,
     ): ParfaitGroupMember? =
         parfaitGroupMemberRepository.findByParfaitGroupIdAndMemberIdAndLeftAtIsNull(groupId, memberId)?.toDomain()
+
+    override fun findAnyByGroupIdAndMemberId(
+        groupId: Long,
+        memberId: Long,
+    ): ParfaitGroupMember? = parfaitGroupMemberRepository.findByParfaitGroupIdAndMemberId(groupId, memberId)?.toDomain()
 
     override fun findAllByGroupId(groupId: Long): List<ParfaitGroupMember> =
         parfaitGroupMemberRepository.findAllByParfaitGroupIdAndLeftAtIsNullOrderByJoinedAtAscIdAsc(groupId).map {
