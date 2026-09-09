@@ -83,7 +83,7 @@ class ParfaitGroupAdapterTest {
                 nametagChip = NameTagChipType.TYPE4,
                 joinedAt = now,
             )
-        every { groupMemberRepository.existsByParfaitGroupIdAndMemberId(1L, 10L) } returns true
+        every { groupMemberRepository.existsByParfaitGroupIdAndMemberIdAndLeftAtIsNull(1L, 10L) } returns true
         every { groupMemberRepository.countByParfaitGroupIdAndLeftAtIsNull(1L) } returns 3L
         every { groupMemberRepository.save(any()) } answers {
             firstArg<ParfaitGroupMemberEntity>().apply { id = 2L }
@@ -92,6 +92,26 @@ class ParfaitGroupAdapterTest {
         adapter.existsByGroupIdAndMemberId(1L, 10L) shouldBe true
         adapter.countByGroupId(1L) shouldBe 3
         adapter.save(member).id shouldBe 2L
+    }
+
+    @Test
+    fun `탈퇴 여부와 무관하게 멤버십 row를 조회할 수 있다`() {
+        val leftEntity =
+            ParfaitGroupMemberEntity(
+                parfaitGroupId = 1L,
+                memberId = 10L,
+                groupNickname = "(알수없음)",
+                joinedAt = now,
+                leftAt = now,
+                nametagChip = NameTagChipType.DEFAULT.name,
+                id = 7L,
+            )
+        every { groupMemberRepository.findByParfaitGroupIdAndMemberId(1L, 10L) } returns leftEntity
+
+        val result = adapter.findAnyByGroupIdAndMemberId(1L, 10L)!!
+
+        result.id shouldBe 7L
+        result.leftAt shouldBe now
     }
 
     @Test

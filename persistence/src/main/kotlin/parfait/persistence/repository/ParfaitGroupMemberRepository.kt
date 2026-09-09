@@ -13,11 +13,16 @@ interface ParfaitGroupMemberRepository : JpaRepository<ParfaitGroupMember, Long>
         memberId: Long,
     ): ParfaitGroupMember?
 
+    fun findByParfaitGroupIdAndMemberId(
+        parfaitGroupId: Long,
+        memberId: Long,
+    ): ParfaitGroupMember?
+
     fun findAllByParfaitGroupIdAndLeftAtIsNullOrderByJoinedAtAscIdAsc(parfaitGroupId: Long): List<ParfaitGroupMember>
 
     fun findAllByMemberIdAndLeftAtIsNullOrderByJoinedAtAscIdAsc(memberId: Long): List<ParfaitGroupMember>
 
-    fun existsByParfaitGroupIdAndMemberId(
+    fun existsByParfaitGroupIdAndMemberIdAndLeftAtIsNull(
         parfaitGroupId: Long,
         memberId: Long,
     ): Boolean

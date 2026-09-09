@@ -67,6 +67,7 @@ class ParfaitGroupServiceTest {
         every { groupQueryPort.findByInviteCode(any()) } returns group
         every { groupQueryPort.findByInviteCodeForUpdate(any()) } returns group
         every { groupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns false
+        every { groupMemberQueryPort.findAnyByGroupIdAndMemberId(1L, 10L) } returns null
         every { groupMemberQueryPort.countByGroupId(1L) } returns 1
         every { memberQueryPort.findGlobalNicknameById(10L) } returns "멤버 닉네임"
         every { groupMemberQueryPort.findAllByGroupId(any()) } returns emptyList()
@@ -121,6 +122,30 @@ class ParfaitGroupServiceTest {
         memberSlot.captured.memberId shouldBe 10L
         memberSlot.captured.groupNickname.value shouldBe "멤버 닉네임"
         verify { groupQueryPort.findByInviteCodeForUpdate(InviteCode.of("ABCD12")) }
+    }
+
+    @Test
+    fun `한 번 나갔던 멤버가 다시 참여하면 기존 멤버십 row를 재활성화한다`() {
+        val leftMembership =
+            ParfaitGroupMember.reconstitute(
+                id = 5L,
+                parfaitGroupId = 1L,
+                memberId = 10L,
+                groupNickname = "(알수없음)",
+                joinedAt = LocalDateTime.now().minusDays(3),
+                leftAt = LocalDateTime.now().minusDays(1),
+                nametagChip = NameTagChipType.DEFAULT,
+            )
+        every { groupMemberQueryPort.findAnyByGroupIdAndMemberId(1L, 10L) } returns leftMembership
+        val memberSlot = slot<ParfaitGroupMember>()
+        every { groupMemberSavePort.save(capture(memberSlot)) } answers { firstArg() }
+
+        val result = service.join(JoinParfaitGroupCommand(memberId = 10L, inviteCode = "ABCD12"))
+
+        result.groupId shouldBe 1L
+        memberSlot.captured.id shouldBe 5L
+        memberSlot.captured.leftAt shouldBe null
+        memberSlot.captured.groupNickname.value shouldBe "멤버 닉네임"
     }
 
     @Test
