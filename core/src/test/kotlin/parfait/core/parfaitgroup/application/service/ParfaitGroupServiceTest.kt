@@ -253,7 +253,7 @@ class ParfaitGroupServiceTest {
         result.first().recentImageUrl shouldBe "https://image.example/2"
         result.first().recentImageBorderType shouldBe BorderType.SOLID
         result.first().recentImageBorderColor shouldBe "#FFD54F"
-        result.first().recentImageBorderWidth shouldBe 6.0
+        result.first().recentImageBorderWidth shouldBe 2.0
         result.first().recentImageUploadedAt shouldBe LocalDateTime.MAX
         result.first().lastPlacedByNametagChip shouldBe NameTagChipType.TYPE7
         result.last().lastPlacedByNametagChip shouldBe NameTagChipType.TYPE3

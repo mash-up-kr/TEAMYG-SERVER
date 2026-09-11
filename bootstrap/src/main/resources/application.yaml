@@ -65,7 +65,7 @@ fcm:
 notification:
   outbox:
     poll-interval-ms: 2000
-    retention-days: 7
+    retention-days: 2
     purge-cron: "0 0 4 * * *"
   reminder:
     morning-cron: "0 0 10 * * *"
