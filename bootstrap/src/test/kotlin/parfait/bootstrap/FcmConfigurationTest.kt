@@ -34,7 +34,7 @@ class FcmConfigurationTest {
         val properties = loadProperties("application.yaml")
 
         assertEquals("2000", properties.getProperty("notification.outbox.poll-interval-ms").toString())
-        assertEquals("7", properties.getProperty("notification.outbox.retention-days").toString())
+        assertEquals("2", properties.getProperty("notification.outbox.retention-days").toString())
         assertEquals("0 0 4 * * *", properties.getProperty("notification.outbox.purge-cron"))
     }
 
