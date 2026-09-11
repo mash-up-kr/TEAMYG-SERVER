@@ -46,6 +46,33 @@ interface ParfaitGroupMemberRepository : JpaRepository<ParfaitGroupMember, Long>
                     ORDER BY pi.created_at DESC, pi.id DESC
                     LIMIT 1
                 ) AS recentImageUrl,
+                (
+                    SELECT pi.border_type
+                    FROM parfait p
+                    JOIN parfait_image pi ON pi.parfait_id = p.id
+                    WHERE p.parfait_group_id = g.id
+                      AND p.parfait_date = :today
+                    ORDER BY pi.created_at DESC, pi.id DESC
+                    LIMIT 1
+                ) AS recentImageBorderType,
+                (
+                    SELECT pi.border_color
+                    FROM parfait p
+                    JOIN parfait_image pi ON pi.parfait_id = p.id
+                    WHERE p.parfait_group_id = g.id
+                      AND p.parfait_date = :today
+                    ORDER BY pi.created_at DESC, pi.id DESC
+                    LIMIT 1
+                ) AS recentImageBorderColor,
+                (
+                    SELECT pi.border_width
+                    FROM parfait p
+                    JOIN parfait_image pi ON pi.parfait_id = p.id
+                    WHERE p.parfait_group_id = g.id
+                      AND p.parfait_date = :today
+                    ORDER BY pi.created_at DESC, pi.id DESC
+                    LIMIT 1
+                ) AS recentImageBorderWidth,
                 COALESCE(
                     (
                         SELECT pi.created_at
@@ -103,6 +130,9 @@ interface MyParfaitGroupSummaryProjection {
     val groupId: Long
     val groupName: String
     val recentImageUrl: String?
+    val recentImageBorderType: String?
+    val recentImageBorderColor: String?
+    val recentImageBorderWidth: Double?
     val recentImageUploadedAt: LocalDateTime
     val lastPlacedByNametagChip: String
 }
