@@ -13,6 +13,7 @@ import parfait.core.parfaitgroup.domain.InviteCode
 import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitgroup.domain.ParfaitGroup
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
+import parfait.core.parfaitimage.domain.BorderType
 import parfait.persistence.repository.ParfaitGroupMemberRepository
 import parfait.persistence.repository.ParfaitGroupRepository
 import parfait.persistence.entity.ParfaitGroup as ParfaitGroupEntity
@@ -92,6 +93,9 @@ class ParfaitGroupAdapter(
                 groupId = it.groupId,
                 groupName = it.groupName,
                 recentImageUrl = it.recentImageUrl,
+                recentImageBorderType = it.recentImageBorderType?.let(BorderType::valueOf),
+                recentImageBorderColor = it.recentImageBorderColor,
+                recentImageBorderWidth = it.recentImageBorderWidth,
                 recentImageUploadedAt = it.recentImageUploadedAt,
                 lastPlacedByNametagChip = NameTagChipType.valueOf(it.lastPlacedByNametagChip),
             )

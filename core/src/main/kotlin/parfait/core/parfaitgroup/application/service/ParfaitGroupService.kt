@@ -142,6 +142,9 @@ class ParfaitGroupService(
                 groupId = it.groupId,
                 groupName = it.groupName,
                 recentImageUrl = it.recentImageUrl,
+                recentImageBorderType = it.recentImageBorderType,
+                recentImageBorderColor = it.recentImageBorderColor,
+                recentImageBorderWidth = it.recentImageBorderWidth,
                 recentImageUploadedAt = it.recentImageUploadedAt,
                 lastPlacedByNametagChip = it.lastPlacedByNametagChip,
             )
