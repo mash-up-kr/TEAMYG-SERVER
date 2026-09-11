@@ -11,6 +11,7 @@ import parfait.core.parfaitgroup.domain.InviteCode
 import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitgroup.domain.ParfaitGroup
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
+import parfait.core.parfaitimage.domain.BorderType
 import parfait.persistence.repository.MyParfaitGroupSummaryProjection
 import parfait.persistence.repository.ParfaitGroupMemberRepository
 import parfait.persistence.repository.ParfaitGroupRepository
@@ -120,6 +121,9 @@ class ParfaitGroupAdapterTest {
         every { projection.groupId } returns 1L
         every { projection.groupName } returns "우리 그룹"
         every { projection.recentImageUrl } returns "https://image.example/latest"
+        every { projection.recentImageBorderType } returns "SOLID"
+        every { projection.recentImageBorderColor } returns "#FFD54F"
+        every { projection.recentImageBorderWidth } returns 6.0
         every { projection.recentImageUploadedAt } returns now
         every { projection.lastPlacedByNametagChip } returns "TYPE7"
         every { groupMemberRepository.findMyGroupSummaries(10L, ParfaitDay.current()) } returns listOf(projection)
@@ -130,6 +134,9 @@ class ParfaitGroupAdapterTest {
                     groupId = 1L,
                     groupName = "우리 그룹",
                     recentImageUrl = "https://image.example/latest",
+                    recentImageBorderType = BorderType.SOLID,
+                    recentImageBorderColor = "#FFD54F",
+                    recentImageBorderWidth = 6.0,
                     recentImageUploadedAt = now,
                     lastPlacedByNametagChip = NameTagChipType.TYPE7,
                 ),

@@ -32,6 +32,7 @@ import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 import parfait.core.parfaitgroup.domain.ParfaitGroupReport
+import parfait.core.parfaitimage.domain.BorderType
 import java.time.LocalDateTime
 import kotlin.test.assertFailsWith
 
@@ -224,14 +225,35 @@ class ParfaitGroupServiceTest {
     fun `내 그룹 목록은 최근 활동 순으로 조회 포트의 결과를 그대로 반환한다`() {
         every { myGroupQueryPort.findAllByMemberId(10L) } returns
             listOf(
-                MyParfaitGroupSummary(2L, "최근 그룹", "https://image.example/2", LocalDateTime.MAX, NameTagChipType.TYPE7),
-                MyParfaitGroupSummary(1L, "이전 그룹", null, LocalDateTime.MIN, NameTagChipType.TYPE3),
+                MyParfaitGroupSummary(
+                    groupId = 2L,
+                    groupName = "최근 그룹",
+                    recentImageUrl = "https://image.example/2",
+                    recentImageBorderType = BorderType.SOLID,
+                    recentImageBorderColor = "#FFD54F",
+                    recentImageBorderWidth = 6.0,
+                    recentImageUploadedAt = LocalDateTime.MAX,
+                    lastPlacedByNametagChip = NameTagChipType.TYPE7,
+                ),
+                MyParfaitGroupSummary(
+                    groupId = 1L,
+                    groupName = "이전 그룹",
+                    recentImageUrl = null,
+                    recentImageBorderType = null,
+                    recentImageBorderColor = null,
+                    recentImageBorderWidth = null,
+                    recentImageUploadedAt = LocalDateTime.MIN,
+                    lastPlacedByNametagChip = NameTagChipType.TYPE3,
+                ),
             )
 
         val result = service.getAll(10L)
 
         result.map { it.groupId } shouldBe listOf(2L, 1L)
         result.first().recentImageUrl shouldBe "https://image.example/2"
+        result.first().recentImageBorderType shouldBe BorderType.SOLID
+        result.first().recentImageBorderColor shouldBe "#FFD54F"
+        result.first().recentImageBorderWidth shouldBe 6.0
         result.first().recentImageUploadedAt shouldBe LocalDateTime.MAX
         result.first().lastPlacedByNametagChip shouldBe NameTagChipType.TYPE7
         result.last().lastPlacedByNametagChip shouldBe NameTagChipType.TYPE3

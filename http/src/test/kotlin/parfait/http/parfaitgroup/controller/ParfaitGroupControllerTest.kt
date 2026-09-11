@@ -38,6 +38,7 @@ import parfait.core.parfaitgroup.application.port.`in`.ReportParfaitGroupUseCase
 import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
+import parfait.core.parfaitimage.domain.BorderType
 import parfait.http.global.exception.GlobalExceptionHandler
 import parfait.http.global.security.TestMemberQueryPortConfig
 import parfait.http.global.security.TestTokenValidatePortConfig
@@ -107,6 +108,9 @@ class ParfaitGroupControllerTest {
                     groupId = 1L,
                     groupName = "우리 그룹",
                     recentImageUrl = "https://image.example/latest",
+                    recentImageBorderType = BorderType.SOLID,
+                    recentImageBorderColor = "#FFD54F",
+                    recentImageBorderWidth = 6.0,
                     recentImageUploadedAt = LocalDateTime.of(2026, 8, 1, 12, 0),
                     lastPlacedByNametagChip = NameTagChipType.TYPE7,
                 ),
@@ -120,6 +124,9 @@ class ParfaitGroupControllerTest {
                 jsonPath("$.data[0].groupId") { value(1) }
                 jsonPath("$.data[0].groupName") { value("우리 그룹") }
                 jsonPath("$.data[0].recentImageUrl") { value("https://image.example/latest") }
+                jsonPath("$.data[0].recentImageBorderType") { value("SOLID") }
+                jsonPath("$.data[0].recentImageBorderColor") { value("#FFD54F") }
+                jsonPath("$.data[0].recentImageBorderWidth") { value(6.0) }
                 jsonPath("$.data[0].recentImageUploadedAt") { value("2026-08-01T12:00:00") }
                 jsonPath("$.data[0].lastPlacedByNameTagChip") { value("TYPE7") }
             }
@@ -133,6 +140,9 @@ class ParfaitGroupControllerTest {
                     groupId = 1L,
                     groupName = "이미지 없는 그룹",
                     recentImageUrl = null,
+                    recentImageBorderType = null,
+                    recentImageBorderColor = null,
+                    recentImageBorderWidth = null,
                     recentImageUploadedAt = LocalDateTime.of(2026, 8, 1, 0, 0),
                     lastPlacedByNametagChip = NameTagChipType.TYPE3,
                 ),
@@ -144,6 +154,9 @@ class ParfaitGroupControllerTest {
             }.andExpect {
                 status { isOk() }
                 jsonPath("$.data[0].recentImageUrl") { value(nullValue()) }
+                jsonPath("$.data[0].recentImageBorderType") { value(nullValue()) }
+                jsonPath("$.data[0].recentImageBorderColor") { value(nullValue()) }
+                jsonPath("$.data[0].recentImageBorderWidth") { value(nullValue()) }
                 jsonPath("$.data[0].recentImageUploadedAt") { value("2026-08-01T00:00:00") }
                 jsonPath("$.data[0].lastPlacedByNameTagChip") { value("TYPE3") }
             }
