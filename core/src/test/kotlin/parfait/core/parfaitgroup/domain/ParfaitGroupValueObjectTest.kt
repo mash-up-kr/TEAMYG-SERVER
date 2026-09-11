@@ -19,6 +19,12 @@ class ParfaitGroupValueObjectTest {
     }
 
     @Test
+    fun `그룹명은 자음 모음 단독 입력도 허용한다`() {
+        GroupName.of("ㅎㅇ").value shouldBe "ㅎㅇ"
+        GroupName.of("ㅏㅑㅓ").value shouldBe "ㅏㅑㅓ"
+    }
+
+    @Test
     fun `그룹 닉네임은 한글 영문 숫자와 단일 중간 공백을 포함해 15자까지 허용한다`() {
         GroupNickname.of("파르페 Member12").value shouldBe "파르페 Member12"
     }
