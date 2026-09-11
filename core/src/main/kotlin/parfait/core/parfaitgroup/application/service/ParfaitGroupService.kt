@@ -144,7 +144,7 @@ class ParfaitGroupService(
                 recentImageUrl = it.recentImageUrl,
                 recentImageBorderType = it.recentImageBorderType,
                 recentImageBorderColor = it.recentImageBorderColor,
-                recentImageBorderWidth = it.recentImageBorderWidth,
+                recentImageBorderWidth = it.recentImageBorderWidth?.let { 2.0 },
                 recentImageUploadedAt = it.recentImageUploadedAt,
                 lastPlacedByNametagChip = it.lastPlacedByNametagChip,
             )
