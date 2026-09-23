@@ -22,3 +22,20 @@
 		}
 	}
 }
+
+# App Links(Android)/Universal Links(iOS) 자체구현용 루트 도메인. assetlinks.json·
+# apple-app-site-association·웹 폴백 페이지(/link)는 이 호스트에서 서빙되어야 도메인 소유
+# 검증이 성립한다. 같은 애플리케이션 컨테이너로 프록시하므로 별도 배포가 필요 없다.
+# 사용 전 가비아 DNS에 루트(@) A레코드를 이 서버의 EIP로 추가해야 한다 (docs/operations/https-setup.md 참조).
+parfait-app.store {
+	encode zstd gzip
+
+	reverse_proxy 127.0.0.1:8080
+
+	log {
+		output file /data/access-root.log {
+			roll_size 10MiB
+			roll_keep 5
+		}
+	}
+}
