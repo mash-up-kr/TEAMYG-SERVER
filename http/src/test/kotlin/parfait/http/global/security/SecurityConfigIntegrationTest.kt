@@ -18,6 +18,7 @@ import parfait.core.auth.port.out.TokenIssuePort
 import parfait.core.member.port.out.MemberAccount
 import parfait.core.member.port.out.MemberQueryPort
 import parfait.http.TestApplication
+import parfait.http.api.deeplink.controller.TestResolveStoreFallbackUseCaseConfig
 import parfait.http.api.notification.controller.TestDeviceTokenUseCaseConfig
 import parfait.http.auth.controller.TestAppleLoginUseCaseConfig
 import parfait.http.auth.controller.TestKakaoLoginUseCaseConfig
@@ -54,6 +55,7 @@ import kotlin.test.Test
 @Import(
     SecurityConfigIntegrationTest.MemberOneOnlyExistsConfig::class,
     SecurityConfigIntegrationTest.DummyProtectedController::class,
+    TestResolveStoreFallbackUseCaseConfig::class,
     TestParfaitGroupUseCaseConfig::class,
     TestKakaoLoginUseCaseConfig::class,
     TestAppleLoginUseCaseConfig::class,
@@ -233,6 +235,27 @@ class SecurityConfigIntegrationTest {
     @Test
     fun `캔버스 회전 테스트 엔드포인트는 화이트리스트에 포함되어 토큰 없이 통과한다`() {
         mockMvc.post("/api/v1/test/parfait-canvas/rotate").andExpect {
+            status { isOk() }
+        }
+    }
+
+    @Test
+    fun `Android App Links 검증 파일은 화이트리스트에 포함되어 토큰 없이 통과한다`() {
+        mockMvc.get("/.well-known/assetlinks.json").andExpect {
+            status { isOk() }
+        }
+    }
+
+    @Test
+    fun `iOS Universal Links 검증 파일은 화이트리스트에 포함되어 토큰 없이 통과한다`() {
+        mockMvc.get("/.well-known/apple-app-site-association").andExpect {
+            status { isOk() }
+        }
+    }
+
+    @Test
+    fun `딥링크 웹 폴백 페이지는 화이트리스트에 포함되어 토큰 없이 통과한다`() {
+        mockMvc.get("/link").andExpect {
             status { isOk() }
         }
     }

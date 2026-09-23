@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import parfait.http.TestApplication
+import parfait.http.api.deeplink.controller.TestResolveStoreFallbackUseCaseConfig
 import parfait.http.api.notification.controller.TestDeviceTokenUseCaseConfig
 import parfait.http.auth.controller.TestAppleLoginUseCaseConfig
 import parfait.http.auth.controller.TestKakaoLoginUseCaseConfig
@@ -35,6 +36,7 @@ import kotlin.test.Test
 @AutoConfigureMockMvc
 @Import(
     TestMemberQueryPortConfig::class,
+    TestResolveStoreFallbackUseCaseConfig::class,
     TestKakaoLoginUseCaseConfig::class,
     TestAppleLoginUseCaseConfig::class,
     TestParfaitGroupUseCaseConfig::class,
