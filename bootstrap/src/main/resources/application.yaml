@@ -71,6 +71,21 @@ notification:
     morning-cron: "0 0 10 * * *"
     evening-cron: "0 0 20 * * *"
 
+# App Links(Android)/Universal Links(iOS) 자체구현용 설정. docs 루트의 deeplink-selfbuild-plan.md 참고.
+deeplink:
+  domain: parfait-app.store
+  android:
+    package-name: com.teamyg.parfait
+    # debug 키스토어 지문 + release(Play 앱 서명 키) 지문. 둘 다 등록해야 debug/release 빌드 모두
+    # App Links 검증(Digital Asset Links)을 통과한다.
+    sha256-cert-fingerprints: "4F:7D:A7:E9:92:71:2E:1E:D3:AF:3F:CF:64:85:08:05:25:9D:E7:7A:5B:E4:80:96:B0:40:1D:1E:09:44:79:4F,46:77:8E:EC:B8:36:90:86:B1:33:29:00:96:15:35:75:AE:13:14:B6:3D:DA:FC:19:0C:B7:78:9E:ED:B3:50:73"
+  ios:
+    team-id: "" # TODO: Apple Developer Team ID
+    bundle-id: "" # TODO: iOS 앱 Bundle ID
+    app-store-id: "" # TODO: App Store Connect 앱 고유 숫자 ID (비워두면 iOS 폴백 페이지가 스토어로 리다이렉트하지 않는다)
+  ga4:
+    measurement-id: "" # TODO: GA4 Web 데이터 스트림 측정 ID (G-XXXXXXXXXX, 비워두면 이벤트 전송을 건너뛴다)
+
 springdoc:
   api-docs:
     path: /v3/api-docs
