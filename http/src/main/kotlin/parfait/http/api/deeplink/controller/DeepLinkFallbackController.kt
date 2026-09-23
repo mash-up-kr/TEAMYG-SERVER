@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RestController
 import parfait.core.deeplink.port.`in`.ResolveStoreFallbackCommand
 import parfait.core.deeplink.port.`in`.ResolveStoreFallbackUseCase
 import parfait.http.api.deeplink.view.DeepLinkFallbackPageRenderer
+import java.nio.charset.StandardCharsets
 
-// App Link/Universal Link 인터셉트가 실패했을 때(주로 앱 미설치)만 실제로 로드되는 웹 폴백 페이지.
 @Tag(name = "DeepLink")
 @RestController
 class DeepLinkFallbackController(
@@ -51,6 +51,9 @@ class DeepLinkFallbackController(
                 ga4MeasurementId = ga4MeasurementId,
             )
 
-        return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(html)
+        return ResponseEntity
+            .ok()
+            .contentType(MediaType(MediaType.TEXT_HTML, StandardCharsets.UTF_8))
+            .body(html)
     }
 }

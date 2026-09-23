@@ -67,7 +67,7 @@ class DeepLinkFallbackControllerTest {
                     header("User-Agent", "Android")
                 }.andExpect {
                     status { isOk() }
-                    content { contentType(MediaType.TEXT_HTML) }
+                    content { contentType("${MediaType.TEXT_HTML_VALUE};charset=UTF-8") }
                 }.andReturn()
                 .response
                 .contentAsString
