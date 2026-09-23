@@ -7,9 +7,8 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 
-// Android App Links(assetlinks.json)·iOS Universal Links(apple-app-site-association) 도메인 소유
-// 검증용 정적 파일. 두 파일 모두 스펙상 정확한 스키마·키 이름이 고정되어 있어 Jackson data class
-// 직렬화(camelCase 기본 네이밍) 대신 Map을 그대로 반환해 키 표기를 있는 그대로 제어한다.
+// 키 이름이 스펙상 snake_case로 고정되어 있어(Jackson 기본은 camelCase), data class 대신
+// Map을 그대로 반환해 키 표기를 직접 제어한다.
 @Hidden
 @RestController
 class DeepLinkWellKnownController(
@@ -55,8 +54,6 @@ class DeepLinkWellKnownController(
     private fun sha256CertFingerprints(): List<String> =
         sha256CertFingerprintsRaw.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
-    // Team ID/Bundle ID가 아직 확정되지 않은 동안은 details를 비워 둔다 — 의미 없는 appID 문자열을
-    // 내보내는 것보다, 검증 실패가 "설정 안 됨"으로 명확히 드러나는 편이 낫다.
     private fun appleAppLinkDetails(): List<Map<String, Any>> {
         if (iosTeamId.isBlank() || iosBundleId.isBlank()) return emptyList()
         return listOf(

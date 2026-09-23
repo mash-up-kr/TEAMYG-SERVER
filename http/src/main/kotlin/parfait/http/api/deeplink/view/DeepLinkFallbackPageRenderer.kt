@@ -3,10 +3,8 @@ package parfait.http.api.deeplink.view
 import parfait.core.deeplink.domain.Platform
 import tools.jackson.databind.ObjectMapper
 
-// 앱 미설치 상태에서 App Link/Universal Link 인터셉트가 실패했을 때만 브라우저에 실제로 로드되는
-// 폴백 페이지. 리다이렉트 직전에 GA4 커스텀 이벤트를 transport_type: 'beacon'으로 전송해야
-// 리다이렉트로 요청이 끊기기 전에 이벤트가 나가므로, 순수 서버 리다이렉트가 아니라 클라이언트
-// 스크립트(gtag.js)로 처리한다.
+// 순수 서버 리다이렉트 대신 클라이언트 스크립트를 쓰는 이유: GA4 beacon 이벤트가 리다이렉트로
+// 요청이 끊기기 전에 나가야 하기 때문이다.
 object DeepLinkFallbackPageRenderer {
     private val objectMapper = ObjectMapper()
 
@@ -94,8 +92,7 @@ object DeepLinkFallbackPageRenderer {
             """.trimMargin()
         }
 
-    // Jackson이 이스케이프한 문자열을 <script> 안에 그대로 넣더라도 "</script"로 조기 종료될 수
-    // 있어, 슬래시가 포함된 "</" 시퀀스만 추가로 끊어준다.
+    // "</script"로 조기 종료되는 것을 막기 위해 "</" 시퀀스를 끊는다.
     private fun escapeForInlineScript(json: String): String = json.replace("</", "<\\/")
 
     private fun escapeHtmlAttribute(value: String): String =

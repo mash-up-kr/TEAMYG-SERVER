@@ -12,7 +12,6 @@ import parfait.http.global.exception.GlobalExceptionHandler
 import parfait.http.global.security.TestMemberQueryPortConfig
 import parfait.http.global.security.TestTokenValidatePortConfig
 
-// iOS Team ID/Bundle ID, Android 서명 지문이 아직 TODO(빈 문자열)인 현재 단계의 동작을 검증한다.
 @WebMvcTest(controllers = [DeepLinkWellKnownController::class])
 @AutoConfigureMockMvc(addFilters = false)
 @Import(GlobalExceptionHandler::class, TestMemberQueryPortConfig::class, TestTokenValidatePortConfig::class)
