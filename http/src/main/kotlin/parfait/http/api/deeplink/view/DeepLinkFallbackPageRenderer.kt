@@ -28,8 +28,35 @@ object DeepLinkFallbackPageRenderer {
             |  <meta charset="utf-8" />
             |  <meta name="viewport" content="width=device-width, initial-scale=1" />
             |  <title>Parfait</title>
+            |  <style>
+            |    body {
+            |      display: flex;
+            |      flex-direction: column;
+            |      align-items: center;
+            |      justify-content: center;
+            |      gap: 16px;
+            |      height: 100vh;
+            |      margin: 0;
+            |      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            |      color: #333;
+            |      text-align: center;
+            |    }
+            |    .spinner {
+            |      width: 28px;
+            |      height: 28px;
+            |      border: 3px solid #eee;
+            |      border-top-color: #ff6b6b;
+            |      border-radius: 50%;
+            |      animation: spin 0.8s linear infinite;
+            |    }
+            |    @keyframes spin {
+            |      to { transform: rotate(360deg); }
+            |    }
+            |    a { color: #ff6b6b; }
+            |  </style>
             |</head>
             |<body>
+            |  <div class="spinner"></div>
             |  <p>앱으로 이동 중입니다...</p>
             |  <p><a id="fallback-link" href="$fallbackHref">스토어로 이동하기</a></p>
             |${analyticsScript(ga4MeasurementId)}
