@@ -34,7 +34,7 @@ class NotificationMessageFactory {
         val (title, body) =
             when (type) {
                 ReminderType.MORNING -> "새벽 3시에 오늘의 새 캔버스가 열렸어요" to "오늘의 첫 토핑을 쌓아볼까요?"
-                ReminderType.EVENING -> "새벽 3시에 오늘의 캔버스가 마감돼요" to "오늘의 마지막 토핑을 올리러 가볼까요?"
+                ReminderType.EVENING -> "새벽 3시에 오늘의 캔버스가 마감돼요" to "오늘의 마지막 토핑을 쌓으러 가볼까요?"
             }
         return PushMessage(
             title = title,
