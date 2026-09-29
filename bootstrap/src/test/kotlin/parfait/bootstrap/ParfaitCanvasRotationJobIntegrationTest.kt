@@ -103,20 +103,23 @@ class ParfaitCanvasRotationJobIntegrationTest {
                 ParfaitGroup.create(name = "회전테스트그룹", inviteCode = InviteCode.of("ROTA01"), memberLimit = 12),
             )
         val groupId = group.requireId()
-        val yesterday = LocalDate.now().minusDays(1)
-        parfaitSavePort.save(Parfait.createToday(parfaitGroupId = groupId, date = yesterday))
+        // minusDays(1)을 쓰면 새벽 3시 이전 실행 시 ParfaitDay.current()도 minusDays(1)이 돼
+        // 가드 조건(!isBefore)에 막혀 회전이 스킵된다. minusDays(2)는 어느 시각에 실행해도
+        // ParfaitDay.current()보다 항상 과거임이 보장된다.
+        val twoDaysAgo = LocalDate.now().minusDays(2)
+        parfaitSavePort.save(Parfait.createToday(parfaitGroupId = groupId, date = twoDaysAgo))
 
         val jobExecution = jobOperatorTestUtils.startJob(jobOperatorTestUtils.getUniqueJobParameters())
 
         jobExecution.status shouldBe BatchStatus.COMPLETED
 
-        // 토핑을 하나도 배치하지 않았으므로 어제 캔버스는 EMPTY로 마감되어야 한다.
-        val rotated = parfaitQueryPort.findByGroupIdAndDate(groupId, yesterday)
+        // 토핑을 하나도 배치하지 않았으므로 해당 캔버스는 EMPTY로 마감되어야 한다.
+        val rotated = parfaitQueryPort.findByGroupIdAndDate(groupId, twoDaysAgo)
         rotated shouldNotBe null
         rotated?.status?.name shouldBe "EMPTY"
 
-        // 마감 직후 오늘 날짜의 새 ACTIVE 캔버스가 생성되어 있어야 한다.
-        val next = parfaitQueryPort.findByGroupIdAndDate(groupId, LocalDate.now())
+        // 마감 직후 twoDaysAgo+1일(어제) 날짜의 새 ACTIVE 캔버스가 생성되어 있어야 한다.
+        val next = parfaitQueryPort.findByGroupIdAndDate(groupId, LocalDate.now().minusDays(1))
         next shouldNotBe null
         next?.status?.name shouldBe "ACTIVE"
     }
