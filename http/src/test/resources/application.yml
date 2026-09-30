@@ -7,6 +7,10 @@ jwt:
 landing:
   domain: parfait-app.store
 
+deeplink:
+  android:
+    package-name: com.teamyg.parfait.test
+
 spring:
   jackson:
     default-property-inclusion: always
