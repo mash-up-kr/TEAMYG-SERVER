@@ -21,6 +21,6 @@ class RootLandingController(
         return ResponseEntity
             .ok()
             .contentType(MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8))
-            .body("hello world")
+            .body("hello world") // TODO: 실제 웹 페이지 연동 예정
     }
 }
