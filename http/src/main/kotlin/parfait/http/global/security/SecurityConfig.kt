@@ -23,6 +23,8 @@ class SecurityConfig(
         private val WHITELIST_PATHS =
             arrayOf(
                 "/",
+                "/assets/**",
+                "/icon-512.png",
                 "/health",
                 "/actuator/health",
                 "/swagger-ui.html",
