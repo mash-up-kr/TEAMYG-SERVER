@@ -1,11 +1,13 @@
 package parfait.http.api.page.root
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.context.annotation.Import
+import org.springframework.http.MediaType
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
@@ -22,7 +24,7 @@ class RootLandingControllerTest {
     lateinit var mockMvc: MockMvc
 
     @Test
-    fun `parfait-app-store로 요청하면 hello world를 응답한다`() {
+    fun `parfait-app-store로 요청하면 랜딩 페이지 HTML을 응답한다`() {
         val response =
             mockMvc
                 .get("/") {
@@ -34,7 +36,8 @@ class RootLandingControllerTest {
                 .response
 
         response.status shouldBe 200
-        response.contentAsString shouldBe "hello world"
+        response.contentType shouldBe "${MediaType.TEXT_HTML_VALUE};charset=UTF-8"
+        response.contentAsString shouldContain "landing-test-fixture"
     }
 
     @Test
