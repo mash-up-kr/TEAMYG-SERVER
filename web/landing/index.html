@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Parfait 다운로드</title>
+  <meta name="description" content="우리가 쌓을 하루, 사진 공유 캔버스 SNS Parfait (Google Play · App Store)">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Parfait">
+  <meta property="og:description" content="우리가 쌓을 하루, 사진 공유 캔버스 SNS">
+  <meta property="og:url" content="https://parfait-app.store/">
+  <meta property="og:image" content="https://parfait-app.store/assets/icon-512.png">
+  <link rel="icon" type="image/png" href="assets/icon-512.png">
+  <link rel="apple-touch-icon" href="assets/icon-512.png">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <script>
+    // Android 일반 브라우저는 페이지가 그려지기 전에 스토어로 보낸다. React보다 먼저 실행돼야 한다.
+    // 아래 정규식과 intent 조립은 src/landing/ua.ts와 같아야 한다.
+    (function () {
+      var ua = navigator.userAgent || "";
+      var isAndroid = /Android/i.test(ua);
+      var isInApp = /Instagram|FBAN|FBAV|FB_IAB|KAKAOTALK|NAVER|Line\/|Threads/i.test(ua);
+      if (!isAndroid || isInApp) return;
+      var pkg = "com.teamyg.parfait";
+      var webUrl = "https://play.google.com/store/apps/details?id=" + pkg;
+      location.replace(
+        "intent://details?id=" + pkg +
+        "#Intent;scheme=market;package=com.android.vending;" +
+        "S.browser_fallback_url=" + encodeURIComponent(webUrl) + ";end"
+      );
+    })();
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/landing/main.tsx"></script>
+</body>
+</html>
