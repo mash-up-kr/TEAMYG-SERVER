@@ -29,7 +29,7 @@ export default function Landing({ platform, pageUrl }: Props) {
             </p>
             <img
               className="app-icon"
-              src={asset('icon-512.png')}
+              src={asset('assets/icon-512.png')}
               alt="Parfait 앱 아이콘"
               width={124}
               height={124}
