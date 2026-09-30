@@ -13,6 +13,7 @@ EC2에 Caddy를 리버스 프록시로 올려 도메인에 Let's Encrypt 인증�
 | 항목 | 값 |
 |---|---|
 | 도메인 | `api.parfait-app.store` (가비아 등록, 가비아 네임서버) |
+| 루트 도메인 | `parfait-app.store` — App Links/Universal Links 전용 ([아래 절차](#루트-도메인-app-linksuniversal-links) 참조) |
 | 공인 IP | `43.201.180.13` (EIP `eipalloc-036e8471df2ae16da`) |
 | 인스턴스 | `i-0a3e0094147db6031` (`parfait-server`, ap-northeast-2a) |
 | 보안 그룹 | `sg-015795760ae63b419` (`parfait-sg`) |
@@ -145,6 +146,55 @@ aws ec2 revoke-security-group-ingress --region ap-northeast-2 \
 ```sh
 sudo docker exec caddy caddy reload --config /etc/caddy/Caddyfile
 ```
+
+## 루트 도메인 (App Links/Universal Links)
+
+딥링크 자체구현을 위해 루트 도메인 `parfait-app.store`도 같은 Caddy로 처리한다. OS가 링크 도메인의
+소유를 검증하는 파일과 웹 폴백 페이지는 그 링크의 호스트에서 서빙돼야 하기 때문이다.
+
+| 경로 | 용도 |
+|---|---|
+| `/.well-known/assetlinks.json` | Android App Links 도메인 검증 |
+| `/.well-known/apple-app-site-association` | iOS Universal Links 도메인 검증 |
+| `/link` | 앱이 없을 때의 웹 폴백 페이지 (UA로 스토어 분기) |
+
+Caddyfile의 `parfait-app.store` 사이트 블록이 이 호스트를 같은 애플리케이션 컨테이너(`127.0.0.1:8080`)로
+프록시하므로 별도 배포는 없다. 접근 로그는 api 도메인과 분리해 `/data/access-root.log`에 남는다.
+인증서는 api 도메인과 같은 방식(HTTP-01, 자동 갱신)으로 발급되며 80 포트는 이미 열려 있다.
+
+### 적용 절차
+
+1. **DNS 먼저.** 가비아 DNS 관리툴에서 루트 A 레코드를 추가하고 전파를 확인한다. DNS가 이 서버를
+   가리키기 전에 반영하면 인증서 발급이 실패하고 발급 횟수만 소모된다.
+
+   | 타입 | 호스트 | 값 | TTL |
+   |---|---|---|---|
+   | A | `@` | `43.201.180.13` | 300 |
+
+   ```sh
+   dig +short parfait-app.store @8.8.8.8
+   ```
+
+2. 위 "설정 변경"의 방법으로 Caddyfile을 EC2에 반영하고 `caddy reload`한다. 컨테이너를 새로 띄울
+   필요는 없다.
+3. 인증서 발급을 확인한다.
+
+   ```sh
+   sudo docker logs caddy 2>&1 | grep -i "certificate obtained"
+   ```
+
+4. 검증한다. 검증 파일이 200과 JSON으로 내려와야 OS 도메인 검증이 통과한다.
+
+   ```sh
+   curl -sSI https://parfait-app.store/.well-known/assetlinks.json
+   curl -sSI https://parfait-app.store/.well-known/apple-app-site-association
+   curl -sSI https://parfait-app.store/link
+   curl -sSI http://parfait-app.store/link   # 308, Location: https://
+   ```
+
+애플리케이션 쪽 설정(`deeplink.android.*`, `deeplink.ios.*`)은 `application.yaml`을 참조한다. iOS는
+`team-id`, `bundle-id`, `app-store-id`가 아직 비어 있어 채우기 전에는 iOS 검증과 스토어 리다이렉트가
+동작하지 않는다.
 
 ## 롤백
 
