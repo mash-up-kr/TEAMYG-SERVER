@@ -1,0 +1,166 @@
+/* Figma "인스타그램 게시물" Page 1(폭 1080)에 비율을 맞춘다. 1u = 디자인 1px */
+:root {
+  --u: calc(min(100vw, 480px) / 1080);
+  --bg: #000000;
+  --glow: rgba(88, 60, 48, 0.55);
+  --text: #ffffff;
+  --sub: #dce3e6;
+  --line: #ffffff;
+  --accent: #e3123a;
+  --accent-text: #ffffff;
+  --surface: rgba(255, 255, 255, 0.08);
+  --surface-line: rgba(255, 255, 255, 0.16);
+  --mono-filter: none;
+  --icon-ring: transparent;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #fafafa;
+    --glow: rgba(227, 18, 58, 0.10);
+    --text: #111111;
+    --sub: #4a5256;
+    --line: #111111;
+    --surface: rgba(0, 0, 0, 0.04);
+    --surface-line: rgba(0, 0, 0, 0.10);
+    --mono-filter: invert(1);
+    --icon-ring: rgba(0, 0, 0, 0.10);
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background:
+    radial-gradient(120% 70% at 100% 100%, var(--glow), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: "Pretendard Variable", Pretendard, -apple-system, "Noto Sans KR", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  justify-content: center;
+}
+main {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header (5039:2600) */
+.header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--u) * 32);
+  padding: max(calc(var(--u) * 80), env(safe-area-inset-top)) calc(var(--u) * 70) 0;
+}
+.platform {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 16);
+  padding: calc(var(--u) * 20) calc(var(--u) * 28);
+  border: max(1px, calc(var(--u) * 2.861)) solid var(--line);
+  border-radius: 999px;
+  font-size: calc(var(--u) * 40);
+  font-weight: 700;
+  line-height: 1;
+}
+.platform img {
+  width: calc(var(--u) * 8);
+  height: calc(var(--u) * 8);
+  filter: var(--mono-filter);
+}
+.title-block {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 28);
+  width: 100%;
+}
+h1 {
+  margin: 0;
+  font-size: calc(var(--u) * 92);
+  font-weight: 700;
+  line-height: 1.2;
+}
+.tagline {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--u) * 16);
+  padding-left: calc(var(--u) * 8);
+}
+.tagline p {
+  flex: 1;
+  margin: 0;
+  color: var(--sub);
+  font-size: calc(var(--u) * 38);
+  font-weight: 500;
+  line-height: 1.5;
+}
+.tagline b { font-weight: 700; }
+.app-icon {
+  width: calc(var(--u) * 124);
+  height: calc(var(--u) * 124);
+  border-radius: calc(var(--u) * 20);
+  box-shadow: 0 0 0 1px var(--icon-ring);
+}
+
+/* 다운로드 버튼 */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px calc(var(--u) * 70) 0;
+}
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 20px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+.btn:active { opacity: .85; }
+.hint {
+  margin: 2px 0 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--surface-line);
+  color: var(--sub);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.hint b { color: var(--text); }
+
+/* Area (5039:1816): 게시물처럼 화면 아래로 이어지는 캔버스 미리보기 */
+.preview {
+  padding: 28px calc(var(--u) * 78) 0;
+}
+.preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: calc(var(--u) * 40) calc(var(--u) * 40) 0 0;
+  /* 디자인처럼 아래가 잘려 보이도록 끝을 흐리게 처리한다. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 75%, transparent);
+  mask-image: linear-gradient(to bottom, #000 75%, transparent);
+}
+[hidden] { display: none !important; }
