@@ -1,4 +1,4 @@
-package parfait.http.api.landing
+package parfait.http.api.page.root
 
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Value
