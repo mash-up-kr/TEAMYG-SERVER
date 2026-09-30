@@ -24,7 +24,6 @@ class SecurityConfig(
             arrayOf(
                 "/",
                 "/assets/**",
-                "/icon-512.png",
                 "/health",
                 "/actuator/health",
                 "/swagger-ui.html",
