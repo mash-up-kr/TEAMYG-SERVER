@@ -71,6 +71,9 @@ notification:
     morning-cron: "0 0 10 * * *"
     evening-cron: "0 0 20 * * *"
 
+landing:
+  domain: parfait-app.store
+
 springdoc:
   api-docs:
     path: /v3/api-docs

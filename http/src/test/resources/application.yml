@@ -4,6 +4,9 @@ jwt:
   refresh-token-expiration-seconds: 1209600
   registration-token-expiration-seconds: 600
 
+landing:
+  domain: parfait-app.store
+
 spring:
   jackson:
     default-property-inclusion: always
