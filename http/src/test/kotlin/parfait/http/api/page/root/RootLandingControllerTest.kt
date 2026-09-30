@@ -1,4 +1,4 @@
-package parfait.http.api.landing
+package parfait.http.api.page.root
 
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
