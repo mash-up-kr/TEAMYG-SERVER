@@ -40,7 +40,7 @@ docs/#7
 | `main` | 배포 | 금지 — PR 必 |
 | `develop` | 통합 개발 | 금지 — PR 必 |
 
-- 모든 작업 브랜치는 `main`을 base로 분기한다. (당분간 `develop` 미사용)
+- 모든 작업 브랜치는 `develop`을 base로 분기한다.
 
 ## 머지 전략
 

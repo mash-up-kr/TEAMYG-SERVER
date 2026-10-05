@@ -73,7 +73,7 @@ class NotificationMessageFactoryTest {
         val message = factory.dailyReminder(ReminderType.EVENING)
 
         message.title shouldBe "새벽 3시에 오늘의 캔버스가 마감돼요"
-        message.body shouldBe "오늘의 마지막 토핑을 올리러 가볼까요?"
+        message.body shouldBe "오늘의 마지막 토핑을 쌓으러 가볼까요?"
         message.data shouldBe mapOf("type" to "REMIND_PM", "route" to "group")
         message.ttl shouldBe Duration.ofHours(1)
     }
