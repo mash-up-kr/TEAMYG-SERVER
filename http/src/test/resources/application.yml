@@ -4,6 +4,10 @@ jwt:
   refresh-token-expiration-seconds: 1209600
   registration-token-expiration-seconds: 600
 
+deeplink:
+  android:
+    package-name: com.teamyg.parfait.test
+
 spring:
   jackson:
     default-property-inclusion: always
