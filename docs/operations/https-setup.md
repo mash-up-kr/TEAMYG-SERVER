@@ -97,7 +97,8 @@ aws ssm send-command --region ap-northeast-2 \
 ### 5. Caddy 기동
 
 ```sh
-sudo docker run -d --name caddy --network host --restart always \
+sudo docker run -d --name caddy --network host --restart unless-stopped \
+  --log-opt max-size=10m --log-opt max-file=3 \
   -e DOMAIN=api.parfait-app.store \
   -e ACME_EMAIL=celina.16161616@gmail.com \
   -v /home/ubuntu/caddy/Caddyfile:/etc/caddy/Caddyfile:ro \
@@ -145,6 +146,27 @@ aws ec2 revoke-security-group-ingress --region ap-northeast-2 \
 ```sh
 sudo docker exec caddy caddy reload --config /etc/caddy/Caddyfile
 ```
+
+### 컨테이너 옵션 변경 (재시작 정책·로그 제한)
+
+- **재시작 정책**은 재생성 없이 실행 중에 바꿀 수 있다.
+
+  ```sh
+  sudo docker update --restart unless-stopped caddy
+  ```
+
+- **로그 제한**(`--log-opt`)은 실행 중인 컨테이너에 바꿀 수 없다. 5단계 명령으로 컨테이너를 다시 만든다.
+  인증서는 `/home/ubuntu/caddy/data` 볼륨에 남아 재발급되지 않지만, 재생성하는 동안 몇 초간 HTTPS가 끊긴다.
+
+  ```sh
+  sudo docker stop caddy && sudo docker rm caddy
+  # 이어서 5단계의 docker run 명령을 실행한다.
+  ```
+
+- 확인: `sudo docker inspect caddy --format '{{.HostConfig.RestartPolicy.Name}} {{.HostConfig.LogConfig}}'`
+  결과에 `unless-stopped`와 `max-size:10m`, `max-file:3`이 보이면 된다.
+- Caddy 접근 로그(`/data/access.log`)는 Caddyfile의 `roll_size`·`roll_keep`으로 이미 제한돼 있다.
+  컨테이너 stdout 로그만 위 옵션으로 제한한다.
 
 ## 롤백
 
