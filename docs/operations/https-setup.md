@@ -160,6 +160,10 @@ sudo docker exec caddy caddy reload --config /etc/caddy/Caddyfile
 
 Caddyfile의 `parfait-app.store` 사이트 블록이 이 호스트를 같은 애플리케이션 컨테이너(`127.0.0.1:8080`)로
 프록시하므로 별도 배포는 없다. 접근 로그는 api 도메인과 분리해 `/data/access-root.log`에 남는다.
+
+사용자에게 노출되는 도메인이라 **허용 경로(`@public` 매처)만 프록시하고 나머지는 404**로 막는다. 그래서
+`swagger-ui.html`, `/actuator/health`, `/v3/api-docs` 등은 이 도메인에서 열리지 않는다(api 도메인에서만 접근).
+딥링크에 새 경로를 추가하면 Caddyfile의 `@public`도 함께 고쳐야 한다.
 인증서는 api 도메인과 같은 방식(HTTP-01, 자동 갱신)으로 발급되며 80 포트는 이미 열려 있다.
 
 ### 적용 절차
@@ -190,6 +194,7 @@ Caddyfile의 `parfait-app.store` 사이트 블록이 이 호스트를 같은 애
    curl -sSI https://parfait-app.store/.well-known/apple-app-site-association
    curl -sSI https://parfait-app.store/link
    curl -sSI http://parfait-app.store/link   # 308, Location: https://
+   curl -sSI https://parfait-app.store/swagger-ui.html   # 404 (허용 경로 밖은 막혀 있어야 한다)
    ```
 
 애플리케이션 쪽 설정(`deeplink.android.*`, `deeplink.ios.*`)은 `application.yaml`을 참조한다. iOS는
