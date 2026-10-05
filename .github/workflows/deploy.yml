@@ -4,6 +4,11 @@ on:
   push:
     branches: [ main ]
 
+# 배포와 롤백(rollback.yml)이 같은 컨테이너를 교체하므로 동시에 실행되지 않게 한다.
+concurrency:
+  group: server-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -48,7 +53,8 @@ jobs:
               "# FCM 키: Firebase 콘솔 > 프로젝트 설정 > 서비스 계정 > 새 비공개 키 생성 →",
               "#   scp 로 /home/ubuntu/TEAMYG-SERVER/parfait-firebase-key.json (chmod 600)",
               "test -s /home/ubuntu/TEAMYG-SERVER/parfait-firebase-key.json || { echo FCM key missing: /home/ubuntu/TEAMYG-SERVER/parfait-firebase-key.json; exit 1; }",
-              "sudo docker run -d --name parfait --network host --env-file /home/ubuntu/TEAMYG-SERVER/.env -v /home/ubuntu/TEAMYG-SERVER/parfait-firebase-key.json:/app/parfait-firebase-key.json:ro --restart always 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com/parfait:latest",
+              "# docker run 옵션은 deploy/scripts/rollback-app.sh와 같아야 한다 (한쪽을 고치면 다른 쪽도 확인).",
+              "sudo docker run -d --name parfait --network host --env-file /home/ubuntu/TEAMYG-SERVER/.env -v /home/ubuntu/TEAMYG-SERVER/parfait-firebase-key.json:/app/parfait-firebase-key.json:ro --restart unless-stopped --log-opt max-size=10m --log-opt max-file=3 452203592903.dkr.ecr.ap-northeast-2.amazonaws.com/parfait:latest",
               "for i in $(seq 1 30); do curl -sf --max-time 2 http://localhost:8080/health && exit 0; [ $i -lt 30 ] && sleep 5; done; echo Health check failed; exit 1"
             ]' \
             --query "Command.CommandId" \
