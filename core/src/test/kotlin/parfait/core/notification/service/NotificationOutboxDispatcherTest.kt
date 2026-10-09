@@ -102,7 +102,7 @@ class NotificationOutboxDispatcherTest {
 
         dispatcher.processDueBatch(now)
 
-        verify { senderPort.send("tok-1", match { it.title == "우리팀 파르페에 체리 하나 톡!" && it.body == "닉7님이 새 토핑을 쌓았어요" }) }
+        verify { senderPort.send("tok-1", match { it.title == "우리팀 파르페에 체리 하나 톡!" && it.body == "닉7님이 새 사진을 쌓았어요" }) }
         verify { pollPort.markSent(1L, now, null) }
     }
 
@@ -139,7 +139,7 @@ class NotificationOutboxDispatcherTest {
 
         dispatcher.processDueBatch(now)
 
-        verify { senderPort.send("tok-1", match { it.body == "누군가 새 토핑을 쌓았어요" }) }
+        verify { senderPort.send("tok-1", match { it.body == "누군가 새 사진을 쌓았어요" }) }
         verify { pollPort.markSent(1L, now, null) }
     }
 

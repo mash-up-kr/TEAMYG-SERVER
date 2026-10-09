@@ -14,7 +14,7 @@ class NotificationMessageFactoryTest {
         val message = factory.toppingPlaced(groupName = "우리팀", actorNickname = "체리", groupId = 50L, parfaitDate = date)
 
         message.title shouldBe "우리팀 파르페에 체리 하나 톡!"
-        message.body shouldBe "체리님이 새 토핑을 쌓았어요"
+        message.body shouldBe "체리님이 새 사진을 쌓았어요"
         message.data shouldBe
             mapOf(
                 "type" to "TOPPING",
@@ -35,7 +35,7 @@ class NotificationMessageFactoryTest {
                 parfaitDate = date,
             )
 
-        message.body shouldBe "WWWWWWWW님이 새 토핑을 쌓았어요"
+        message.body shouldBe "WWWWWWWW님이 새 사진을 쌓았어요"
     }
 
     @Test
@@ -48,14 +48,14 @@ class NotificationMessageFactoryTest {
                 parfaitDate = date,
             )
 
-        message.body shouldBe "WWWWWWWW...님이 새 토핑을 쌓았어요"
+        message.body shouldBe "WWWWWWWW...님이 새 사진을 쌓았어요"
     }
 
     @Test
     fun `토핑 알림 - 작성자 닉네임이 null 이면 익명 문구 (E-05)`() {
         val message = factory.toppingPlaced(groupName = "우리팀", actorNickname = null, groupId = 50L, parfaitDate = date)
 
-        message.body shouldBe "누군가 새 토핑을 쌓았어요"
+        message.body shouldBe "누군가 새 사진을 쌓았어요"
     }
 
     @Test
@@ -63,7 +63,7 @@ class NotificationMessageFactoryTest {
         val message = factory.dailyReminder(ReminderType.MORNING)
 
         message.title shouldBe "새벽 3시에 오늘의 새 캔버스가 열렸어요"
-        message.body shouldBe "오늘의 첫 토핑을 쌓아볼까요?"
+        message.body shouldBe "오늘의 파르페를 먼저 쌓아볼까요?"
         message.data shouldBe mapOf("type" to "REMIND_AM", "route" to "group")
         message.ttl shouldBe Duration.ofHours(1)
     }
@@ -73,7 +73,7 @@ class NotificationMessageFactoryTest {
         val message = factory.dailyReminder(ReminderType.EVENING)
 
         message.title shouldBe "새벽 3시에 오늘의 캔버스가 마감돼요"
-        message.body shouldBe "오늘의 마지막 토핑을 쌓으러 가볼까요?"
+        message.body shouldBe "오늘의 파르페를 완성하러 가볼까요?"
         message.data shouldBe mapOf("type" to "REMIND_PM", "route" to "group")
         message.ttl shouldBe Duration.ofHours(1)
     }

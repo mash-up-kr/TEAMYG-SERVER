@@ -18,8 +18,8 @@ class NotificationMessageFactory {
             body =
                 actorNickname
                     ?.ellipsize(NICKNAME_DISPLAY_MAX)
-                    ?.let { "${it}님이 새 토핑을 쌓았어요" }
-                    ?: "누군가 새 토핑을 쌓았어요",
+                    ?.let { "${it}님이 새 사진을 쌓았어요" }
+                    ?: "누군가 새 사진을 쌓았어요",
             data =
                 mapOf(
                     "type" to "TOPPING",
@@ -33,8 +33,8 @@ class NotificationMessageFactory {
     fun dailyReminder(type: ReminderType): PushMessage {
         val (title, body) =
             when (type) {
-                ReminderType.MORNING -> "새벽 3시에 오늘의 새 캔버스가 열렸어요" to "오늘의 첫 토핑을 쌓아볼까요?"
-                ReminderType.EVENING -> "새벽 3시에 오늘의 캔버스가 마감돼요" to "오늘의 마지막 토핑을 쌓으러 가볼까요?"
+                ReminderType.MORNING -> "새벽 3시에 오늘의 새 캔버스가 열렸어요" to "오늘의 파르페를 먼저 쌓아볼까요?"
+                ReminderType.EVENING -> "새벽 3시에 오늘의 캔버스가 마감돼요" to "오늘의 파르페를 완성하러 가볼까요?"
             }
         return PushMessage(
             title = title,
