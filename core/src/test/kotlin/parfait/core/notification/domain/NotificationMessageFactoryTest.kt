@@ -77,4 +77,52 @@ class NotificationMessageFactoryTest {
         message.data shouldBe mapOf("type" to "REMIND_PM", "route" to "group")
         message.ttl shouldBe Duration.ofHours(1)
     }
+
+    @Test
+    fun `배경 알림 - 제목에 그룹명, 본문에 닉네임`() {
+        val message =
+            factory.backgroundChanged(
+                groupName = "우리팀",
+                actorNickname = "체리",
+                groupId = 50L,
+                parfaitDate = date,
+            )
+
+        message.title shouldBe "우리팀 파르페에 체리 하나 톡!"
+        message.body shouldBe "체리님이 배경을 바꿨어요"
+        message.data shouldBe
+            mapOf(
+                "type" to "BACKGROUND",
+                "route" to "canvas",
+                "groupId" to "50",
+                "date" to "2026-09-02",
+            )
+        message.ttl shouldBe Duration.ofHours(6)
+    }
+
+    @Test
+    fun `배경 알림 - 닉네임이 8자 초과면 앞 8자 + 마침표 3개`() {
+        val message =
+            factory.backgroundChanged(
+                groupName = "우리팀",
+                actorNickname = "WWWWWWWWWWW",
+                groupId = 50L,
+                parfaitDate = date,
+            )
+
+        message.body shouldBe "WWWWWWWW...님이 배경을 바꿨어요"
+    }
+
+    @Test
+    fun `배경 알림 - 작성자 닉네임이 null 이면 익명 문구 (E-05)`() {
+        val message =
+            factory.backgroundChanged(
+                groupName = "우리팀",
+                actorNickname = null,
+                groupId = 50L,
+                parfaitDate = date,
+            )
+
+        message.body shouldBe "누군가 배경을 바꿨어요"
+    }
 }

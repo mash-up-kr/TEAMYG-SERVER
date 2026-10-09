@@ -49,11 +49,12 @@ class NotificationOutboxDispatcherTest {
         id: Long = 1L,
         receiver: Long = 42L,
         attempts: Int = 0,
+        eventType: String = "TOPPING_PLACED",
     ) = NotificationOutbox.reconstitute(
         id = id,
         aggregateType = "TOPPING",
         aggregateId = 5L,
-        eventType = "TOPPING_PLACED",
+        eventType = eventType,
         receiverMemberId = receiver,
         payload = payload,
         dedupKey = "topping-placed:5:$receiver",
@@ -234,5 +235,35 @@ class NotificationOutboxDispatcherTest {
 
         outcome.cancelled shouldBe 2
         outcome.cancelledByReason shouldBe mapOf("CANCELLED_GROUP_DELETED" to 1, "NO_DEVICE_TOKEN" to 1)
+    }
+
+    @Test
+    fun `BACKGROUND_CHANGED 행은 배경 변경 문구로 발송한다`() {
+        every { pollPort.claimBatch(any(), now) } returns listOf(row(eventType = "BACKGROUND_CHANGED"))
+        every { groupQueryPort.findById(1L) } returns group()
+        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns member(42L)
+        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 7L) } returns member(7L)
+        every { deviceTokenQueryPort.findByMemberId(42L) } returns listOf(token("tok-1"))
+
+        dispatcher.processDueBatch(now)
+
+        verify { senderPort.send("tok-1", match { it.title == "우리팀 파르페에 체리 하나 톡!" && it.body == "닉7님이 배경을 바꿨어요" }) }
+        verify { pollPort.markSent(1L, now, null) }
+    }
+
+    @Test
+    fun `알 수 없는 eventType 은 markFailed 하고 다음 행을 계속 처리한다`() {
+        every { pollPort.claimBatch(any(), now) } returns
+            listOf(row(id = 1L, eventType = "UNKNOWN"), row(id = 2L))
+        every { groupQueryPort.findById(1L) } returns group()
+        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns member(42L)
+        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 7L) } returns member(7L)
+        every { deviceTokenQueryPort.findByMemberId(42L) } returns listOf(token("tok-1"))
+
+        dispatcher.processDueBatch(now)
+
+        verify { pollPort.markFailed(1L, match { it.startsWith("UNKNOWN_EVENT_TYPE") }) }
+        verify { pollPort.markSent(2L, now, null) }
+        verify(exactly = 1) { senderPort.send("tok-1", any()) }
     }
 }

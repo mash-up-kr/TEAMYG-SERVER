@@ -30,6 +30,29 @@ class NotificationMessageFactory {
             ttl = Duration.ofHours(6),
         )
 
+    fun backgroundChanged(
+        groupName: String,
+        actorNickname: String?,
+        groupId: Long,
+        parfaitDate: LocalDate,
+    ): PushMessage =
+        PushMessage(
+            title = "$groupName 파르페에 체리 하나 톡!",
+            body =
+                actorNickname
+                    ?.ellipsize(NICKNAME_DISPLAY_MAX)
+                    ?.let { "${it}님이 배경을 바꿨어요" }
+                    ?: "누군가 배경을 바꿨어요",
+            data =
+                mapOf(
+                    "type" to "BACKGROUND",
+                    "route" to "canvas",
+                    "groupId" to groupId.toString(),
+                    "date" to parfaitDate.toString(),
+                ),
+            ttl = Duration.ofHours(6),
+        )
+
     fun dailyReminder(type: ReminderType): PushMessage {
         val (title, body) =
             when (type) {
