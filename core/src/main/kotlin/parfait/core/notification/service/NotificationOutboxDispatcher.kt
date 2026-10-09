@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import parfait.core.notification.domain.FcmErrorCodes
 import parfait.core.notification.domain.NotificationMessageFactory
+import parfait.core.notification.domain.NotificationOutbox
 import parfait.core.notification.domain.OutboxBackoff
 import parfait.core.notification.exception.NotificationSendException
 import parfait.core.notification.port.`in`.OutboxBatchOutcome
@@ -89,7 +90,20 @@ class NotificationOutboxDispatcher(
                 continue
             }
 
-            val message = messageFactory.toppingPlaced(group.name.value, actorNickname, p.groupId, p.parfaitDate)
+            val message =
+                when (row.eventType) {
+                    NotificationOutbox.EVENT_TYPE_TOPPING_PLACED ->
+                        messageFactory.toppingPlaced(group.name.value, actorNickname, p.groupId, p.parfaitDate)
+                    NotificationOutbox.EVENT_TYPE_BACKGROUND_CHANGED ->
+                        messageFactory.backgroundChanged(group.name.value, actorNickname, p.groupId, p.parfaitDate)
+                    else -> {
+                        // 예외를 던지면 배치 트랜잭션 전체가 롤백되므로 해당 행만 종료 처리하고 계속한다.
+                        pollPort.markFailed(id, "UNKNOWN_EVENT_TYPE: ${row.eventType}")
+                        log.warn("outbox 알 수 없는 eventType id={} eventType={}", id, row.eventType)
+                        failed++
+                        continue
+                    }
+                }
 
             var anySuccess = false
             var anyRetryable = false

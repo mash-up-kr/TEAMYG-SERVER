@@ -39,4 +39,29 @@ class NotificationOutboxTest {
         row.sentAt shouldBe null
         row.lastError shouldBe null
     }
+
+    @Test
+    fun `backgroundChanged 는 PARFAIT 집계와 변경시각이 들어간 dedupKey 로 생성한다`() {
+        val changedAt = LocalDateTime.of(2026, 9, 2, 10, 5, 7, 123_000_000)
+
+        val row =
+            NotificationOutbox.backgroundChanged(
+                receiverMemberId = 42L,
+                payload = payload,
+                changedAt = changedAt,
+                now = now,
+            )
+
+        row.id shouldBe null
+        row.aggregateType shouldBe "PARFAIT"
+        row.aggregateId shouldBe 123L
+        row.eventType shouldBe "BACKGROUND_CHANGED"
+        row.receiverMemberId shouldBe 42L
+        row.payload shouldBe payload
+        row.dedupKey shouldBe "background-changed:123:20260902100507123:42"
+        row.status shouldBe OutboxStatus.PENDING
+        row.attempts shouldBe 0
+        row.scheduledAt shouldBe now
+        row.createdAt shouldBe now
+    }
 }

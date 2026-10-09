@@ -6,6 +6,8 @@ import parfait.core.exception.BusinessException
 import parfait.core.image.domain.ImageStatus
 import parfait.core.image.exception.ImageErrorCode
 import parfait.core.image.port.out.ImageMetaQueryPort
+import parfait.core.notification.domain.ToppingPlacedPayload
+import parfait.core.notification.service.BackgroundChangedNotifier
 import parfait.core.parfait.domain.BackgroundType
 import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.exception.ParfaitErrorCode
@@ -24,6 +26,7 @@ class ChangeParfaitBackgroundService(
     private val parfaitQueryPort: ParfaitQueryPort,
     private val parfaitSavePort: ParfaitSavePort,
     private val imageMetaQueryPort: ImageMetaQueryPort,
+    private val backgroundChangedNotifier: BackgroundChangedNotifier,
 ) : ChangeParfaitBackgroundUseCase {
     @Transactional
     override fun change(command: ChangeParfaitBackgroundCommand): BackgroundResult {
@@ -41,6 +44,17 @@ class ChangeParfaitBackgroundService(
         val resolvedValue = resolveValue(command)
 
         val saved = parfaitSavePort.save(parfait.changeBackground(command.type, resolvedValue))
+
+        backgroundChangedNotifier.notify(
+            payload =
+                ToppingPlacedPayload(
+                    groupId = command.groupId,
+                    parfaitId = command.parfaitId,
+                    parfaitDate = parfait.parfaitDate,
+                    actorMemberId = command.memberId,
+                ),
+            changedAt = saved.updatedAt,
+        )
 
         return BackgroundResult(
             type = requireNotNull(saved.backgroundType),

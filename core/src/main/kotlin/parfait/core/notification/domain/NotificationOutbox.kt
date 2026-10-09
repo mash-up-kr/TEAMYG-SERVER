@@ -1,6 +1,7 @@
 package parfait.core.notification.domain
 
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  * notification_outbox 한 행의 도메인 표현. 상태 전이는 이 객체가 아니라
@@ -24,6 +25,10 @@ class NotificationOutbox private constructor(
     companion object {
         const val AGGREGATE_TYPE_TOPPING = "TOPPING"
         const val EVENT_TYPE_TOPPING_PLACED = "TOPPING_PLACED"
+        const val AGGREGATE_TYPE_PARFAIT = "PARFAIT"
+        const val EVENT_TYPE_BACKGROUND_CHANGED = "BACKGROUND_CHANGED"
+
+        private val DEDUP_TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS")
 
         fun toppingPlaced(
             toppingId: Long,
@@ -46,6 +51,31 @@ class NotificationOutbox private constructor(
                 createdAt = now,
                 sentAt = null,
             )
+
+        fun backgroundChanged(
+            receiverMemberId: Long,
+            payload: ToppingPlacedPayload,
+            changedAt: LocalDateTime,
+            now: LocalDateTime = LocalDateTime.now(),
+        ): NotificationOutbox {
+            val changedAtKey = changedAt.format(DEDUP_TIME_FORMAT)
+            val dedupKey = "background-changed:${payload.parfaitId}:$changedAtKey:$receiverMemberId"
+            return NotificationOutbox(
+                id = null,
+                aggregateType = AGGREGATE_TYPE_PARFAIT,
+                aggregateId = payload.parfaitId,
+                eventType = EVENT_TYPE_BACKGROUND_CHANGED,
+                receiverMemberId = receiverMemberId,
+                payload = payload,
+                dedupKey = dedupKey,
+                status = OutboxStatus.PENDING,
+                attempts = 0,
+                scheduledAt = now,
+                lastError = null,
+                createdAt = now,
+                sentAt = null,
+            )
+        }
 
         @Suppress("LongParameterList")
         fun reconstitute(
