@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -21,6 +22,7 @@ import parfait.core.member.port.out.MemberQueryPort
 import parfait.core.notification.port.out.DeviceTokenDeletePort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberLeavePort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
+import parfait.core.parfaitgroup.application.service.ParfaitGroupVersionService
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 import java.time.LocalDateTime
 import kotlin.test.assertFailsWith
@@ -33,6 +35,7 @@ class MemberServiceTest {
     private val parfaitGroupMemberLeavePort = mockk<ParfaitGroupMemberLeavePort>(relaxed = true)
     private val tokenDeletePort = mockk<TokenDeletePort>(relaxed = true)
     private val deviceTokenDeletePort = mockk<DeviceTokenDeletePort>(relaxed = true)
+    private val parfaitGroupVersionService = mockk<ParfaitGroupVersionService>(relaxed = true)
     private val service =
         MemberService(
             memberNicknameUpdatePort = memberNicknameUpdatePort,
@@ -42,6 +45,7 @@ class MemberServiceTest {
             parfaitGroupMemberLeavePort = parfaitGroupMemberLeavePort,
             tokenDeletePort = tokenDeletePort,
             deviceTokenDeletePort = deviceTokenDeletePort,
+            parfaitGroupVersionService = parfaitGroupVersionService,
         )
     private val now = LocalDateTime.of(2026, 8, 11, 12, 0)
 
@@ -167,5 +171,43 @@ class MemberServiceTest {
             }
 
         exception.errorCode shouldBe MemberErrorCode.MEMBER_NOT_FOUND
+    }
+
+    @Test
+    fun `탈퇴하면 가입한 각 그룹에 그룹 id 오름차순으로 bumpOnMemberLeft 를 호출한다`() {
+        every { memberQueryPort.existsById(49L) } returns true
+        val membershipC = ParfaitGroupMember.reconstitute(3L, 300L, 49L, "닉C", now)
+        val membershipA = ParfaitGroupMember.reconstitute(1L, 100L, 49L, "닉A", now)
+        val membershipB = ParfaitGroupMember.reconstitute(2L, 200L, 49L, "닉B", now)
+        every { parfaitGroupMemberQueryPort.findAllMembershipsByMemberId(49L) } returns
+            listOf(membershipC, membershipA, membershipB)
+
+        service.withdraw(49L)
+
+        verify(exactly = 3) { parfaitGroupVersionService.bumpOnMemberLeft(any(), 49L) }
+        verifyOrder {
+            parfaitGroupVersionService.bumpOnMemberLeft(100L, 49L)
+            parfaitGroupVersionService.bumpOnMemberLeft(200L, 49L)
+            parfaitGroupVersionService.bumpOnMemberLeft(300L, 49L)
+        }
+    }
+
+    @Test
+    fun `가입한 그룹이 없으면 탈퇴해도 bumpOnMemberLeft 를 호출하지 않는다`() {
+        every { memberQueryPort.existsById(50L) } returns true
+        every { parfaitGroupMemberQueryPort.findAllMembershipsByMemberId(50L) } returns emptyList()
+
+        service.withdraw(50L)
+
+        verify(exactly = 0) { parfaitGroupVersionService.bumpOnMemberLeft(any(), any()) }
+    }
+
+    @Test
+    fun `이미 없는 회원이면 bumpOnMemberLeft 를 호출하지 않는다`() {
+        every { memberQueryPort.existsById(51L) } returns false
+
+        service.withdraw(51L)
+
+        verify(exactly = 0) { parfaitGroupVersionService.bumpOnMemberLeft(any(), any()) }
     }
 }

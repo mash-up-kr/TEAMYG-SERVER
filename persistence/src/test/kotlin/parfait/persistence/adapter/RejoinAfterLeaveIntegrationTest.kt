@@ -85,6 +85,7 @@ class RejoinAfterLeaveIntegrationTest {
                 memberQueryPort = memberQueryPort,
                 inviteCodeGenerator = InviteCodeGenerator(),
                 ensureActiveCanvasUseCase = mockk(relaxed = true),
+                parfaitGroupVersionService = mockk(relaxed = true),
             )
         val group =
             parfaitGroupRepository.save(
