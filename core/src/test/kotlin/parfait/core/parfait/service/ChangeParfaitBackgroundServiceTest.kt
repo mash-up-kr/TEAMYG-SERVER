@@ -3,6 +3,7 @@ package parfait.core.parfait.service
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import parfait.core.exception.BusinessException
@@ -11,6 +12,8 @@ import parfait.core.image.domain.ImageStatus
 import parfait.core.image.domain.ImageType
 import parfait.core.image.exception.ImageErrorCode
 import parfait.core.image.port.out.ImageMetaQueryPort
+import parfait.core.notification.domain.ToppingPlacedPayload
+import parfait.core.notification.service.BackgroundChangedNotifier
 import parfait.core.parfait.domain.BackgroundType
 import parfait.core.parfait.domain.Parfait
 import parfait.core.parfait.domain.ParfaitStatus
@@ -31,6 +34,7 @@ class ChangeParfaitBackgroundServiceTest {
     private val parfaitSavePort = mockk<ParfaitSavePort>()
     private val imageMetaQueryPort = mockk<ImageMetaQueryPort>()
     private val parfaitVersionService = mockk<ParfaitVersionService>(relaxed = true)
+    private val backgroundChangedNotifier = mockk<BackgroundChangedNotifier>(relaxed = true)
     private val service =
         ChangeParfaitBackgroundService(
             parfaitGroupMemberQueryPort,
@@ -38,6 +42,7 @@ class ChangeParfaitBackgroundServiceTest {
             parfaitSavePort,
             imageMetaQueryPort,
             parfaitVersionService,
+            backgroundChangedNotifier,
         )
 
     private fun parfait(): Parfait =
@@ -196,6 +201,84 @@ class ChangeParfaitBackgroundServiceTest {
 
         val exception = assertFailsWith<ParfaitGroupException> { service.change(command()) }
         exception.error shouldBe ParfaitGroupError.GROUP_NOT_JOINED
+    }
+
+    @Test
+    fun `색상 변경에 성공하면 본인 기준 payload 로 notifier 를 호출한다`() {
+        every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
+        every { parfaitQueryPort.findByIdAndGroupId(98L, 1L) } returns parfait()
+        val savedParfait = slot<Parfait>()
+        every { parfaitSavePort.save(capture(savedParfait)) } answers { firstArg() }
+
+        service.change(command(type = BackgroundType.COLOR, value = "#FF5733"))
+
+        verify(exactly = 1) {
+            backgroundChangedNotifier.notify(
+                payload =
+                    ToppingPlacedPayload(
+                        groupId = 1L,
+                        parfaitId = 98L,
+                        parfaitDate = LocalDate.of(2026, 7, 7),
+                        actorMemberId = 10L,
+                    ),
+                changedAt = savedParfait.captured.updatedAt,
+                now = any(),
+            )
+        }
+    }
+
+    @Test
+    fun `이전과 같은 값으로 다시 저장해도 항상 notifier 를 호출한다`() {
+        every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
+        every { parfaitQueryPort.findByIdAndGroupId(98L, 1L) } returns
+            parfait().changeBackground(BackgroundType.COLOR, "#FF5733")
+        every { parfaitSavePort.save(any()) } answers { firstArg() }
+
+        service.change(command(type = BackgroundType.COLOR, value = "#FF5733"))
+
+        verify(exactly = 1) { backgroundChangedNotifier.notify(any(), any(), any()) }
+    }
+
+    @Test
+    fun `사진 변경에 성공해도 notifier 를 호출한다`() {
+        every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
+        every { parfaitQueryPort.findByIdAndGroupId(98L, 1L) } returns parfait()
+        every { imageMetaQueryPort.findById(80L) } returns confirmedImage()
+        every { parfaitSavePort.save(any()) } answers { firstArg() }
+
+        service.change(command(type = BackgroundType.IMAGE, value = null, imageId = 80L))
+
+        verify(exactly = 1) { backgroundChangedNotifier.notify(any(), any(), any()) }
+    }
+
+    @Test
+    fun `이미 마감된 파르페면 notifier 를 호출하지 않는다`() {
+        every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
+        every { parfaitQueryPort.findByIdAndGroupId(98L, 1L) } returns
+            Parfait.reconstitute(
+                id = 98L,
+                parfaitGroupId = 1L,
+                parfaitDate = LocalDate.of(2026, 7, 7),
+                status = ParfaitStatus.CLOSED,
+                backgroundType = null,
+                backgroundValue = null,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now(),
+            )
+
+        assertFailsWith<BusinessException> { service.change(command()) }
+
+        verify(exactly = 0) { backgroundChangedNotifier.notify(any(), any(), any()) }
+    }
+
+    @Test
+    fun `변경에 실패하면 notifier 를 호출하지 않는다`() {
+        every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
+        every { parfaitQueryPort.findByIdAndGroupId(98L, 1L) } returns null
+
+        assertFailsWith<BusinessException> { service.change(command()) }
+
+        verify(exactly = 0) { backgroundChangedNotifier.notify(any(), any(), any()) }
     }
 
     @Test
