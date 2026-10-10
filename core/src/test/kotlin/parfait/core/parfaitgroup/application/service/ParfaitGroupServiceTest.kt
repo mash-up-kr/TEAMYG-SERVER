@@ -47,6 +47,7 @@ class ParfaitGroupServiceTest {
     private val memberQueryPort = mockk<MemberQueryPort>()
     private val inviteCodeGenerator = mockk<InviteCodeGenerator>()
     private val ensureActiveCanvasUseCase = mockk<EnsureActiveCanvasUseCase>(relaxed = true)
+    private val groupVersionService = mockk<ParfaitGroupVersionService>(relaxed = true)
     private val service =
         ParfaitGroupService(
             parfaitGroupQueryPort = groupQueryPort,
@@ -59,6 +60,7 @@ class ParfaitGroupServiceTest {
             memberQueryPort = memberQueryPort,
             inviteCodeGenerator = inviteCodeGenerator,
             ensureActiveCanvasUseCase = ensureActiveCanvasUseCase,
+            parfaitGroupVersionService = groupVersionService,
         )
 
     private val group = savedGroup(memberLimit = 2)
@@ -123,6 +125,7 @@ class ParfaitGroupServiceTest {
         memberSlot.captured.memberId shouldBe 10L
         memberSlot.captured.groupNickname.value shouldBe "멤버 닉네임"
         verify { groupQueryPort.findByInviteCodeForUpdate(InviteCode.of("ABCD12")) }
+        verify(exactly = 1) { groupVersionService.bump(1L) }
     }
 
     @Test
@@ -147,6 +150,7 @@ class ParfaitGroupServiceTest {
         memberSlot.captured.id shouldBe 5L
         memberSlot.captured.leftAt shouldBe null
         memberSlot.captured.groupNickname.value shouldBe "멤버 닉네임"
+        verify(exactly = 1) { groupVersionService.bump(1L) }
     }
 
     @Test
@@ -298,6 +302,24 @@ class ParfaitGroupServiceTest {
         result.groupNickname shouldBe "새 닉네임"
         savedSlot.captured.groupNickname.value shouldBe "새 닉네임"
         verify { groupQueryPort.findByIdForUpdate(1L) }
+        verify(exactly = 1) { groupVersionService.bump(1L) }
+    }
+
+    @Test
+    fun `그룹 닉네임이 바뀌지 않으면 version을 올리지 않는다`() {
+        val currentMembership = membership(memberId = 10L, nickname = "기존 닉네임")
+        every { groupQueryPort.findByIdForUpdate(1L) } returns group
+        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 10L) } returns currentMembership
+
+        service.change(
+            ChangeMyParfaitGroupNicknameCommand(
+                memberId = 10L,
+                groupId = 1L,
+                groupNickname = "기존 닉네임",
+            ),
+        )
+
+        verify(exactly = 0) { groupVersionService.bump(any()) }
     }
 
     @Test
@@ -313,6 +335,7 @@ class ParfaitGroupServiceTest {
         result.groupId shouldBe 1L
         leftMemberSlot.captured.groupNickname.value shouldBe "(알수없음)"
         (leftMemberSlot.captured.leftAt != null) shouldBe true
+        verify(exactly = 1) { groupVersionService.bumpOnMemberLeft(1L, 10L) }
     }
 
     @Test
@@ -400,6 +423,7 @@ class ParfaitGroupServiceTest {
         }
         leftMemberSlot.captured.groupNickname.value shouldBe "(알수없음)"
         (leftMemberSlot.captured.leftAt != null) shouldBe true
+        verify(exactly = 1) { groupVersionService.bumpOnMemberLeft(1L, 10L) }
     }
 
     @Test
