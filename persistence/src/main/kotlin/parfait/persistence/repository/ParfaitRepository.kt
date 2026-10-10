@@ -1,6 +1,7 @@
 package parfait.persistence.repository
 
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import parfait.persistence.entity.Parfait
@@ -34,4 +35,15 @@ interface ParfaitRepository : JpaRepository<Parfait, Long> {
         id: Long,
         parfaitGroupId: Long,
     ): Parfait?
+
+    @Query(value = "SELECT version FROM parfait WHERE id = :id", nativeQuery = true)
+    fun findVersionById(
+        @Param("id") id: Long,
+    ): Long?
+
+    @Modifying
+    @Query(value = "UPDATE parfait SET version = version + 1 WHERE id = :id", nativeQuery = true)
+    fun incrementVersion(
+        @Param("id") id: Long,
+    ): Int
 }
