@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import org.junit.jupiter.api.Test
 import parfait.core.exception.BusinessException
 import parfait.core.image.domain.ImageMeta
@@ -16,6 +17,7 @@ import parfait.core.parfait.domain.Parfait
 import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.exception.ParfaitErrorCode
 import parfait.core.parfait.port.out.ParfaitQueryPort
+import parfait.core.parfait.service.ParfaitVersionService
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
@@ -38,6 +40,7 @@ class PlaceParfaitImageServiceTest {
     private val parfaitImageQueryPort = mockk<ParfaitImageQueryPort>()
     private val parfaitImageSavePort = mockk<ParfaitImageSavePort>()
     private val toppingPlacedNotifier = mockk<parfait.core.notification.service.ToppingPlacedNotifier>(relaxed = true)
+    private val parfaitVersionService = mockk<ParfaitVersionService>(relaxed = true)
     private val service =
         PlaceParfaitImageService(
             parfaitGroupMemberQueryPort = parfaitGroupMemberQueryPort,
@@ -47,6 +50,7 @@ class PlaceParfaitImageServiceTest {
             parfaitImageQueryPort = parfaitImageQueryPort,
             parfaitImageSavePort = parfaitImageSavePort,
             toppingPlacedNotifier = toppingPlacedNotifier,
+            parfaitVersionService = parfaitVersionService,
         )
 
     private val groupMember =
@@ -280,5 +284,86 @@ class PlaceParfaitImageServiceTest {
         service.place(command())
 
         verify(exactly = 0) { toppingPlacedNotifier.notify(any(), any(), any()) }
+    }
+
+    @Test
+    fun `배치에 성공하면 캔버스 version 을 올린다`() {
+        stubHappyPathPrerequisites()
+        every { parfaitImageQueryPort.findByParfaitIdAndImageMetaId(5L, 77L) } returns null
+
+        service.place(command())
+
+        verify(exactly = 1) { parfaitVersionService.bump(5L) }
+    }
+
+    @Test
+    fun `이미 배치된 이미지를 다시 확정해도 캔버스 version 을 올린다`() {
+        stubHappyPathPrerequisites()
+        every { parfaitImageQueryPort.findByParfaitIdAndImageMetaId(5L, 77L) } returns
+            ParfaitImage.reconstitute(
+                id = 201L,
+                parfaitId = 5L,
+                imageMetaId = 77L,
+                placedByGroupMemberId = 99L,
+                imageUrl = "https://s3.example/nukki/user42/uuid.png",
+                positionX = 0.0,
+                positionY = 0.0,
+                positionZ = 0,
+                scale = 1.0,
+                rotation = 0.0,
+                borderType = BorderType.NONE,
+                borderColor = null,
+                borderWidth = null,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now(),
+            )
+
+        service.place(command())
+
+        verify(exactly = 1) { parfaitVersionService.bump(5L) }
+    }
+
+    @Test
+    fun `캔버스 version 은 parfait_image 저장보다 먼저 올린다 (FK 공유 락 승격 데드락 방지)`() {
+        stubHappyPathPrerequisites()
+        every { parfaitImageQueryPort.findByParfaitIdAndImageMetaId(5L, 77L) } returns null
+
+        service.place(command())
+
+        verifyOrder {
+            parfaitVersionService.bump(5L)
+            parfaitImageSavePort.save(any())
+        }
+    }
+
+    @Test
+    fun `그룹에 참여하지 않았으면 캔버스 version 을 올리지 않는다`() {
+        every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns null
+
+        assertFailsWith<ParfaitGroupException> { service.place(command()) }
+
+        verify(exactly = 0) { parfaitVersionService.bump(any()) }
+    }
+
+    @Test
+    fun `마감된 파르페면 캔버스 version 을 올리지 않는다`() {
+        every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns groupMember
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait(status = ParfaitStatus.CLOSED)
+
+        assertFailsWith<BusinessException> { service.place(command()) }
+
+        verify(exactly = 0) { parfaitVersionService.bump(any()) }
+    }
+
+    @Test
+    fun `테두리 검증에 실패하면 캔버스 version 을 올리지 않는다`() {
+        stubHappyPathPrerequisites()
+        every { parfaitImageQueryPort.findByParfaitIdAndImageMetaId(5L, 77L) } returns null
+
+        assertFailsWith<BusinessException> {
+            service.place(command(borderType = BorderType.SOLID, borderColor = null, borderWidth = null))
+        }
+
+        verify(exactly = 0) { parfaitVersionService.bump(any()) }
     }
 }

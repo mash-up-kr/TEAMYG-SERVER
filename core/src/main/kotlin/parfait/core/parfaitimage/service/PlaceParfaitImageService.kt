@@ -12,6 +12,7 @@ import parfait.core.notification.service.ToppingPlacedNotifier
 import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.exception.ParfaitErrorCode
 import parfait.core.parfait.port.out.ParfaitQueryPort
+import parfait.core.parfait.service.ParfaitVersionService
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
@@ -33,6 +34,7 @@ class PlaceParfaitImageService(
     private val parfaitImageQueryPort: ParfaitImageQueryPort,
     private val parfaitImageSavePort: ParfaitImageSavePort,
     private val toppingPlacedNotifier: ToppingPlacedNotifier,
+    private val parfaitVersionService: ParfaitVersionService,
 ) : PlaceParfaitImageUseCase {
     @Transactional
     override fun place(command: PlaceParfaitImageCommand): PlaceParfaitImageResult {
@@ -81,6 +83,13 @@ class PlaceParfaitImageService(
                 borderWidth = command.borderWidth,
             )
 
+        // version 증가(부모 parfait 행 UPDATE)는 반드시 parfait_image INSERT 보다 먼저 해야 한다.
+        // parfait_image.parfait_id 의 FK 검사 때문에 INSERT 는 부모 parfait 행에 공유 락(S)을 건다.
+        // INSERT 뒤에 같은 행을 UPDATE 하면 S -> X 승격이 필요해, 같은 캔버스에 두 멤버가 동시에 새 이미지를 배치하면
+        // 두 트랜잭션이 서로의 S 락을 기다리며 데드락(MySQL 1213)이 난다.
+        // 부모 행의 배타 락(X)을 먼저 잡으면 같은 캔버스의 쓰기가 이 지점에서 직렬화되어 승격 자체가 사라진다.
+        // 검증(도메인 검증 포함)이 모두 끝난 뒤에 호출해 실패한 요청이 락을 잡거나 version 을 올리지 않게 한다.
+        parfaitVersionService.bump(command.parfaitId)
         val saved = parfaitImageSavePort.save(toSave)
 
         if (existing == null) {
