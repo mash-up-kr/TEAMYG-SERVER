@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import org.junit.jupiter.api.Test
 import parfait.core.exception.BusinessException
 import parfait.core.image.domain.ImageMeta
@@ -16,6 +17,7 @@ import parfait.core.parfait.domain.Parfait
 import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.exception.ParfaitErrorCode
 import parfait.core.parfait.port.out.ParfaitQueryPort
+import parfait.core.parfait.service.ParfaitVersionService
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 import parfait.core.parfaitimage.domain.BorderType
@@ -36,6 +38,7 @@ class DeleteParfaitImageServiceTest {
     private val imageMetaQueryPort = mockk<ImageMetaQueryPort>()
     private val imageMetaSavePort = mockk<ImageMetaSavePort>()
     private val imageDeletePort = mockk<ImageDeletePort>(relaxed = true)
+    private val parfaitVersionService = mockk<ParfaitVersionService>(relaxed = true)
     private val service =
         DeleteParfaitImageService(
             parfaitGroupMemberQueryPort = parfaitGroupMemberQueryPort,
@@ -45,6 +48,7 @@ class DeleteParfaitImageServiceTest {
             imageMetaQueryPort = imageMetaQueryPort,
             imageMetaSavePort = imageMetaSavePort,
             imageDeletePort = imageDeletePort,
+            parfaitVersionService = parfaitVersionService,
         )
 
     private val owner =
@@ -181,5 +185,34 @@ class DeleteParfaitImageServiceTest {
 
         val exception = assertFailsWith<BusinessException> { service.delete(command()) }
         exception.errorCode shouldBe ParfaitImageErrorCode.PARFAIT_IMAGE_NOT_OWNED
+    }
+
+    @Test
+    fun `삭제에 성공하면 캔버스 version 을 올린다`() {
+        every { parfaitImageQueryPort.findById(201L) } returns placedImage()
+        every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns owner
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
+        every { imageMetaQueryPort.findById(77L) } returns imageMeta(referenceCount = 2)
+        every { imageMetaSavePort.save(any()) } answers { firstArg() }
+
+        service.delete(command())
+
+        verify(exactly = 1) { parfaitVersionService.bump(5L) }
+    }
+
+    @Test
+    fun `캔버스 version 은 parfait_image 삭제보다 먼저 올린다 (부모 행 락 먼저)`() {
+        every { parfaitImageQueryPort.findById(201L) } returns placedImage()
+        every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns owner
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
+        every { imageMetaQueryPort.findById(77L) } returns imageMeta(referenceCount = 2)
+        every { imageMetaSavePort.save(any()) } answers { firstArg() }
+
+        service.delete(command())
+
+        verifyOrder {
+            parfaitVersionService.bump(5L)
+            parfaitImageDeletePort.deleteById(201L)
+        }
     }
 }

@@ -3,6 +3,7 @@ package parfait.core.parfait.service
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.Test
 import parfait.core.exception.BusinessException
 import parfait.core.image.domain.ImageMeta
@@ -29,12 +30,14 @@ class ChangeParfaitBackgroundServiceTest {
     private val parfaitQueryPort = mockk<ParfaitQueryPort>()
     private val parfaitSavePort = mockk<ParfaitSavePort>()
     private val imageMetaQueryPort = mockk<ImageMetaQueryPort>()
+    private val parfaitVersionService = mockk<ParfaitVersionService>(relaxed = true)
     private val service =
         ChangeParfaitBackgroundService(
             parfaitGroupMemberQueryPort,
             parfaitQueryPort,
             parfaitSavePort,
             imageMetaQueryPort,
+            parfaitVersionService,
         )
 
     private fun parfait(): Parfait =
@@ -193,5 +196,27 @@ class ChangeParfaitBackgroundServiceTest {
 
         val exception = assertFailsWith<ParfaitGroupException> { service.change(command()) }
         exception.error shouldBe ParfaitGroupError.GROUP_NOT_JOINED
+    }
+
+    @Test
+    fun `배경 변경에 성공하면 캔버스 version 을 올린다`() {
+        every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
+        every { parfaitQueryPort.findByIdAndGroupId(98L, 1L) } returns parfait()
+        every { parfaitSavePort.save(any()) } answers { firstArg() }
+
+        service.change(command(type = BackgroundType.COLOR, value = "#FF5733"))
+
+        verify(exactly = 1) { parfaitVersionService.bump(98L) }
+    }
+
+    @Test
+    fun `배경 변경에 실패하면 version 을 올리지 않는다`() {
+        every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 10L) } returns true
+        every { parfaitQueryPort.findByIdAndGroupId(98L, 1L) } returns null
+
+        val exception = assertFailsWith<BusinessException> { service.change(command()) }
+        exception.errorCode shouldBe ParfaitErrorCode.PARFAIT_NOT_FOUND
+
+        verify(exactly = 0) { parfaitVersionService.bump(any()) }
     }
 }

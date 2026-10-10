@@ -6,6 +6,7 @@ import parfait.core.exception.BusinessException
 import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.exception.ParfaitErrorCode
 import parfait.core.parfait.port.out.ParfaitQueryPort
+import parfait.core.parfait.service.ParfaitVersionService
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitimage.exception.ParfaitImageErrorCode
 import parfait.core.parfaitimage.port.`in`.UpdateParfaitImageResult
@@ -20,6 +21,7 @@ class UpdateParfaitImagesService(
     private val parfaitQueryPort: ParfaitQueryPort,
     private val parfaitImageQueryPort: ParfaitImageQueryPort,
     private val parfaitImageSavePort: ParfaitImageSavePort,
+    private val parfaitVersionService: ParfaitVersionService,
 ) : UpdateParfaitImagesUseCase {
     @Transactional
     override fun updateAll(command: UpdateParfaitImagesCommand): List<UpdateParfaitImageResult> {
@@ -61,7 +63,14 @@ class UpdateParfaitImagesService(
                 )
             }
 
-        return parfaitImageSavePort.saveAll(toSave).map { saved ->
+        // 부모 parfait 행 X 락을 자식(parfait_image) 변경보다 먼저 잡는다.
+        // 배치(Place) 등 다른 쓰기 경로가 "parfait → parfait_image" 순서로 락을 잡으므로
+        // 순서를 통일하지 않으면 동시 요청 시 교차 대기로 데드락이 날 수 있다.
+        parfaitVersionService.bump(command.parfaitId)
+
+        val savedImages = parfaitImageSavePort.saveAll(toSave)
+
+        return savedImages.map { saved ->
             UpdateParfaitImageResult(
                 parfaitImageId = saved.requireId(),
                 positionX = saved.positionX,
