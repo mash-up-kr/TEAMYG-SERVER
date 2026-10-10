@@ -26,6 +26,7 @@ class ChangeParfaitBackgroundService(
     private val parfaitQueryPort: ParfaitQueryPort,
     private val parfaitSavePort: ParfaitSavePort,
     private val imageMetaQueryPort: ImageMetaQueryPort,
+    private val parfaitVersionService: ParfaitVersionService,
     private val backgroundChangedNotifier: BackgroundChangedNotifier,
 ) : ChangeParfaitBackgroundUseCase {
     @Transactional
@@ -44,6 +45,7 @@ class ChangeParfaitBackgroundService(
         val resolvedValue = resolveValue(command)
 
         val saved = parfaitSavePort.save(parfait.changeBackground(command.type, resolvedValue))
+        parfaitVersionService.bump(command.parfaitId)
 
         backgroundChangedNotifier.notify(
             payload =

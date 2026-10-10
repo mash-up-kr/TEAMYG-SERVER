@@ -8,6 +8,9 @@ import parfait.core.parfait.port.`in`.GetParfaitYearsUseCase
 import parfait.core.parfait.port.`in`.GetPastParfaitsCommand
 import parfait.core.parfait.port.`in`.GetPastParfaitsUseCase
 import parfait.core.parfait.port.`in`.GetTodayParfaitCommand
+import parfait.core.parfait.port.`in`.GetTodayParfaitIfChangedCommand
+import parfait.core.parfait.port.`in`.GetTodayParfaitIfChangedResult
+import parfait.core.parfait.port.`in`.GetTodayParfaitIfChangedUseCase
 import parfait.core.parfait.port.`in`.GetTodayParfaitResult
 import parfait.core.parfait.port.`in`.GetTodayParfaitUseCase
 import parfait.core.parfait.port.`in`.PastParfaitResult
@@ -49,6 +52,13 @@ class TestParfaitUseCaseConfig {
     fun getParfaitDetailUseCase(): GetParfaitDetailUseCase =
         object : GetParfaitDetailUseCase {
             override fun getDetail(command: GetParfaitDetailCommand): GetTodayParfaitResult =
+                throw UnsupportedOperationException("stub")
+        }
+
+    @Bean
+    fun getTodayParfaitIfChangedUseCase(): GetTodayParfaitIfChangedUseCase =
+        object : GetTodayParfaitIfChangedUseCase {
+            override fun get(command: GetTodayParfaitIfChangedCommand): GetTodayParfaitIfChangedResult =
                 throw UnsupportedOperationException("stub")
         }
 }

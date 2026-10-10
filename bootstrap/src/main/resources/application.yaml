@@ -25,6 +25,13 @@ spring:
           time_zone: Asia/Seoul
         order_inserts: true
         order_updates: true
+  data:
+    redis:
+      # Redis 클라이언트는 캔버스 캐시와 리프레시 토큰 어댑터가 공유한다. 기본값(60초)이면 Redis 지연
+      # 장애 때 today 폴링과 쓰기 요청이 오래 막히므로 짧게 끊는다. 캐시 오류는 DB 폴백으로 처리된다.
+      # host/port 는 프로필별 설정(application-{local,dev,prod}.yaml)에서 정의한다.
+      timeout: 500ms
+      connect-timeout: 500ms
   flyway:
     enabled: true
     locations: classpath:db/migration

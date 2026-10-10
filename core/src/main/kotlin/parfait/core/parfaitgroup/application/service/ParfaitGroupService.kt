@@ -56,6 +56,7 @@ class ParfaitGroupService(
     private val memberQueryPort: MemberQueryPort,
     private val inviteCodeGenerator: InviteCodeGenerator,
     private val ensureActiveCanvasUseCase: EnsureActiveCanvasUseCase,
+    private val parfaitGroupVersionService: ParfaitGroupVersionService,
 ) : PreviewParfaitGroupJoinUseCase,
     JoinParfaitGroupUseCase,
     CreateParfaitGroupUseCase,
@@ -95,6 +96,7 @@ class ParfaitGroupService(
                 nametagChip = nametagChip,
             )
         parfaitGroupMemberSavePort.save(membership)
+        parfaitGroupVersionService.bump(group.requireId())
         return JoinParfaitGroupResult(
             groupId = group.requireId(),
             groupName = group.name.value,
@@ -181,6 +183,7 @@ class ParfaitGroupService(
         val changedMembership = membership.changeNickname(command.groupNickname)
         if (changedMembership.groupNickname != membership.groupNickname) {
             parfaitGroupMemberSavePort.save(changedMembership)
+            parfaitGroupVersionService.bump(command.groupId)
         }
         return ChangeMyParfaitGroupNicknameResult(
             groupId = command.groupId,
@@ -192,6 +195,7 @@ class ParfaitGroupService(
     override fun leave(command: LeaveParfaitGroupCommand): LeaveParfaitGroupResult {
         findGroupByIdForUpdate(command.groupId)
         parfaitGroupMemberLeavePort.leave(findMembership(command.groupId, command.memberId).leave())
+        parfaitGroupVersionService.bumpOnMemberLeft(command.groupId, command.memberId)
         return LeaveParfaitGroupResult(groupId = command.groupId)
     }
 
@@ -207,6 +211,7 @@ class ParfaitGroupService(
         val membership = findMembership(command.groupId, command.memberId)
         val savedReport = parfaitGroupReportSavePort.save(report)
         parfaitGroupMemberLeavePort.leave(membership.leave())
+        parfaitGroupVersionService.bumpOnMemberLeft(command.groupId, command.memberId)
         return ReportParfaitGroupResult(
             groupId = command.groupId,
             reportId = requireNotNull(savedReport.id),

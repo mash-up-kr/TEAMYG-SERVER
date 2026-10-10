@@ -3,12 +3,15 @@ package parfait.core.parfaitimage.service
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
+import io.mockk.verifyOrder
 import org.junit.jupiter.api.Test
 import parfait.core.exception.BusinessException
 import parfait.core.parfait.domain.Parfait
 import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.exception.ParfaitErrorCode
 import parfait.core.parfait.port.out.ParfaitQueryPort
+import parfait.core.parfait.service.ParfaitVersionService
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 import parfait.core.parfaitimage.domain.BorderType
@@ -27,12 +30,14 @@ class UpdateParfaitImagesServiceTest {
     private val parfaitQueryPort = mockk<ParfaitQueryPort>()
     private val parfaitImageQueryPort = mockk<ParfaitImageQueryPort>()
     private val parfaitImageSavePort = mockk<ParfaitImageSavePort>()
+    private val parfaitVersionService = mockk<ParfaitVersionService>(relaxed = true)
     private val service =
         UpdateParfaitImagesService(
             parfaitGroupMemberQueryPort = parfaitGroupMemberQueryPort,
             parfaitQueryPort = parfaitQueryPort,
             parfaitImageQueryPort = parfaitImageQueryPort,
             parfaitImageSavePort = parfaitImageSavePort,
+            parfaitVersionService = parfaitVersionService,
         )
 
     private val owner =
@@ -223,5 +228,74 @@ class UpdateParfaitImagesServiceTest {
                 service.updateAll(command(listOf(UpdateParfaitImageItemCommand(201L, 1.0, 1.0, null, null, null))))
             }
         exception.errorCode shouldBe ParfaitImageErrorCode.PARFAIT_IMAGE_NOT_FOUND
+    }
+
+    @Test
+    fun `일괄 수정에 성공하면 캔버스 version 을 한 번만 올린다`() {
+        every { parfaitImageQueryPort.findAllByIds(listOf(201L, 202L)) } returns
+            listOf(existingImage(201L), existingImage(202L))
+        every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns owner
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
+        every { parfaitImageSavePort.saveAll(any()) } answers { firstArg() }
+
+        service.updateAll(
+            command(
+                listOf(
+                    UpdateParfaitImageItemCommand(
+                        parfaitImageId = 201L,
+                        positionX = 1.0,
+                        positionY = 1.0,
+                        positionZ = 1,
+                        scale = 1.0,
+                        rotation = 0.0,
+                    ),
+                    UpdateParfaitImageItemCommand(
+                        parfaitImageId = 202L,
+                        positionX = 2.0,
+                        positionY = 2.0,
+                        positionZ = 2,
+                        scale = 1.0,
+                        rotation = 0.0,
+                    ),
+                ),
+            ),
+        )
+
+        verify(exactly = 1) { parfaitVersionService.bump(5L) }
+    }
+
+    @Test
+    fun `items 가 비어 있으면 version 을 올리지 않는다`() {
+        service.updateAll(command(emptyList()))
+
+        verify(exactly = 0) { parfaitVersionService.bump(any()) }
+    }
+
+    @Test
+    fun `캔버스 version 은 parfait_image 일괄 저장보다 먼저 올린다 (부모 행 락 먼저)`() {
+        every { parfaitImageQueryPort.findAllByIds(listOf(201L)) } returns listOf(existingImage(201L))
+        every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns owner
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
+        every { parfaitImageSavePort.saveAll(any()) } answers { firstArg() }
+
+        service.updateAll(
+            command(
+                listOf(
+                    UpdateParfaitImageItemCommand(
+                        parfaitImageId = 201L,
+                        positionX = 1.0,
+                        positionY = 1.0,
+                        positionZ = 1,
+                        scale = 1.0,
+                        rotation = 0.0,
+                    ),
+                ),
+            ),
+        )
+
+        verifyOrder {
+            parfaitVersionService.bump(5L)
+            parfaitImageSavePort.saveAll(any())
+        }
     }
 }
