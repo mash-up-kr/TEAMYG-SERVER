@@ -134,6 +134,16 @@ class SecurityConfigIntegrationTest {
     }
 
     @Test
+    fun `랜딩 정적 에셋(assets 하위 경로)은 화이트리스트에 포함되어 토큰 없이 통과한다`() {
+        mockMvc.get("/assets/dot.svg").andExpect {
+            status { isOk() }
+        }
+        mockMvc.get("/assets/icon-512.png").andExpect {
+            status { isOk() }
+        }
+    }
+
+    @Test
     fun `Authorization 헤더가 없으면 401과 UNAUTHORIZED로 응답한다`() {
         mockMvc.get("/test/protected").andExpect {
             status { isUnauthorized() }
