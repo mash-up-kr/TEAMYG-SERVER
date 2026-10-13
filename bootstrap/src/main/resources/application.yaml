@@ -76,7 +76,6 @@ landing:
 
 # App Links(Android)/Universal Links(iOS) 자체구현용 설정.
 deeplink:
-  domain: parfait-app.store
   android:
     package-name: com.teamyg.parfait
     # debug 키스토어 지문 + release(Play 앱 서명 키) 지문. 둘 다 등록해야 debug/release 빌드 모두
