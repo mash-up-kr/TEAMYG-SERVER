@@ -12,6 +12,7 @@ class ImageUploadUrlIssueAdapterTest {
         ImageUploadUrlIssueAdapter(
             bucket = "parfait-bucket",
             region = "ap-northeast-2",
+            publicBaseUrl = "https://cdn.example.com/",
             credentialsProvider =
                 StaticCredentialsProvider.create(
                     AwsBasicCredentials.create("test-key", "test-secret"),
@@ -19,11 +20,11 @@ class ImageUploadUrlIssueAdapterTest {
         )
 
     @Test
-    fun `key와 만료시간이 반영된 presigned upload URL과 영구 imageUrl을 발급한다`() {
+    fun `key와 만료시간이 반영된 presigned upload URL과 공개 베이스 URL 기준 imageUrl을 발급한다`() {
         val result = adapter.issue(key = "nukki/user42/uuid.png", contentType = "image/png", expirationSeconds = 900)
 
         result.uploadUrl shouldStartWith "https://parfait-bucket.s3.ap-northeast-2.amazonaws.com/nukki/user42/uuid.png"
         result.uploadUrl shouldContain "X-Amz-Expires=900"
-        result.imageUrl shouldBe "https://parfait-bucket.s3.ap-northeast-2.amazonaws.com/nukki/user42/uuid.png"
+        result.imageUrl shouldBe "https://cdn.example.com/nukki/user42/uuid.png"
     }
 }

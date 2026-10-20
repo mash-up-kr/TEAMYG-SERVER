@@ -30,3 +30,4 @@ apple:
 aws:
   s3:
     bucket: local-only-dummy-bucket
+    public-base-url: https://${aws.s3.bucket}.s3.${aws.s3.region}.amazonaws.com

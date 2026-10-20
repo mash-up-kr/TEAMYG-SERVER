@@ -35,6 +35,9 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+    placeholders:
+      # V20이 기존 이미지 URL을 이 주소로 옮긴다. 업로드 URL 발급과 같은 값을 써야 한다.
+      image_base_url: ${aws.s3.public-base-url}
   batch:
     job:
       enabled: false

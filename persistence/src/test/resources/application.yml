@@ -1,0 +1,5 @@
+spring:
+  flyway:
+    placeholders:
+      # V20이 요구한다. 운영 값은 bootstrap의 aws.s3.public-base-url에서 주입된다.
+      image_base_url: https://cdn.example.com

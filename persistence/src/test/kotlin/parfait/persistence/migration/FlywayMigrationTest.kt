@@ -83,6 +83,47 @@ class FlywayMigrationTest {
         snapshot.any { it.startsWith("INDEX|device_token|idx_device_token_member_session_id|") } shouldBe true
     }
 
+    @Test
+    fun `V20은 S3 원본 주소의 이미지 URL만 공개 베이스 URL로 옮기고 해당 캔버스 version을 올린다`() {
+        migrate(mysql.databaseName, target = MigrationVersion.fromVersion("19"))
+        seedImageUrls(mysql.databaseName)
+
+        migrate(mysql.databaseName)
+
+        connect(mysql.databaseName).use { connection ->
+            connection.query("SELECT url FROM image_meta ORDER BY id") shouldBe
+                listOf("$IMAGE_BASE_URL/nukki/user1/a.png", "$OTHER_URL/b.png")
+            connection.query("SELECT image_url FROM parfait_image") shouldBe
+                listOf("$IMAGE_BASE_URL/nukki/user1/a.png")
+            connection.query("SELECT CONCAT_WS('|', id, version, background_value) FROM parfait ORDER BY id") shouldBe
+                listOf(
+                    // 붙인 이미지가 바뀐 캔버스
+                    "1|2|#FFFFFF",
+                    // 배경 이미지가 바뀐 캔버스
+                    "2|2|$IMAGE_BASE_URL/background/user1/c.jpg",
+                    // 바뀐 것이 없는 캔버스
+                    "3|1|$OTHER_URL/d.jpg",
+                )
+        }
+    }
+
+    @Test
+    fun `V20은 베이스 URL 끝에 슬래시가 있어도 이중 슬래시 없이 옮긴다`() {
+        migrate(mysql.databaseName, target = MigrationVersion.fromVersion("19"))
+        seedImageUrls(mysql.databaseName)
+
+        migrate(mysql.databaseName, imageBaseUrl = "$IMAGE_BASE_URL/")
+
+        connect(mysql.databaseName).use { connection ->
+            connection.query("SELECT url FROM image_meta WHERE id = 1") shouldBe
+                listOf("$IMAGE_BASE_URL/nukki/user1/a.png")
+            connection.query("SELECT image_url FROM parfait_image") shouldBe
+                listOf("$IMAGE_BASE_URL/nukki/user1/a.png")
+            connection.query("SELECT background_value FROM parfait WHERE id = 2") shouldBe
+                listOf("$IMAGE_BASE_URL/background/user1/c.jpg")
+        }
+    }
+
     /** V15까지 적용한 뒤 운영에서 관측된 드리프트를 얹은 DB를 만든다. */
     private fun driftedDatabase(name: String): String {
         connect(mysql.databaseName).use { it.createStatement().execute("CREATE DATABASE $name") }
@@ -148,6 +189,48 @@ class FlywayMigrationTest {
         }
     }
 
+    /**
+     * 캔버스 1에는 S3 원본 주소 이미지를 붙이고, 캔버스 2는 S3 원본 주소 배경 이미지,
+     * 캔버스 3은 다른 도메인 배경 이미지를 쓴다. 다른 도메인 이미지는 캔버스에 붙이지 않는다.
+     */
+    private fun seedImageUrls(database: String) {
+        connect(database).use { connection ->
+            connection.createStatement().use { statement ->
+                listOf(
+                    """
+                    INSERT INTO member (id, login_provider, provider_user_id, global_nickname, created_at, updated_at)
+                    VALUES (1, 'KAKAO', 'p1', 'n1', NOW(), NOW())
+                    """.trimIndent(),
+                    """
+                    INSERT INTO parfait_group (id, name, invite_code, member_limit, created_at, updated_at)
+                    VALUES (1, '이미지그룹', 'IMAGES', 12, NOW(), NOW())
+                    """.trimIndent(),
+                    """
+                    INSERT INTO parfait_group_member (id, parfait_group_id, member_id, group_nickname, joined_at, nametag_chip)
+                    VALUES (1, 1, 1, '멤버', NOW(), 'TYPE1')
+                    """.trimIndent(),
+                    """
+                    INSERT INTO parfait (id, parfait_group_id, parfait_date, background_type, background_value, created_at, updated_at)
+                    VALUES (1, 1, '2026-10-18', 'COLOR', '#FFFFFF', NOW(), NOW()),
+                           (2, 1, '2026-10-19', 'IMAGE', '$S3_URL/background/user1/c.jpg', NOW(), NOW()),
+                           (3, 1, '2026-10-20', 'IMAGE', '$OTHER_URL/d.jpg', NOW(), NOW())
+                    """.trimIndent(),
+                    """
+                    INSERT INTO image_meta (id, uploaded_by_member_id, url, reference_count, created_at, updated_at)
+                    VALUES (1, 1, '$S3_URL/nukki/user1/a.png', 1, NOW(), NOW()),
+                           (2, 1, '$OTHER_URL/b.png', 0, NOW(), NOW())
+                    """.trimIndent(),
+                    """
+                    INSERT INTO parfait_image
+                        (parfait_id, image_meta_id, placed_by_group_member_id, image_url,
+                         position_x, position_y, position_z, scale, rotation, border_type, created_at, updated_at)
+                    VALUES (1, 1, 1, '$S3_URL/nukki/user1/a.png', 0, 0, 0, 1, 0, 'NONE', NOW(), NOW())
+                    """.trimIndent(),
+                ).forEach(statement::execute)
+            }
+        }
+    }
+
     private fun nametagChips(database: String): Map<String, String> =
         connect(database)
             .use { connection ->
@@ -159,11 +242,13 @@ class FlywayMigrationTest {
     private fun migrate(
         database: String,
         target: MigrationVersion = MigrationVersion.LATEST,
+        imageBaseUrl: String = IMAGE_BASE_URL,
     ): Int =
         Flyway
             .configure()
             .dataSource(jdbcUrl(database), ROOT_USER, mysql.password)
             .locations("classpath:db/migration")
+            .placeholders(mapOf("image_base_url" to imageBaseUrl))
             .target(target)
             .load()
             .migrate()
@@ -225,6 +310,10 @@ class FlywayMigrationTest {
     private fun jdbcUrl(database: String): String = mysql.jdbcUrl.replace("/${mysql.databaseName}", "/$database")
 
     companion object {
+        private const val IMAGE_BASE_URL = "https://cdn.example.com"
+        private const val S3_URL = "https://parfait-bucket.s3.ap-northeast-2.amazonaws.com"
+        private const val OTHER_URL = "https://other.example.com"
+
         /** 테스트용 스키마를 하나 더 만들어야 해서 컨테이너 기본 사용자 대신 root로 붙는다. */
         private const val ROOT_USER = "root"
 

@@ -26,6 +26,8 @@ apple:
 aws:
   s3:
     bucket: ${AWS_S3_BUCKET}
+    # dev에는 CloudFront가 없어 기본값은 S3 원본 주소다.
+    public-base-url: ${IMAGE_PUBLIC_BASE_URL:https://${aws.s3.bucket}.s3.${aws.s3.region}.amazonaws.com}
 
 fcm:
   credentials-path: file:/app/parfait-firebase-key.json
