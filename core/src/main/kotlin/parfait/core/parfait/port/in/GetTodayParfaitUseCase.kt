@@ -7,6 +7,7 @@ import parfait.core.parfait.domain.OwnerType
 import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitimage.domain.BorderType
+import parfait.core.parfaittext.domain.ParfaitText
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -28,6 +29,7 @@ data class GetTodayParfaitResult(
     val groupMembers: List<GroupMemberResult>,
     val background: BackgroundResult?,
     val images: List<TodayParfaitImageResult>?,
+    val texts: List<TodayParfaitTextResult>? = null,
 )
 
 data class GroupMemberResult(
@@ -63,3 +65,37 @@ data class PlacedByResult(
     val nametagChip: NameTagChipType,
     val ownerType: OwnerType,
 )
+
+data class TodayParfaitTextResult(
+    val parfaitTextId: Long,
+    val text: String,
+    val positionX: Double,
+    val positionY: Double,
+    val positionZ: Int,
+    val scale: Double,
+    val rotation: Double,
+    val color: String,
+    val fontSize: Double,
+    val placedBy: PlacedByResult,
+    val createdAt: LocalDateTime,
+) {
+    companion object {
+        fun from(
+            text: ParfaitText,
+            placedBy: PlacedByResult,
+        ): TodayParfaitTextResult =
+            TodayParfaitTextResult(
+                parfaitTextId = text.requireId(),
+                text = text.text,
+                positionX = text.positionX,
+                positionY = text.positionY,
+                positionZ = text.positionZ,
+                scale = text.scale,
+                rotation = text.rotation,
+                color = text.color,
+                fontSize = text.fontSize,
+                placedBy = placedBy,
+                createdAt = text.createdAt,
+            )
+    }
+}

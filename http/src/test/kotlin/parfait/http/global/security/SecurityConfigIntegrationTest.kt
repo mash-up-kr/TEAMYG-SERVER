@@ -40,6 +40,7 @@ import parfait.http.parfaitimage.controller.TestPlaceParfaitImageUseCaseConfig
 import parfait.http.parfaitimage.controller.TestUpdateParfaitImageBorderUseCaseConfig
 import parfait.http.parfaitimage.controller.TestUpdateParfaitImageUseCaseConfig
 import parfait.http.parfaitimage.controller.TestUpdateParfaitImagesUseCaseConfig
+import parfait.http.parfaittext.controller.TestPlaceParfaitTextUseCaseConfig
 import kotlin.test.Test
 
 @SpringBootTest(
@@ -70,6 +71,7 @@ import kotlin.test.Test
     TestIssueImageUploadUrlUseCaseConfig::class,
     TestConfirmImageUploadUseCaseConfig::class,
     TestPlaceParfaitImageUseCaseConfig::class,
+    TestPlaceParfaitTextUseCaseConfig::class,
     TestUpdateParfaitImageUseCaseConfig::class,
     TestUpdateParfaitImagesUseCaseConfig::class,
     TestUpdateParfaitImageBorderUseCaseConfig::class,

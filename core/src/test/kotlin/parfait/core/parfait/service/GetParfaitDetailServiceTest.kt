@@ -21,6 +21,8 @@ import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 import parfait.core.parfaitimage.domain.BorderType
 import parfait.core.parfaitimage.domain.ParfaitImage
 import parfait.core.parfaitimage.port.out.ParfaitImageQueryPort
+import parfait.core.parfaittext.domain.ParfaitText
+import parfait.core.parfaittext.port.out.ParfaitTextQueryPort
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.test.assertFailsWith
@@ -30,12 +32,19 @@ class GetParfaitDetailServiceTest {
     private val parfaitGroupQueryPort = mockk<ParfaitGroupQueryPort>()
     private val parfaitQueryPort = mockk<ParfaitQueryPort>()
     private val parfaitImageQueryPort = mockk<ParfaitImageQueryPort>()
+    private val parfaitTextQueryPort = mockk<ParfaitTextQueryPort>()
+
+    init {
+        every { parfaitTextQueryPort.findAllByParfaitId(any()) } returns emptyList()
+    }
+
     private val service =
         GetParfaitDetailService(
             parfaitGroupMemberQueryPort,
             parfaitGroupQueryPort,
             parfaitQueryPort,
             parfaitImageQueryPort,
+            parfaitTextQueryPort,
         )
 
     private fun group(name: String = "팀연경 테스트 방"): ParfaitGroup =
@@ -132,6 +141,7 @@ class GetParfaitDetailServiceTest {
         val result = service.getDetail(GetParfaitDetailCommand(memberId = 10L, groupId = 1L, parfaitId = 98L))
 
         result.images shouldBe null
+        result.texts shouldBe null
         result.background shouldBe null
     }
 
@@ -196,6 +206,46 @@ class GetParfaitDetailServiceTest {
             ?.get(1)
             ?.placedBy
             ?.ownerType shouldBe OwnerType.OTHER
+    }
+
+    @Test
+    fun `이미지 없이 텍스트만 있는 마감 파르페도 작성자와 스타일을 반환한다`() {
+        every { parfaitGroupMemberQueryPort.existsByGroupIdAndMemberId(1L, 1000L) } returns true
+        every { parfaitGroupQueryPort.findById(1L) } returns group()
+        every { parfaitQueryPort.findByIdAndGroupId(98L, 1L) } returns parfait(status = ParfaitStatus.CLOSED)
+        every { parfaitQueryPort.findLastClosedDateByGroupId(1L) } returns null
+        every { parfaitGroupMemberQueryPort.findAllByGroupId(1L) } returns listOf(groupMember(10L, "연경이"))
+        every { parfaitGroupMemberQueryPort.findAllByIds(listOf(10L)) } returns listOf(groupMember(10L, "연경이"))
+        every { parfaitImageQueryPort.findAllByParfaitId(98L) } returns emptyList()
+        every { parfaitTextQueryPort.findAllByParfaitId(98L) } returns
+            listOf(
+                ParfaitText.reconstitute(
+                    id = 301L,
+                    parfaitId = 98L,
+                    placedByGroupMemberId = 10L,
+                    text = "오늘의 추억",
+                    positionX = 10.0,
+                    positionY = 20.0,
+                    positionZ = 2,
+                    scale = 2.0,
+                    rotation = 45.0,
+                    color = "#FFFFFF",
+                    fontSize = 18.0,
+                    createdAt = LocalDateTime.of(2026, 7, 7, 14, 30),
+                    updatedAt = LocalDateTime.of(2026, 7, 7, 14, 30),
+                ),
+            )
+
+        val result = service.getDetail(GetParfaitDetailCommand(memberId = 1000L, groupId = 1L, parfaitId = 98L))
+
+        result.images shouldBe null
+        val text = requireNotNull(result.texts).single()
+        text.text shouldBe "오늘의 추억"
+        text.color shouldBe "#FFFFFF"
+        text.scale shouldBe 2.0
+        text.fontSize shouldBe 18.0
+        text.placedBy.nickname shouldBe "연경이"
+        text.placedBy.ownerType shouldBe OwnerType.ME
     }
 
     @Test
