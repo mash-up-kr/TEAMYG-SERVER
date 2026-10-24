@@ -79,7 +79,7 @@ class DeepLinkFallbackControllerTest {
     }
 
     @Test
-    fun `카카오톡 인앱 브라우저면 외부 브라우저 전환 URL과 안내 문구를 응답한다`() {
+    fun `카카오톡 인앱 브라우저면 외부 브라우저 전환 URL을 직접 이동하기 링크와 이동 스크립트에 담아 응답한다`() {
         fakeUseCase.result =
             DownloadStoreLinkResult(
                 platform = Platform.ANDROID,
@@ -99,7 +99,7 @@ class DeepLinkFallbackControllerTest {
 
         response shouldContain
             "kakaotalk://web/openExternal?url=https%3A%2F%2Fparfait-app.store%2Flink%3FinviteCode%3DABC123"
-        response shouldContain "외부 브라우저로 이동 중입니다"
+        response shouldContain "파르페로 이동 중입니다"
     }
 
     @Test
