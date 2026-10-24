@@ -12,7 +12,7 @@ import parfait.core.image.domain.ImageStatus
 import parfait.core.image.domain.ImageType
 import parfait.core.image.exception.ImageErrorCode
 import parfait.core.image.port.out.ImageMetaQueryPort
-import parfait.core.notification.domain.ToppingPlacedPayload
+import parfait.core.notification.domain.BackgroundChangedPayload
 import parfait.core.notification.service.BackgroundChangedNotifier
 import parfait.core.parfait.domain.BackgroundType
 import parfait.core.parfait.domain.Parfait
@@ -215,7 +215,7 @@ class ChangeParfaitBackgroundServiceTest {
         verify(exactly = 1) {
             backgroundChangedNotifier.notify(
                 payload =
-                    ToppingPlacedPayload(
+                    BackgroundChangedPayload(
                         groupId = 1L,
                         parfaitId = 98L,
                         parfaitDate = LocalDate.of(2026, 7, 7),

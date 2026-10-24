@@ -13,7 +13,7 @@ class NotificationOutbox private constructor(
     val aggregateId: Long,
     val eventType: String,
     val receiverMemberId: Long,
-    val payload: ToppingPlacedPayload,
+    val payload: NotificationPayload,
     val dedupKey: String,
     val status: OutboxStatus,
     val attempts: Int,
@@ -27,6 +27,8 @@ class NotificationOutbox private constructor(
         const val EVENT_TYPE_TOPPING_PLACED = "TOPPING_PLACED"
         const val AGGREGATE_TYPE_PARFAIT = "PARFAIT"
         const val EVENT_TYPE_BACKGROUND_CHANGED = "BACKGROUND_CHANGED"
+        const val AGGREGATE_TYPE_TEXT = "TEXT"
+        const val EVENT_TYPE_TEXT_PLACED = "TEXT_PLACED"
 
         private val DEDUP_TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS")
 
@@ -54,7 +56,7 @@ class NotificationOutbox private constructor(
 
         fun backgroundChanged(
             receiverMemberId: Long,
-            payload: ToppingPlacedPayload,
+            payload: BackgroundChangedPayload,
             changedAt: LocalDateTime,
             now: LocalDateTime = LocalDateTime.now(),
         ): NotificationOutbox {
@@ -77,6 +79,28 @@ class NotificationOutbox private constructor(
             )
         }
 
+        fun textPlaced(
+            textId: Long,
+            receiverMemberId: Long,
+            payload: TextPlacedPayload,
+            now: LocalDateTime = LocalDateTime.now(),
+        ): NotificationOutbox =
+            NotificationOutbox(
+                id = null,
+                aggregateType = AGGREGATE_TYPE_TEXT,
+                aggregateId = textId,
+                eventType = EVENT_TYPE_TEXT_PLACED,
+                receiverMemberId = receiverMemberId,
+                payload = payload,
+                dedupKey = "text-placed:$textId:$receiverMemberId",
+                status = OutboxStatus.PENDING,
+                attempts = 0,
+                scheduledAt = now,
+                lastError = null,
+                createdAt = now,
+                sentAt = null,
+            )
+
         @Suppress("LongParameterList")
         fun reconstitute(
             id: Long,
@@ -84,7 +108,7 @@ class NotificationOutbox private constructor(
             aggregateId: Long,
             eventType: String,
             receiverMemberId: Long,
-            payload: ToppingPlacedPayload,
+            payload: NotificationPayload,
             dedupKey: String,
             status: OutboxStatus,
             attempts: Int,

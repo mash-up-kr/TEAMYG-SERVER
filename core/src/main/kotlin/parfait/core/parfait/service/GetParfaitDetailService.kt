@@ -12,12 +12,14 @@ import parfait.core.parfait.port.`in`.GetTodayParfaitResult
 import parfait.core.parfait.port.`in`.GroupMemberResult
 import parfait.core.parfait.port.`in`.PlacedByResult
 import parfait.core.parfait.port.`in`.TodayParfaitImageResult
+import parfait.core.parfait.port.`in`.TodayParfaitTextResult
 import parfait.core.parfait.port.out.ParfaitQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupQueryPort
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.core.parfaitimage.port.out.ParfaitImageQueryPort
+import parfait.core.parfaittext.port.out.ParfaitTextQueryPort
 
 @Service
 class GetParfaitDetailService(
@@ -25,6 +27,7 @@ class GetParfaitDetailService(
     private val parfaitGroupQueryPort: ParfaitGroupQueryPort,
     private val parfaitQueryPort: ParfaitQueryPort,
     private val parfaitImageQueryPort: ParfaitImageQueryPort,
+    private val parfaitTextQueryPort: ParfaitTextQueryPort,
 ) : GetParfaitDetailUseCase {
     @Transactional(readOnly = true)
     override fun getDetail(command: GetParfaitDetailCommand): GetTodayParfaitResult {
@@ -69,7 +72,34 @@ class GetParfaitDetailService(
             groupMembers = groupMembers,
             background = background,
             images = images,
+            texts = buildTexts(parfait.requireId(), command.memberId),
         )
+    }
+
+    private fun buildTexts(
+        parfaitId: Long,
+        requesterMemberId: Long,
+    ): List<TodayParfaitTextResult>? {
+        val texts = parfaitTextQueryPort.findAllByParfaitId(parfaitId)
+        if (texts.isEmpty()) {
+            return null
+        }
+        val placers =
+            parfaitGroupMemberQueryPort
+                .findAllByIds(texts.map { it.placedByGroupMemberId }.distinct())
+                .associateBy { requireNotNull(it.id) }
+        return texts.map { text ->
+            val placer = requireNotNull(placers[text.placedByGroupMemberId])
+            TodayParfaitTextResult.from(
+                text,
+                PlacedByResult(
+                    groupMemberId = text.placedByGroupMemberId,
+                    nickname = placer.groupNickname.value,
+                    nametagChip = placer.nametagChip,
+                    ownerType = if (placer.memberId == requesterMemberId) OwnerType.ME else OwnerType.OTHER,
+                ),
+            )
+        }
     }
 
     private fun buildImages(

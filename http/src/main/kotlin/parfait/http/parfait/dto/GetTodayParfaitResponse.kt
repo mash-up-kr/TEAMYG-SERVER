@@ -8,6 +8,7 @@ import parfait.core.parfait.port.`in`.GetTodayParfaitResult
 import parfait.core.parfait.port.`in`.GroupMemberResult
 import parfait.core.parfait.port.`in`.PlacedByResult
 import parfait.core.parfait.port.`in`.TodayParfaitImageResult
+import parfait.core.parfait.port.`in`.TodayParfaitTextResult
 import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitimage.domain.BorderType
 import java.time.LocalDate
@@ -22,6 +23,7 @@ data class GetTodayParfaitResponse(
     val groupMembers: List<GroupMemberResponse>,
     val background: BackgroundResponse?,
     val images: List<TodayParfaitImageResponse>?,
+    val texts: List<TodayParfaitTextResponse>?,
 ) {
     companion object {
         fun from(result: GetTodayParfaitResult): GetTodayParfaitResponse =
@@ -34,6 +36,7 @@ data class GetTodayParfaitResponse(
                 groupMembers = result.groupMembers.map(GroupMemberResponse::from),
                 background = result.background?.let(BackgroundResponse::from),
                 images = result.images?.map(TodayParfaitImageResponse::from),
+                texts = result.texts?.map(TodayParfaitTextResponse::from),
             )
     }
 }
@@ -107,6 +110,37 @@ data class PlacedByResponse(
                 nickname = result.nickname,
                 nameTagChip = result.nametagChip,
                 ownerType = result.ownerType,
+            )
+    }
+}
+
+data class TodayParfaitTextResponse(
+    val parfaitTextId: Long,
+    val text: String,
+    val positionX: Double,
+    val positionY: Double,
+    val positionZ: Int,
+    val scale: Double,
+    val rotation: Double,
+    val color: String,
+    val fontSize: Double,
+    val placedBy: PlacedByResponse,
+    val createdAt: LocalDateTime,
+) {
+    companion object {
+        fun from(result: TodayParfaitTextResult): TodayParfaitTextResponse =
+            TodayParfaitTextResponse(
+                parfaitTextId = result.parfaitTextId,
+                text = result.text,
+                positionX = result.positionX,
+                positionY = result.positionY,
+                positionZ = result.positionZ,
+                scale = result.scale,
+                rotation = result.rotation,
+                color = result.color,
+                fontSize = result.fontSize,
+                placedBy = PlacedByResponse.from(result.placedBy),
+                createdAt = result.createdAt,
             )
     }
 }
