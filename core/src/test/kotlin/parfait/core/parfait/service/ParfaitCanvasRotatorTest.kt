@@ -10,6 +10,7 @@ import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.port.out.ParfaitQueryPort
 import parfait.core.parfait.port.out.ParfaitSavePort
 import parfait.core.parfaitimage.port.out.ParfaitImageQueryPort
+import parfait.core.parfaittext.port.out.ParfaitTextQueryPort
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -17,8 +18,28 @@ class ParfaitCanvasRotatorTest {
     private val parfaitQueryPort = mockk<ParfaitQueryPort>()
     private val parfaitImageQueryPort = mockk<ParfaitImageQueryPort>()
     private val parfaitSavePort = mockk<ParfaitSavePort>()
-    private val rotator = ParfaitCanvasRotator(parfaitQueryPort, parfaitImageQueryPort, parfaitSavePort)
+    private val parfaitTextQueryPort = mockk<ParfaitTextQueryPort>()
+    private val rotator =
+        ParfaitCanvasRotator(parfaitQueryPort, parfaitImageQueryPort, parfaitSavePort, parfaitTextQueryPort)
     private val today = LocalDate.of(2026, 8, 13)
+
+    init {
+        every { parfaitTextQueryPort.existsByParfaitId(any()) } returns false
+    }
+
+    @Test
+    fun `텍스트만 있는 캔버스도 CLOSED로 마감한다`() {
+        every { parfaitQueryPort.findActiveByGroupId(1L) } returns activeParfait(1L)
+        every { parfaitImageQueryPort.existsByParfaitId(1L) } returns false
+        every { parfaitTextQueryPort.existsByParfaitId(1L) } returns true
+        every { parfaitSavePort.save(any()) } answers { firstArg() }
+        every { parfaitQueryPort.findByGroupIdAndDate(1L, today.plusDays(1)) } returns null
+
+        val result = rotator.rotateOne(1L, today.plusDays(1).atTime(3, 0))!!
+
+        result.wasEmpty shouldBe false
+        verify { parfaitSavePort.save(match { it.id == 1L && it.status == ParfaitStatus.CLOSED }) }
+    }
 
     private fun activeParfait(
         id: Long,
