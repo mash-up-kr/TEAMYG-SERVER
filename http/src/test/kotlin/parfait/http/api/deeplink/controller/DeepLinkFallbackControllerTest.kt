@@ -102,6 +102,24 @@ class DeepLinkFallbackControllerTest {
         response shouldContain "외부 브라우저로 이동 중입니다"
     }
 
+    @Test
+    fun `공유 미리보기를 위한 OG 메타 태그를 응답에 포함한다`() {
+        val response =
+            mockMvc
+                .get("/link?inviteCode=ABC123") {
+                    header("User-Agent", "Mozilla/5.0 (Linux; Android 14)")
+                }.andExpect {
+                    status { isOk() }
+                }.andReturn()
+                .response
+                .contentAsString
+
+        response shouldContain """<meta property="og:title" content="Parfait" />"""
+        response shouldContain """<meta property="og:description" content="우리가 쌓을 하루, 사진 공유 캔버스 SNS" />"""
+        response shouldContain
+            """<meta property="og:image" content="https://parfait-app.store/assets/og_image.png" />"""
+    }
+
     private companion object {
         const val OPEN_EXTERNAL_URL =
             "kakaotalk://web/openExternal?url=https%3A%2F%2Fparfait-app.store%2Flink%3FinviteCode%3DABC123"

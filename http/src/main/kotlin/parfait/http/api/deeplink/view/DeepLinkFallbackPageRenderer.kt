@@ -9,6 +9,7 @@ object DeepLinkFallbackPageRenderer {
     fun render(
         platform: Platform,
         redirectUrl: String?,
+        ogImageUrl: String,
         isInAppBrowser: Boolean = false,
     ): String {
         val pageParams = buildPageParams(platform, redirectUrl)
@@ -25,6 +26,12 @@ object DeepLinkFallbackPageRenderer {
             |  <meta charset="utf-8" />
             |  <meta name="viewport" content="width=device-width, initial-scale=1" />
             |  <title>Parfait</title>
+            |  <meta property="og:type" content="website" />
+            |  <meta property="og:title" content="Parfait" />
+            |  <meta property="og:description" content="우리가 쌓을 하루, 사진 공유 캔버스 SNS" />
+            |  <meta property="og:image" content="${escapeHtmlAttribute(ogImageUrl)}" />
+            |  <meta property="og:image:width" content="1200" />
+            |  <meta property="og:image:height" content="600" />
             |  <style>
             |    body {
             |      display: flex;
