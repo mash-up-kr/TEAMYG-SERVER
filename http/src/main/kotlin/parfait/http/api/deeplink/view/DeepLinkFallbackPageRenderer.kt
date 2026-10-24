@@ -29,6 +29,18 @@ object DeepLinkFallbackPageRenderer {
             |  <meta property="og:image:width" content="1200" />
             |  <meta property="og:image:height" content="600" />
             |  <style>
+            |    @font-face {
+            |      font-family: SUIT;
+            |      font-weight: 400;
+            |      font-display: swap;
+            |      src: url("/assets/fonts/suit-regular.woff2") format("woff2");
+            |    }
+            |    @font-face {
+            |      font-family: SUIT;
+            |      font-weight: 600;
+            |      font-display: swap;
+            |      src: url("/assets/fonts/suit-semibold.woff2") format("woff2");
+            |    }
             |    * {
             |      box-sizing: border-box;
             |    }
