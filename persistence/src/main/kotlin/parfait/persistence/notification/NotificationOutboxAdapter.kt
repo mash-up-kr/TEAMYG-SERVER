@@ -6,8 +6,11 @@ import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import parfait.core.notification.domain.BackgroundChangedPayload
 import parfait.core.notification.domain.NotificationOutbox
+import parfait.core.notification.domain.NotificationPayload
 import parfait.core.notification.domain.OutboxStatus
+import parfait.core.notification.domain.TextPlacedPayload
 import parfait.core.notification.domain.ToppingPlacedPayload
 import parfait.core.notification.port.out.NotificationOutboxAppendPort
 import parfait.core.notification.port.out.NotificationOutboxPollPort
@@ -121,14 +124,24 @@ class NotificationOutboxAdapter(
             id = id,
         )
 
-    private fun NotificationOutboxEntity.toDomain(): NotificationOutbox =
-        NotificationOutbox.reconstitute(
+    private fun NotificationOutboxEntity.toDomain(): NotificationOutbox {
+        val payloadObj: NotificationPayload =
+            when (eventType) {
+                NotificationOutbox.EVENT_TYPE_TOPPING_PLACED ->
+                    objectMapper.readValue<ToppingPlacedPayload>(payload)
+                NotificationOutbox.EVENT_TYPE_BACKGROUND_CHANGED ->
+                    objectMapper.readValue<BackgroundChangedPayload>(payload)
+                NotificationOutbox.EVENT_TYPE_TEXT_PLACED ->
+                    objectMapper.readValue<TextPlacedPayload>(payload)
+                else -> error("알 수 없는 eventType: $eventType")
+            }
+        return NotificationOutbox.reconstitute(
             id = id!!,
             aggregateType = aggregateType,
             aggregateId = aggregateId,
             eventType = eventType,
             receiverMemberId = receiverMemberId,
-            payload = objectMapper.readValue<ToppingPlacedPayload>(payload),
+            payload = payloadObj,
             dedupKey = dedupKey,
             status = status,
             attempts = attempts,
@@ -137,4 +150,5 @@ class NotificationOutboxAdapter(
             createdAt = createdAt,
             sentAt = sentAt,
         )
+    }
 }
