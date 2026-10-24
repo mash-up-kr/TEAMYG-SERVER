@@ -3,6 +3,8 @@ package parfait.core.parfaittext.service
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import parfait.core.exception.BusinessException
+import parfait.core.notification.domain.TextPlacedPayload
+import parfait.core.notification.service.TextPlacedNotifier
 import parfait.core.parfait.domain.OwnerType
 import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfait.exception.ParfaitErrorCode
@@ -24,6 +26,7 @@ class PlaceParfaitTextService(
     private val parfaitQueryPort: ParfaitQueryPort,
     private val parfaitTextSavePort: ParfaitTextSavePort,
     private val parfaitVersionService: ParfaitVersionService,
+    private val textPlacedNotifier: TextPlacedNotifier,
 ) : PlaceParfaitTextUseCase {
     @Transactional
     override fun place(command: PlaceParfaitTextCommand): TodayParfaitTextResult {
@@ -54,6 +57,18 @@ class PlaceParfaitTextService(
         // 이미지 배치와 동일하게 FK의 공유 락을 얻기 전에 부모 행을 갱신해 락 승격 데드락을 방지한다.
         parfaitVersionService.bump(command.parfaitId)
         val saved = parfaitTextSavePort.save(text)
+
+        textPlacedNotifier.notify(
+            TextPlacedPayload(
+                groupId = command.groupId,
+                parfaitId = command.parfaitId,
+                parfaitDate = parfait.parfaitDate,
+                actorMemberId = command.memberId,
+                text = command.text,
+            ),
+            saved.requireId(),
+        )
+
         return TodayParfaitTextResult.from(
             saved,
             PlacedByResult(

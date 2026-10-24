@@ -8,6 +8,8 @@ import io.mockk.verifyOrder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import parfait.core.exception.BusinessException
+import parfait.core.notification.domain.TextPlacedPayload
+import parfait.core.notification.service.TextPlacedNotifier
 import parfait.core.parfait.domain.OwnerType
 import parfait.core.parfait.domain.Parfait
 import parfait.core.parfait.domain.ParfaitStatus
@@ -31,7 +33,8 @@ class PlaceParfaitTextServiceTest {
     private val parfaits = mockk<ParfaitQueryPort>()
     private val texts = mockk<ParfaitTextSavePort>()
     private val versions = mockk<ParfaitVersionService>(relaxed = true)
-    private val service = PlaceParfaitTextService(groupMembers, parfaits, texts, versions)
+    private val notifier = mockk<TextPlacedNotifier>(relaxed = true)
+    private val service = PlaceParfaitTextService(groupMembers, parfaits, texts, versions, notifier)
     private val command =
         PlaceParfaitTextCommand(
             memberId = 42L,
@@ -110,6 +113,19 @@ class PlaceParfaitTextServiceTest {
             versions.bump(5L)
             texts.save(match { it.id == null && it.parfaitId == 5L && it.placedByGroupMemberId == 10L })
         }
+        verify {
+            notifier.notify(
+                TextPlacedPayload(
+                    groupId = 1L,
+                    parfaitId = 5L,
+                    parfaitDate = LocalDate.of(2026, 10, 20),
+                    actorMemberId = 42L,
+                    text = "안녕\n파르페! 🎉",
+                ),
+                301L,
+                any(),
+            )
+        }
     }
 
     @Test
@@ -184,5 +200,6 @@ class PlaceParfaitTextServiceTest {
     private fun verifyNoWrites() {
         verify(exactly = 0) { versions.bump(any()) }
         verify(exactly = 0) { texts.save(any()) }
+        verify(exactly = 0) { notifier.notify(any(), any(), any()) }
     }
 }
