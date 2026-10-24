@@ -10,6 +10,7 @@ import parfait.core.notification.domain.DeviceToken
 import parfait.core.notification.domain.NotificationMessageFactory
 import parfait.core.notification.domain.NotificationOutbox
 import parfait.core.notification.domain.OutboxStatus
+import parfait.core.notification.domain.TextPlacedPayload
 import parfait.core.notification.domain.ToppingPlacedPayload
 import parfait.core.notification.exception.NotificationSendException
 import parfait.core.notification.port.out.DeviceTokenDeletePort
@@ -92,6 +93,34 @@ class NotificationOutboxDispatcherTest {
         t: String,
         memberId: Long = 42L,
     ) = DeviceToken(token = t, memberId = memberId, platform = DevicePlatform.ANDROID)
+
+    private val textPayload =
+        TextPlacedPayload(
+            groupId = 1L,
+            parfaitId = 5L,
+            parfaitDate = LocalDate.of(2026, 9, 2),
+            actorMemberId = 7L,
+            text = "오늘 다들 뭐 먹었어",
+        )
+
+    private fun textRow(
+        id: Long = 2L,
+        receiver: Long = 42L,
+    ) = NotificationOutbox.reconstitute(
+        id = id,
+        aggregateType = "TEXT",
+        aggregateId = 5L,
+        eventType = "TEXT_PLACED",
+        receiverMemberId = receiver,
+        payload = textPayload,
+        dedupKey = "text-placed:5:$receiver",
+        status = OutboxStatus.PENDING,
+        attempts = 0,
+        scheduledAt = now,
+        lastError = null,
+        createdAt = now,
+        sentAt = null,
+    )
 
     @Test
     fun `정상 경로 - 재검증 통과 후 발송 성공하면 markSent`() {
@@ -265,5 +294,65 @@ class NotificationOutboxDispatcherTest {
         verify { pollPort.markFailed(1L, match { it.startsWith("UNKNOWN_EVENT_TYPE") }) }
         verify { pollPort.markSent(2L, now, null) }
         verify(exactly = 1) { senderPort.send("tok-1", any()) }
+    }
+
+    @Test
+    fun `TEXT_PLACED - 정상 발송 성공 후 markSent`() {
+        every { pollPort.claimBatch(any(), now) } returns listOf(textRow())
+        every { groupQueryPort.findById(1L) } returns group()
+        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns member(42L)
+        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 7L) } returns member(7L)
+        every { deviceTokenQueryPort.findByMemberId(42L) } returns listOf(token("tok-1"))
+
+        dispatcher.processDueBatch(now)
+
+        verify {
+            senderPort.send(
+                "tok-1",
+                match {
+                    it.title == "우리팀 파르페에 체리 하나 톡!" &&
+                        it.body == "닉7: 오늘 다들 뭐 먹었어"
+                },
+            )
+        }
+        verify { pollPort.markSent(2L, now, null) }
+    }
+
+    @Test
+    fun `TEXT_PLACED - E-22 정규화 후 빈 문자열이면 발송하지 않는다`() {
+        val emptyPayload =
+            TextPlacedPayload(
+                groupId = 1L,
+                parfaitId = 5L,
+                parfaitDate = LocalDate.of(2026, 9, 2),
+                actorMemberId = 7L,
+                text = "  \n  ",
+            )
+        val emptyRow =
+            NotificationOutbox.reconstitute(
+                id = 2L,
+                aggregateType = "TEXT",
+                aggregateId = 5L,
+                eventType = "TEXT_PLACED",
+                receiverMemberId = 42L,
+                payload = emptyPayload,
+                dedupKey = "text-placed:5:42",
+                status = OutboxStatus.PENDING,
+                attempts = 0,
+                scheduledAt = now,
+                lastError = null,
+                createdAt = now,
+                sentAt = null,
+            )
+        every { pollPort.claimBatch(any(), now) } returns listOf(emptyRow)
+        every { groupQueryPort.findById(1L) } returns group()
+        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns member(42L)
+        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 7L) } returns member(7L)
+        every { deviceTokenQueryPort.findByMemberId(42L) } returns listOf(token("tok-1"))
+
+        dispatcher.processDueBatch(now)
+
+        verify(exactly = 0) { senderPort.send(any(), any()) }
+        verify { pollPort.markSent(2L, now, "CANCELLED_EMPTY_PREVIEW") }
     }
 }
