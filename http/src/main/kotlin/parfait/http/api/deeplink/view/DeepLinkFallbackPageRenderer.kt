@@ -37,9 +37,21 @@ object DeepLinkFallbackPageRenderer {
             |    }
             |    @font-face {
             |      font-family: SUIT;
+            |      font-weight: 500;
+            |      font-display: swap;
+            |      src: url("/assets/fonts/suit-medium.woff2") format("woff2");
+            |    }
+            |    @font-face {
+            |      font-family: SUIT;
             |      font-weight: 600;
             |      font-display: swap;
             |      src: url("/assets/fonts/suit-semibold.woff2") format("woff2");
+            |    }
+            |    @font-face {
+            |      font-family: SUIT;
+            |      font-weight: 700;
+            |      font-display: swap;
+            |      src: url("/assets/fonts/suit-bold.woff2") format("woff2");
             |    }
             |    * {
             |      box-sizing: border-box;
