@@ -13,6 +13,7 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import parfait.core.notification.domain.NotificationOutbox
 import parfait.core.notification.domain.OutboxStatus
+import parfait.core.notification.domain.TextPlacedPayload
 import parfait.core.notification.domain.ToppingPlacedPayload
 import parfait.persistence.TestApplication
 import parfait.persistence.repository.NotificationOutboxRepository
@@ -117,6 +118,33 @@ class NotificationOutboxAdapterTest {
         e.status shouldBe OutboxStatus.SENT
         e.sentAt shouldBe base
         e.lastError shouldBe "NO_DEVICE_TOKEN"
+    }
+
+    @Test
+    fun `TextPlacedPayload 를 저장하고 claimBatch 로 꺼내면 payload 가 복원된다`() {
+        val textPayload =
+            TextPlacedPayload(
+                groupId = 1L,
+                parfaitId = 5L,
+                parfaitDate = LocalDate.of(2026, 9, 2),
+                actorMemberId = 7L,
+                text = "오늘 다들 뭐 먹었어",
+            )
+        val row =
+            NotificationOutbox.textPlaced(
+                textId = 200L,
+                receiverMemberId = 99L,
+                payload = textPayload,
+                now = base,
+            )
+
+        adapter.saveAll(listOf(row))
+        val claimed = adapter.claimBatch(1, base)
+
+        claimed shouldHaveSize 1
+        val restored = claimed[0].payload
+        restored shouldBe textPayload
+        (restored as TextPlacedPayload).text shouldBe "오늘 다들 뭐 먹었어"
     }
 
     @Test

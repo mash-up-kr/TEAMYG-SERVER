@@ -6,7 +6,7 @@ import parfait.core.exception.BusinessException
 import parfait.core.image.domain.ImageStatus
 import parfait.core.image.exception.ImageErrorCode
 import parfait.core.image.port.out.ImageMetaQueryPort
-import parfait.core.notification.domain.ToppingPlacedPayload
+import parfait.core.notification.domain.BackgroundChangedPayload
 import parfait.core.notification.service.BackgroundChangedNotifier
 import parfait.core.parfait.domain.BackgroundType
 import parfait.core.parfait.domain.ParfaitStatus
@@ -49,7 +49,7 @@ class ChangeParfaitBackgroundService(
 
         backgroundChangedNotifier.notify(
             payload =
-                ToppingPlacedPayload(
+                BackgroundChangedPayload(
                     groupId = command.groupId,
                     parfaitId = command.parfaitId,
                     parfaitDate = parfait.parfaitDate,
