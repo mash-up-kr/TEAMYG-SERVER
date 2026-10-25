@@ -40,7 +40,6 @@ class DeepLinkFallbackController(
                 platform = result.platform,
                 redirectUrl = result.redirectUrl,
                 ogImageUrl = "https://$landingDomain/assets/og_image.png",
-                isInAppBrowser = result.isInAppBrowser,
             )
 
         return ResponseEntity
