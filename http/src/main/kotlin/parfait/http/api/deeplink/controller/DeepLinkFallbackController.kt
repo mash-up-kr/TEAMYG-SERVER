@@ -3,6 +3,7 @@ package parfait.http.api.deeplink.controller
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -18,6 +19,7 @@ import java.nio.charset.StandardCharsets
 @RestController
 class DeepLinkFallbackController(
     private val getDownloadStoreLinkUseCase: GetDownloadStoreLinkUseCase,
+    @Value("\${landing.domain}") private val landingDomain: String,
 ) {
     @Operation(summary = "딥링크 웹 폴백 페이지 — UA로 스토어 분기 후 리다이렉트")
     @GetMapping("/link", produces = [MediaType.TEXT_HTML_VALUE])
@@ -37,7 +39,7 @@ class DeepLinkFallbackController(
             DeepLinkFallbackPageRenderer.render(
                 platform = result.platform,
                 redirectUrl = result.redirectUrl,
-                isInAppBrowser = result.isInAppBrowser,
+                ogImageUrl = "https://$landingDomain/assets/og_image.png",
             )
 
         return ResponseEntity
