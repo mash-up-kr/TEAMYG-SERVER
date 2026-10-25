@@ -8,8 +8,8 @@ import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.springframework.context.ApplicationEventPublisher
+import parfait.core.notification.domain.BackgroundChangedPayload
 import parfait.core.notification.domain.NotificationOutbox
-import parfait.core.notification.domain.ToppingPlacedPayload
 import parfait.core.notification.event.BackgroundChangedEvent
 import parfait.core.notification.port.out.NotificationOutboxAppendPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
@@ -25,7 +25,12 @@ class BackgroundChangedNotifierTest {
 
     private val now = LocalDateTime.of(2026, 9, 2, 10, 0)
     private val payload =
-        ToppingPlacedPayload(groupId = 1L, parfaitId = 5L, parfaitDate = LocalDate.of(2026, 9, 2), actorMemberId = 42L)
+        BackgroundChangedPayload(
+            groupId = 1L,
+            parfaitId = 5L,
+            parfaitDate = LocalDate.of(2026, 9, 2),
+            actorMemberId = 42L,
+        )
 
     private fun member(
         id: Long,

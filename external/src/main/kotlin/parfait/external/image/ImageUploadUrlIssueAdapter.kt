@@ -16,8 +16,11 @@ import java.time.Duration
 class ImageUploadUrlIssueAdapter(
     @Value("\${aws.s3.bucket}") private val bucket: String,
     @Value("\${aws.s3.region}") private val region: String,
+    @Value("\${aws.s3.public-base-url}") publicBaseUrl: String,
     credentialsProvider: AwsCredentialsProvider = DefaultCredentialsProvider.create(),
 ) : ImageUploadUrlIssuePort {
+    private val publicBaseUrl = publicBaseUrl.trimEnd('/')
+
     private val s3Presigner: S3Presigner =
         S3Presigner
             .builder()
@@ -44,7 +47,7 @@ class ImageUploadUrlIssueAdapter(
                 .putObjectRequest(putObjectRequest)
                 .build()
         val uploadUrl = s3Presigner.presignPutObject(presignRequest).url().toString()
-        val imageUrl = "https://$bucket.s3.$region.amazonaws.com/$key"
+        val imageUrl = "$publicBaseUrl/$key"
         return PresignedUpload(uploadUrl = uploadUrl, imageUrl = imageUrl)
     }
 }

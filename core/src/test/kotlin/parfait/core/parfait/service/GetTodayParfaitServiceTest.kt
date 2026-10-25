@@ -22,6 +22,8 @@ import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 import parfait.core.parfaitimage.domain.BorderType
 import parfait.core.parfaitimage.domain.ParfaitImage
 import parfait.core.parfaitimage.port.out.ParfaitImageQueryPort
+import parfait.core.parfaittext.domain.ParfaitText
+import parfait.core.parfaittext.port.out.ParfaitTextQueryPort
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.test.assertFailsWith
@@ -32,6 +34,12 @@ class GetTodayParfaitServiceTest {
     private val parfaitQueryPort = mockk<ParfaitQueryPort>()
     private val ensureActiveCanvasUseCase = mockk<EnsureActiveCanvasUseCase>()
     private val parfaitImageQueryPort = mockk<ParfaitImageQueryPort>()
+    private val parfaitTextQueryPort = mockk<ParfaitTextQueryPort>()
+
+    init {
+        every { parfaitTextQueryPort.findAllByParfaitId(any()) } returns emptyList()
+    }
+
     private val service =
         GetTodayParfaitService(
             parfaitGroupMemberQueryPort,
@@ -39,6 +47,7 @@ class GetTodayParfaitServiceTest {
             parfaitQueryPort,
             ensureActiveCanvasUseCase,
             parfaitImageQueryPort,
+            parfaitTextQueryPort,
         )
 
     private fun group(name: String = "팀연경 테스트 방"): ParfaitGroup =
@@ -140,6 +149,7 @@ class GetTodayParfaitServiceTest {
         val result = service.get(GetTodayParfaitCommand(memberId = 10L, groupId = 1L))
 
         result.images shouldBe null
+        result.texts shouldBe null
         result.background shouldBe null
     }
 
@@ -183,10 +193,41 @@ class GetTodayParfaitServiceTest {
         every { parfaitImageQueryPort.findAllByParfaitId(200L) } returns listOf(placedImage)
         every { parfaitGroupMemberQueryPort.findAllByIds(listOf(11L)) } returns
             listOf(groupMember(11L, "(알수없음)", nametagChip = NameTagChipType.TYPE9))
+        every { parfaitTextQueryPort.findAllByParfaitId(200L) } returns
+            listOf(
+                ParfaitText.reconstitute(
+                    id = 301L,
+                    parfaitId = 200L,
+                    placedByGroupMemberId = 11L,
+                    text = "안녕\n파르페!",
+                    positionX = 10.0,
+                    positionY = 20.0,
+                    positionZ = 2,
+                    scale = 1.5,
+                    rotation = -30.0,
+                    color = "#FF5733",
+                    fontSize = 16.0,
+                    createdAt = LocalDateTime.of(2026, 7, 9, 14, 30),
+                    updatedAt = LocalDateTime.of(2026, 7, 9, 14, 30),
+                ),
+            )
 
         val result = service.get(GetTodayParfaitCommand(memberId = 10L, groupId = 1L))
 
         result.images?.size shouldBe 1
+        val text = requireNotNull(result.texts).single()
+        text.parfaitTextId shouldBe 301L
+        text.text shouldBe "안녕\n파르페!"
+        text.positionX shouldBe 10.0
+        text.positionY shouldBe 20.0
+        text.positionZ shouldBe 2
+        text.scale shouldBe 1.5
+        text.rotation shouldBe -30.0
+        text.color shouldBe "#FF5733"
+        text.fontSize shouldBe 16.0
+        text.placedBy.nickname shouldBe "(알수없음)"
+        text.placedBy.nametagChip shouldBe NameTagChipType.TYPE9
+        text.placedBy.ownerType shouldBe OwnerType.OTHER
         result.images
             ?.first()
             ?.placedBy

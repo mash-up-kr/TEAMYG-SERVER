@@ -19,8 +19,13 @@ import parfait.core.parfaitimage.domain.ParfaitImage
 import parfait.core.parfaitimage.exception.ParfaitImageErrorCode
 import parfait.core.parfaitimage.port.`in`.UpdateParfaitImageItemCommand
 import parfait.core.parfaitimage.port.`in`.UpdateParfaitImagesCommand
+import parfait.core.parfaitimage.port.`in`.UpdateParfaitTextItemCommand
 import parfait.core.parfaitimage.port.out.ParfaitImageQueryPort
 import parfait.core.parfaitimage.port.out.ParfaitImageSavePort
+import parfait.core.parfaittext.domain.ParfaitText
+import parfait.core.parfaittext.exception.ParfaitTextErrorCode
+import parfait.core.parfaittext.port.out.ParfaitTextQueryPort
+import parfait.core.parfaittext.port.out.ParfaitTextSavePort
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.test.assertFailsWith
@@ -30,6 +35,8 @@ class UpdateParfaitImagesServiceTest {
     private val parfaitQueryPort = mockk<ParfaitQueryPort>()
     private val parfaitImageQueryPort = mockk<ParfaitImageQueryPort>()
     private val parfaitImageSavePort = mockk<ParfaitImageSavePort>()
+    private val parfaitTextQueryPort = mockk<ParfaitTextQueryPort>()
+    private val parfaitTextSavePort = mockk<ParfaitTextSavePort>()
     private val parfaitVersionService = mockk<ParfaitVersionService>(relaxed = true)
     private val service =
         UpdateParfaitImagesService(
@@ -37,6 +44,8 @@ class UpdateParfaitImagesServiceTest {
             parfaitQueryPort = parfaitQueryPort,
             parfaitImageQueryPort = parfaitImageQueryPort,
             parfaitImageSavePort = parfaitImageSavePort,
+            parfaitTextQueryPort = parfaitTextQueryPort,
+            parfaitTextSavePort = parfaitTextSavePort,
             parfaitVersionService = parfaitVersionService,
         )
 
@@ -84,13 +93,42 @@ class UpdateParfaitImagesServiceTest {
             updatedAt = LocalDateTime.now(),
         )
 
-    private fun command(items: List<UpdateParfaitImageItemCommand>) =
-        UpdateParfaitImagesCommand(
-            memberId = 42L,
-            groupId = 1L,
-            parfaitId = 5L,
-            items = items,
+    private fun existingText(
+        id: Long,
+        placedByGroupMemberId: Long = 10L,
+        parfaitId: Long = 5L,
+    ): ParfaitText =
+        ParfaitText.reconstitute(
+            id = id,
+            parfaitId = parfaitId,
+            placedByGroupMemberId = placedByGroupMemberId,
+            text = "오늘도 행복한 하루!",
+            positionX = 0.0,
+            positionY = 0.0,
+            positionZ = 0,
+            scale = 1.0,
+            rotation = 0.0,
+            color = "#FF5733",
+            fontSize = 16.0,
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
         )
+
+    private fun command(
+        items: List<UpdateParfaitImageItemCommand>,
+        textItems: List<UpdateParfaitTextItemCommand> = emptyList(),
+    ) = UpdateParfaitImagesCommand(
+        memberId = 42L,
+        groupId = 1L,
+        parfaitId = 5L,
+        items = items,
+        textItems = textItems,
+    )
+
+    private fun textItem(
+        id: Long,
+        positionX: Double? = 1.0,
+    ) = UpdateParfaitTextItemCommand(id, positionX, null, null, null, null)
 
     @Test
     fun `여러 토핑을 한 번에 요청하면 API 호출 한 번으로 전부 갱신한다`() {
@@ -99,6 +137,8 @@ class UpdateParfaitImagesServiceTest {
         every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns owner
         every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
         every { parfaitImageSavePort.saveAll(any()) } answers { firstArg() }
+        every { parfaitTextQueryPort.findAllByIds(emptyList()) } returns emptyList()
+        every { parfaitTextSavePort.saveAll(emptyList()) } returns emptyList()
 
         val result =
             service.updateAll(
@@ -124,20 +164,22 @@ class UpdateParfaitImagesServiceTest {
                 ),
             )
 
-        result.size shouldBe 2
-        result[0].parfaitImageId shouldBe 201L
-        result[0].positionX shouldBe 200.0
-        result[0].rotation shouldBe 45.0
-        result[1].parfaitImageId shouldBe 202L
-        result[1].positionX shouldBe 10.0
-        result[1].positionZ shouldBe 2
+        result.images.size shouldBe 2
+        result.images[0].parfaitImageId shouldBe 201L
+        result.images[0].positionX shouldBe 200.0
+        result.images[0].rotation shouldBe 45.0
+        result.images[1].parfaitImageId shouldBe 202L
+        result.images[1].positionX shouldBe 10.0
+        result.images[1].positionZ shouldBe 2
+        result.texts shouldBe emptyList()
     }
 
     @Test
     fun `항목이 비어있으면 조회·저장 없이 빈 목록을 반환한다`() {
         val result = service.updateAll(command(emptyList()))
 
-        result shouldBe emptyList()
+        result.images shouldBe emptyList()
+        result.texts shouldBe emptyList()
     }
 
     @Test
@@ -237,6 +279,8 @@ class UpdateParfaitImagesServiceTest {
         every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns owner
         every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
         every { parfaitImageSavePort.saveAll(any()) } answers { firstArg() }
+        every { parfaitTextQueryPort.findAllByIds(emptyList()) } returns emptyList()
+        every { parfaitTextSavePort.saveAll(emptyList()) } returns emptyList()
 
         service.updateAll(
             command(
@@ -277,6 +321,8 @@ class UpdateParfaitImagesServiceTest {
         every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns owner
         every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
         every { parfaitImageSavePort.saveAll(any()) } answers { firstArg() }
+        every { parfaitTextQueryPort.findAllByIds(emptyList()) } returns emptyList()
+        every { parfaitTextSavePort.saveAll(emptyList()) } returns emptyList()
 
         service.updateAll(
             command(
@@ -297,5 +343,126 @@ class UpdateParfaitImagesServiceTest {
             parfaitVersionService.bump(5L)
             parfaitImageSavePort.saveAll(any())
         }
+    }
+
+    @Test
+    fun `이미지와 텍스트를 한 번에 수정하고 둘 다 응답한다`() {
+        every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns owner
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
+        every { parfaitImageQueryPort.findAllByIds(listOf(201L)) } returns listOf(existingImage(201L))
+        every { parfaitTextQueryPort.findAllByIds(listOf(301L)) } returns listOf(existingText(301L))
+        every { parfaitImageSavePort.saveAll(any()) } answers { firstArg() }
+        every { parfaitTextSavePort.saveAll(any()) } answers { firstArg() }
+
+        val result =
+            service.updateAll(
+                command(
+                    items = listOf(UpdateParfaitImageItemCommand(201L, 200.0, null, null, null, null)),
+                    textItems = listOf(UpdateParfaitTextItemCommand(301L, 10.0, 20.0, 3, 2.0, -30.0)),
+                ),
+            )
+
+        result.images.single().positionX shouldBe 200.0
+        val text = result.texts.single()
+        text.parfaitTextId shouldBe 301L
+        text.text shouldBe "오늘도 행복한 하루!"
+        text.positionX shouldBe 10.0
+        text.positionY shouldBe 20.0
+        text.positionZ shouldBe 3
+        text.scale shouldBe 2.0
+        text.rotation shouldBe -30.0
+        text.color shouldBe "#FF5733"
+        verify(exactly = 1) { parfaitVersionService.bump(5L) }
+    }
+
+    @Test
+    fun `텍스트만 보내도 수정되고 version 을 한 번 올린다`() {
+        every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns owner
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
+        every { parfaitImageQueryPort.findAllByIds(emptyList()) } returns emptyList()
+        every { parfaitTextQueryPort.findAllByIds(listOf(301L)) } returns listOf(existingText(301L))
+        every { parfaitImageSavePort.saveAll(any()) } answers { firstArg() }
+        every { parfaitTextSavePort.saveAll(any()) } answers { firstArg() }
+
+        val result = service.updateAll(command(items = emptyList(), textItems = listOf(textItem(301L))))
+
+        result.images shouldBe emptyList()
+        result.texts.single().positionX shouldBe 1.0
+        verify(exactly = 1) { parfaitVersionService.bump(5L) }
+    }
+
+    @Test
+    fun `텍스트 항목 중 존재하지 않는 ID가 있으면 PARFAIT_TEXT_NOT_FOUND 예외를 던지고 저장하지 않는다`() {
+        every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns owner
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
+        every { parfaitImageQueryPort.findAllByIds(emptyList()) } returns emptyList()
+        every { parfaitTextQueryPort.findAllByIds(listOf(999L)) } returns emptyList()
+
+        val exception =
+            assertFailsWith<BusinessException> {
+                service.updateAll(command(items = emptyList(), textItems = listOf(textItem(999L))))
+            }
+
+        exception.errorCode shouldBe ParfaitTextErrorCode.PARFAIT_TEXT_NOT_FOUND
+        verify(exactly = 0) { parfaitVersionService.bump(any()) }
+    }
+
+    @Test
+    fun `경로의 parfaitId와 텍스트의 parfaitId가 다르면 PARFAIT_TEXT_NOT_FOUND 예외를 던진다`() {
+        every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns owner
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
+        every { parfaitImageQueryPort.findAllByIds(emptyList()) } returns emptyList()
+        every { parfaitTextQueryPort.findAllByIds(listOf(301L)) } returns listOf(existingText(301L, parfaitId = 999L))
+
+        val exception =
+            assertFailsWith<BusinessException> {
+                service.updateAll(command(items = emptyList(), textItems = listOf(textItem(301L))))
+            }
+
+        exception.errorCode shouldBe ParfaitTextErrorCode.PARFAIT_TEXT_NOT_FOUND
+    }
+
+    @Test
+    fun `본인이 배치하지 않은 텍스트가 섞여 있으면 이미지도 저장하지 않고 PARFAIT_TEXT_NOT_OWNED 예외를 던진다`() {
+        every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns owner
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
+        every { parfaitImageQueryPort.findAllByIds(listOf(201L)) } returns listOf(existingImage(201L))
+        every { parfaitTextQueryPort.findAllByIds(listOf(301L)) } returns
+            listOf(existingText(301L, placedByGroupMemberId = 999L))
+
+        val exception =
+            assertFailsWith<BusinessException> {
+                service.updateAll(
+                    command(
+                        items = listOf(UpdateParfaitImageItemCommand(201L, 1.0, 1.0, null, null, null)),
+                        textItems = listOf(textItem(301L)),
+                    ),
+                )
+            }
+
+        exception.errorCode shouldBe ParfaitTextErrorCode.PARFAIT_TEXT_NOT_OWNED
+        verify(exactly = 0) { parfaitImageSavePort.saveAll(any()) }
+        verify(exactly = 0) { parfaitTextSavePort.saveAll(any()) }
+        verify(exactly = 0) { parfaitVersionService.bump(any()) }
+    }
+
+    @Test
+    fun `텍스트 스타일 검증은 수정되지 않는 값으로 통과하고 text 내용은 유지된다`() {
+        every { parfaitGroupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns owner
+        every { parfaitQueryPort.findByIdAndGroupId(5L, 1L) } returns activeParfait()
+        every { parfaitImageQueryPort.findAllByIds(emptyList()) } returns emptyList()
+        every { parfaitTextQueryPort.findAllByIds(listOf(301L)) } returns listOf(existingText(301L))
+        every { parfaitImageSavePort.saveAll(any()) } answers { firstArg() }
+        every { parfaitTextSavePort.saveAll(any()) } answers { firstArg() }
+
+        val result =
+            service.updateAll(
+                command(
+                    items = emptyList(),
+                    textItems = listOf(UpdateParfaitTextItemCommand(301L, null, null, null, null, null)),
+                ),
+            )
+
+        result.texts.single().text shouldBe "오늘도 행복한 하루!"
     }
 }

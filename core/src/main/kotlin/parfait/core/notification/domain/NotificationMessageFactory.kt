@@ -1,6 +1,7 @@
 package parfait.core.notification.domain
 
 import org.springframework.stereotype.Component
+import java.text.BreakIterator
 import java.time.Duration
 import java.time.LocalDate
 
@@ -67,9 +68,57 @@ class NotificationMessageFactory {
         )
     }
 
+    fun textPlaced(
+        groupName: String,
+        actorNickname: String?,
+        groupId: Long,
+        parfaitDate: LocalDate,
+        textPreview: String,
+    ): PushMessage =
+        PushMessage(
+            title = "$groupName 파르페에 체리 하나 톡!",
+            body = "${actorNickname ?: "누군가"}: $textPreview",
+            data =
+                mapOf(
+                    "type" to "TEXT",
+                    "route" to "canvas",
+                    "groupId" to groupId.toString(),
+                    "date" to parfaitDate.toString(),
+                ),
+            ttl = Duration.ofHours(6),
+        )
+
+    fun generateTextPreview(text: String): String? {
+        val normalized =
+            text
+                .replace(Regex("[\r\n]+"), " ")
+                .replace(Regex(" {2,}"), " ")
+                .trim()
+        if (normalized.isEmpty()) return null
+        return normalized.ellipsizeByGrapheme(PREVIEW_MAX_GRAPHEMES, PREVIEW_CUT_GRAPHEMES)
+    }
+
     private fun String.ellipsize(max: Int): String = if (length > max) take(max) + "..." else this
+
+    private fun String.ellipsizeByGrapheme(
+        max: Int,
+        cut: Int,
+    ): String {
+        val iter = BreakIterator.getCharacterInstance()
+        iter.setText(this)
+        var count = 0
+        var cutPos = length
+        while (iter.next() != BreakIterator.DONE) {
+            count++
+            if (count == cut) cutPos = iter.current()
+            if (count > max) return substring(0, cutPos) + "…"
+        }
+        return this
+    }
 
     private companion object {
         const val NICKNAME_DISPLAY_MAX = 8
+        const val PREVIEW_MAX_GRAPHEMES = 11
+        const val PREVIEW_CUT_GRAPHEMES = 10
     }
 }

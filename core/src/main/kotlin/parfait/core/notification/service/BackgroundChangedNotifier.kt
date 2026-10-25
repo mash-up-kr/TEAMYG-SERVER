@@ -2,8 +2,8 @@ package parfait.core.notification.service
 
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
+import parfait.core.notification.domain.BackgroundChangedPayload
 import parfait.core.notification.domain.NotificationOutbox
-import parfait.core.notification.domain.ToppingPlacedPayload
 import parfait.core.notification.event.BackgroundChangedEvent
 import parfait.core.notification.port.out.NotificationOutboxAppendPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
@@ -20,7 +20,7 @@ class BackgroundChangedNotifier(
     private val eventPublisher: ApplicationEventPublisher,
 ) {
     fun notify(
-        payload: ToppingPlacedPayload,
+        payload: BackgroundChangedPayload,
         changedAt: LocalDateTime,
         now: LocalDateTime = LocalDateTime.now(),
     ) {
