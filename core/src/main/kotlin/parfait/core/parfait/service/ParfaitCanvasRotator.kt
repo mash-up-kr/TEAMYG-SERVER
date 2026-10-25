@@ -7,6 +7,7 @@ import parfait.core.parfait.domain.ParfaitDay
 import parfait.core.parfait.port.out.ParfaitQueryPort
 import parfait.core.parfait.port.out.ParfaitSavePort
 import parfait.core.parfaitimage.port.out.ParfaitImageQueryPort
+import parfait.core.parfaittext.port.out.ParfaitTextQueryPort
 import java.time.LocalDateTime
 
 @Component
@@ -14,6 +15,7 @@ class ParfaitCanvasRotator(
     private val parfaitQueryPort: ParfaitQueryPort,
     private val parfaitImageQueryPort: ParfaitImageQueryPort,
     private val parfaitSavePort: ParfaitSavePort,
+    private val parfaitTextQueryPort: ParfaitTextQueryPort,
 ) {
     /**
      * "마감 후 생성" 순서 자체가 그룹당 ACTIVE 파르페를 최대 1개로 유지하는 근거다.
@@ -64,7 +66,9 @@ class ParfaitCanvasRotator(
         active: Parfait,
         now: LocalDateTime,
     ): RotateOneResult {
-        val hasToppings = parfaitImageQueryPort.existsByParfaitId(active.requireId())
+        val hasToppings =
+            parfaitImageQueryPort.existsByParfaitId(active.requireId()) ||
+                parfaitTextQueryPort.existsByParfaitId(active.requireId())
         val closed = if (hasToppings) active.close(now) else active.markEmpty(now)
         parfaitSavePort.save(closed)
 

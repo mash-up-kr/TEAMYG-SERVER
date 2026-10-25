@@ -4,6 +4,7 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import parfait.core.parfaitimage.port.`in`.UpdateParfaitImageResult
 import parfait.core.parfaitimage.port.`in`.UpdateParfaitImagesCommand
+import parfait.core.parfaitimage.port.`in`.UpdateParfaitImagesResult
 import parfait.core.parfaitimage.port.`in`.UpdateParfaitImagesUseCase
 
 /**
@@ -15,16 +16,20 @@ class TestUpdateParfaitImagesUseCaseConfig {
     @Bean
     fun updateParfaitImagesUseCase(): UpdateParfaitImagesUseCase =
         object : UpdateParfaitImagesUseCase {
-            override fun updateAll(command: UpdateParfaitImagesCommand): List<UpdateParfaitImageResult> =
-                command.items.map { item ->
-                    UpdateParfaitImageResult(
-                        parfaitImageId = item.parfaitImageId,
-                        positionX = item.positionX ?: 0.0,
-                        positionY = item.positionY ?: 0.0,
-                        positionZ = item.positionZ ?: 0,
-                        scale = item.scale ?: 1.0,
-                        rotation = item.rotation ?: 0.0,
-                    )
-                }
+            override fun updateAll(command: UpdateParfaitImagesCommand): UpdateParfaitImagesResult =
+                UpdateParfaitImagesResult(
+                    images =
+                        command.items.map { item ->
+                            UpdateParfaitImageResult(
+                                parfaitImageId = item.parfaitImageId,
+                                positionX = item.positionX ?: 0.0,
+                                positionY = item.positionY ?: 0.0,
+                                positionZ = item.positionZ ?: 0,
+                                scale = item.scale ?: 1.0,
+                                rotation = item.rotation ?: 0.0,
+                            )
+                        },
+                    texts = emptyList(),
+                )
         }
 }

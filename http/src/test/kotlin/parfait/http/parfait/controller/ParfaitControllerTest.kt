@@ -29,6 +29,7 @@ import parfait.core.parfait.port.`in`.GroupMemberResult
 import parfait.core.parfait.port.`in`.PastParfaitResult
 import parfait.core.parfait.port.`in`.PlacedByResult
 import parfait.core.parfait.port.`in`.TodayParfaitImageResult
+import parfait.core.parfait.port.`in`.TodayParfaitTextResult
 import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
@@ -64,6 +65,23 @@ class ParfaitControllerTest {
     private lateinit var getParfaitDetailUseCase: GetParfaitDetailUseCase
 
     private val authentication = UsernamePasswordAuthenticationToken("42", null, emptyList())
+
+    private fun textResult(): TodayParfaitTextResult =
+        TodayParfaitTextResult(
+            parfaitTextId = 301L,
+            text = "오늘도 행복한 하루!",
+            isFill = false,
+            isStroke = true,
+            positionX = 10.0,
+            positionY = 20.0,
+            positionZ = 2,
+            scale = 1.5,
+            rotation = -30.0,
+            color = "#FF5733",
+            fontSize = 16.0,
+            placedBy = PlacedByResult(10L, "연경이", NameTagChipType.TYPE6, OwnerType.ME),
+            createdAt = LocalDateTime.of(2026, 7, 9, 14, 30),
+        )
 
     @Test
     fun `범위를 지정해 조회하면 200과 파르페 목록을 응답한다`() {
@@ -167,6 +185,7 @@ class ParfaitControllerTest {
                         GroupMemberResult(id = 11L, nickname = "서휘", nametagChip = NameTagChipType.TYPE2),
                     ),
                 background = BackgroundResult(type = BackgroundType.COLOR, value = "#FFFFFF"),
+                texts = listOf(textResult()),
                 images =
                     listOf(
                         TodayParfaitImageResult(
@@ -207,6 +226,18 @@ class ParfaitControllerTest {
                 jsonPath("$.data.images[0].placedBy.nickname") { value("연경이") }
                 jsonPath("$.data.images[0].placedBy.nameTagChip") { value("TYPE6") }
                 jsonPath("$.data.images[0].placedBy.ownerType") { value("ME") }
+                jsonPath("$.data.texts[0].parfaitTextId") { value(301) }
+                jsonPath("$.data.texts[0].text") { value("오늘도 행복한 하루!") }
+                jsonPath("$.data.texts[0].positionX") { value(10.0) }
+                jsonPath("$.data.texts[0].positionY") { value(20.0) }
+                jsonPath("$.data.texts[0].positionZ") { value(2) }
+                jsonPath("$.data.texts[0].scale") { value(1.5) }
+                jsonPath("$.data.texts[0].rotation") { value(-30.0) }
+                jsonPath("$.data.texts[0].color") { value("#FF5733") }
+                jsonPath("$.data.texts[0].fontSize") { value(16.0) }
+                jsonPath("$.data.texts[0].isFill") { value(false) }
+                jsonPath("$.data.texts[0].isStroke") { value(true) }
+                jsonPath("$.data.texts[0].placedBy.ownerType") { value("ME") }
             }
     }
 
@@ -231,6 +262,7 @@ class ParfaitControllerTest {
                 status { isOk() }
                 jsonPath("$.data.background") { value(nullValue()) }
                 jsonPath("$.data.images") { value(nullValue()) }
+                jsonPath("$.data.texts") { value(nullValue()) }
                 jsonPath("$.data.lastClosedDate") { value(nullValue()) }
             }
     }
@@ -264,6 +296,7 @@ class ParfaitControllerTest {
                     ),
                 background = BackgroundResult(type = BackgroundType.COLOR, value = "#FFFFFF"),
                 images = null,
+                texts = listOf(textResult()),
             )
 
         mockMvc
@@ -275,6 +308,8 @@ class ParfaitControllerTest {
                 jsonPath("$.data.groupName") { value("팀연경 테스트 방") }
                 jsonPath("$.data.status") { value("CLOSED") }
                 jsonPath("$.data.background.type") { value("COLOR") }
+                jsonPath("$.data.texts[0].text") { value("오늘도 행복한 하루!") }
+                jsonPath("$.data.texts[0].fontSize") { value(16.0) }
             }
 
         verify {

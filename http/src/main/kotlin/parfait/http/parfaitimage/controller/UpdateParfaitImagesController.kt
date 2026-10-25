@@ -19,7 +19,7 @@ import parfait.http.parfaitimage.dto.UpdateParfaitImagesResponse
 class UpdateParfaitImagesController(
     private val updateParfaitImagesUseCase: UpdateParfaitImagesUseCase,
 ) {
-    @Operation(summary = "토핑 위치/크기/각도 일괄 수정")
+    @Operation(summary = "토핑(이미지·텍스트) 위치/크기/각도 일괄 수정")
     @PatchMapping
     fun updateAll(
         authentication: Authentication,

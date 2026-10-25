@@ -41,6 +41,12 @@ import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 import parfait.core.parfaitimage.domain.BorderType
 import parfait.core.parfaitimage.port.`in`.PlaceParfaitImageCommand
 import parfait.core.parfaitimage.port.`in`.PlaceParfaitImageUseCase
+import parfait.core.parfaittext.port.`in`.DeleteParfaitTextCommand
+import parfait.core.parfaittext.port.`in`.DeleteParfaitTextUseCase
+import parfait.core.parfaittext.port.`in`.PlaceParfaitTextCommand
+import parfait.core.parfaittext.port.`in`.PlaceParfaitTextUseCase
+import parfait.core.parfaittext.port.`in`.UpdateParfaitTextCommand
+import parfait.core.parfaittext.port.`in`.UpdateParfaitTextUseCase
 import kotlin.test.assertFailsWith
 
 /**
@@ -97,6 +103,12 @@ class CanvasEtagIntegrationTest {
     @Autowired private lateinit var placeImage: PlaceParfaitImageUseCase
 
     @Autowired private lateinit var imageMetaSavePort: ImageMetaSavePort
+
+    @Autowired private lateinit var placeText: PlaceParfaitTextUseCase
+
+    @Autowired private lateinit var updateText: UpdateParfaitTextUseCase
+
+    @Autowired private lateinit var deleteText: DeleteParfaitTextUseCase
 
     // Redis 오류를 삼키는 구조라, 캐시가 죽었거나 NoOp 이어도 ETag 단언은 통과한다. 키를 직접 확인해 캐시가 실제로 쓰이는지 본다.
     @Autowired private lateinit var redisTemplate: StringRedisTemplate
@@ -196,6 +208,67 @@ class CanvasEtagIntegrationTest {
 
         // 새 ETag 로 다시 요청하면 304 로 돌아온다.
         poll(f, f.memberId, mine.etag) shouldBe GetTodayParfaitIfChangedResult.NotModified(mine.etag)
+    }
+
+    @Test
+    fun `텍스트 수정과 삭제가 다른 멤버의 조회 본문과 ETag에 반영된다`() {
+        val f = fixture("ETG009")
+        val first = poll(f, f.memberId, null) as GetTodayParfaitIfChangedResult.Modified
+        val parfaitId = first.body.parfaitId
+        val placed =
+            placeText.place(
+                PlaceParfaitTextCommand(
+                    memberId = f.memberId,
+                    groupId = f.groupId,
+                    parfaitId = parfaitId,
+                    text = "원래 텍스트",
+                    positionX = 10.0,
+                    positionY = 20.0,
+                    positionZ = 1,
+                    scale = 1.0,
+                    rotation = 0.0,
+                    color = "#000000",
+                    fontSize = 16.0,
+                ),
+            )
+        val before = poll(f, f.otherMemberId, null) as GetTodayParfaitIfChangedResult.Modified
+        cached(parfaitVersionKey(parfaitId)) shouldBe true
+
+        updateText.update(
+            UpdateParfaitTextCommand(
+                memberId = f.memberId,
+                groupId = f.groupId,
+                parfaitId = parfaitId,
+                parfaitTextId = placed.parfaitTextId,
+                color = "#FFFFFF",
+                scale = 2.0,
+                isFill = false,
+                isStroke = true,
+            ),
+        )
+
+        cached(parfaitVersionKey(parfaitId)) shouldBe false
+        val modified = poll(f, f.otherMemberId, before.etag) as GetTodayParfaitIfChangedResult.Modified
+        modified.etag shouldNotBe before.etag
+        val text = requireNotNull(modified.body.texts).single()
+        text.parfaitTextId shouldBe placed.parfaitTextId
+        text.text shouldBe "원래 텍스트"
+        text.isFill shouldBe false
+        text.isStroke shouldBe true
+        text.color shouldBe "#FFFFFF"
+        text.scale shouldBe 2.0
+        text.fontSize shouldBe 16.0
+        text.positionX shouldBe 10.0
+        text.createdAt shouldBe requireNotNull(before.body.texts).single().createdAt
+        poll(f, f.otherMemberId, modified.etag) shouldBe GetTodayParfaitIfChangedResult.NotModified(modified.etag)
+
+        deleteText.delete(DeleteParfaitTextCommand(f.memberId, f.groupId, parfaitId, placed.parfaitTextId))
+
+        cached(parfaitVersionKey(parfaitId)) shouldBe false
+        val deleted = poll(f, f.otherMemberId, modified.etag) as GetTodayParfaitIfChangedResult.Modified
+        deleted.etag shouldNotBe modified.etag
+        deleted.body.texts shouldBe null
+        poll(f, f.otherMemberId, deleted.etag) shouldBe GetTodayParfaitIfChangedResult.NotModified(deleted.etag)
     }
 
     @Test
