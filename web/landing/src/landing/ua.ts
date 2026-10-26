@@ -25,6 +25,7 @@ const CAMPAIGN_VALUE = /^[A-Za-z0-9._~-]{1,100}$/
 
 // 페이지 주소에서 캠페인 값을 뽑는다. 디코딩하지 않고 URL/URLSearchParams도 쓰지 않는다.
 // index.html 인라인 스크립트가 같은 절차를 ES5로 되풀이한다. 넘길 것이 없으면 ''.
+// 그래서 한글이나 퍼센트 인코딩이 든 값(utm_campaign=%EC%8B%A0…)은 버려진다. 어드민의 캠페인 링크 빌더가 만드는 값만 넘어간다.
 export function campaignReferrer(pageUrl: string): string {
   const noHash = pageUrl.split('#')[0]
   const q = noHash.indexOf('?')
