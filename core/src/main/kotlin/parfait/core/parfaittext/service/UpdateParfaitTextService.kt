@@ -54,6 +54,7 @@ class UpdateParfaitTextService(
                 fontSize = command.fontSize,
                 isFill = command.isFill,
                 isStroke = command.isStroke,
+                textAlign = command.textAlign,
             )
         // 배치와 동일하게 부모 parfait 행의 락을 자식 변경보다 먼저 얻는다.
         parfaitVersionService.bump(command.parfaitId)
@@ -70,6 +71,7 @@ class UpdateParfaitTextService(
             fontSize = saved.fontSize,
             isFill = saved.isFill,
             isStroke = saved.isStroke,
+            textAlign = saved.textAlign,
         )
     }
 }

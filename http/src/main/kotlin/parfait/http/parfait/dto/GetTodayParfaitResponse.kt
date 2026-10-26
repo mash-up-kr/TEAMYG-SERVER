@@ -12,6 +12,7 @@ import parfait.core.parfait.port.`in`.TodayParfaitImageResult
 import parfait.core.parfait.port.`in`.TodayParfaitTextResult
 import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitimage.domain.BorderType
+import parfait.core.parfaittext.domain.TextAlign
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -129,6 +130,7 @@ data class TodayParfaitTextResponse(
     val isFill: Boolean,
     @get:JsonProperty("isStroke")
     val isStroke: Boolean,
+    val textAlign: TextAlign,
     val placedBy: PlacedByResponse,
     val createdAt: LocalDateTime,
 ) {
@@ -146,6 +148,7 @@ data class TodayParfaitTextResponse(
                 fontSize = result.fontSize,
                 isFill = result.isFill,
                 isStroke = result.isStroke,
+                textAlign = result.textAlign,
                 placedBy = PlacedByResponse.from(result.placedBy),
                 createdAt = result.createdAt,
             )

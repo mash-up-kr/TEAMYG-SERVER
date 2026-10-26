@@ -54,6 +54,7 @@ class PlaceParfaitTextService(
                 fontSize = command.fontSize,
                 isFill = command.isFill,
                 isStroke = command.isStroke,
+                textAlign = command.textAlign,
             )
 
         // 이미지 배치와 동일하게 FK의 공유 락을 얻기 전에 부모 행을 갱신해 락 승격 데드락을 방지한다.

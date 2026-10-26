@@ -3,6 +3,7 @@
 package parfait.core.parfaittext.port.`in`
 
 import parfait.core.parfait.port.`in`.TodayParfaitTextResult
+import parfait.core.parfaittext.domain.TextAlign
 
 interface PlaceParfaitTextUseCase {
     fun place(command: PlaceParfaitTextCommand): TodayParfaitTextResult
@@ -22,4 +23,5 @@ data class PlaceParfaitTextCommand(
     val fontSize: Double,
     val isFill: Boolean = false,
     val isStroke: Boolean = false,
+    val textAlign: TextAlign = TextAlign.CENTER,
 )
