@@ -124,6 +124,30 @@ class FlywayMigrationTest {
         }
     }
 
+    @Test
+    fun `V23은 기존 텍스트의 정렬을 CENTER로 채운다`() {
+        migrate(mysql.databaseName, target = MigrationVersion.fromVersion("22"))
+        connect(mysql.databaseName).use { connection ->
+            connection.createStatement().use { statement ->
+                statement.execute(
+                    """
+                    INSERT INTO parfait_text (
+                        parfait_id, placed_by_group_member_id, text, position_x, position_y, position_z,
+                        scale, rotation, color, font_size, created_at, updated_at
+                    )
+                    VALUES (1, 1, '기존 텍스트', 0, 0, 1, 1, 0, '#000000', 16, NOW(), NOW())
+                    """.trimIndent(),
+                )
+            }
+        }
+
+        migrate(mysql.databaseName)
+
+        connect(mysql.databaseName).use { connection ->
+            connection.query("SELECT text_align FROM parfait_text") shouldBe listOf("CENTER")
+        }
+    }
+
     /** V15까지 적용한 뒤 운영에서 관측된 드리프트를 얹은 DB를 만든다. */
     private fun driftedDatabase(name: String): String {
         connect(mysql.databaseName).use { it.createStatement().execute("CREATE DATABASE $name") }

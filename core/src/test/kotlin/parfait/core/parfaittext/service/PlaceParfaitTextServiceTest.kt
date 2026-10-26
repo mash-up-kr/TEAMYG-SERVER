@@ -21,6 +21,7 @@ import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 import parfait.core.parfaittext.domain.ParfaitText
+import parfait.core.parfaittext.domain.TextAlign
 import parfait.core.parfaittext.exception.ParfaitTextErrorCode
 import parfait.core.parfaittext.port.`in`.PlaceParfaitTextCommand
 import parfait.core.parfaittext.port.out.ParfaitTextSavePort
@@ -50,6 +51,7 @@ class PlaceParfaitTextServiceTest {
             fontSize = 16.0,
             isFill = false,
             isStroke = true,
+            textAlign = TextAlign.RIGHT,
         )
 
     private fun parfait(status: ParfaitStatus = ParfaitStatus.ACTIVE): Parfait =
@@ -91,6 +93,7 @@ class PlaceParfaitTextServiceTest {
                 fontSize = text.fontSize,
                 isFill = text.isFill,
                 isStroke = text.isStroke,
+                textAlign = text.textAlign,
                 createdAt = text.createdAt,
                 updatedAt = text.updatedAt,
             )
@@ -112,6 +115,7 @@ class PlaceParfaitTextServiceTest {
         result.fontSize shouldBe command.fontSize
         result.isFill shouldBe false
         result.isStroke shouldBe true
+        result.textAlign shouldBe TextAlign.RIGHT
         result.placedBy.groupMemberId shouldBe 10L
         result.placedBy.nickname shouldBe "연경이"
         result.placedBy.ownerType shouldBe OwnerType.ME

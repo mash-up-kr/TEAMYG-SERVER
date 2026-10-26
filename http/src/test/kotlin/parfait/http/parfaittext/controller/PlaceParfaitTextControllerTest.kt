@@ -24,6 +24,7 @@ import parfait.core.parfait.port.`in`.TodayParfaitTextResult
 import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
+import parfait.core.parfaittext.domain.TextAlign
 import parfait.core.parfaittext.exception.ParfaitTextErrorCode
 import parfait.core.parfaittext.port.`in`.PlaceParfaitTextUseCase
 import parfait.http.global.exception.GlobalExceptionHandler
@@ -65,7 +66,8 @@ class PlaceParfaitTextControllerTest {
           "color": "#FF5733",
           "fontSize": 16.0,
           "isFill": false,
-          "isStroke": true
+          "isStroke": true,
+          "textAlign": "RIGHT"
         }
         """.trimIndent()
 
@@ -84,6 +86,7 @@ class PlaceParfaitTextControllerTest {
                 fontSize = 16.0,
                 isFill = false,
                 isStroke = true,
+                textAlign = TextAlign.RIGHT,
                 placedBy = PlacedByResult(10L, "연경이", NameTagChipType.TYPE6, OwnerType.ME),
                 createdAt = LocalDateTime.of(2026, 10, 20, 14, 30),
             )
@@ -106,6 +109,7 @@ class PlaceParfaitTextControllerTest {
                 jsonPath("$.data.fontSize") { value(16.0) }
                 jsonPath("$.data.isFill") { value(false) }
                 jsonPath("$.data.isStroke") { value(true) }
+                jsonPath("$.data.textAlign") { value("RIGHT") }
                 jsonPath("$.data.placedBy.nameTagChip") { value("TYPE6") }
             }
         verify {
@@ -119,6 +123,7 @@ class PlaceParfaitTextControllerTest {
                         it.fontSize == 16.0 &&
                         !it.isFill &&
                         it.isStroke &&
+                        it.textAlign == TextAlign.RIGHT &&
                         it.positionX == 120.5 &&
                         it.positionY == 340.2 &&
                         it.positionZ == 2 &&
@@ -130,7 +135,7 @@ class PlaceParfaitTextControllerTest {
     }
 
     @Test
-    fun `채움과 외곽선을 생략하면 기본값으로 저장한다`() {
+    fun `채움과 외곽선 및 정렬을 생략하면 기본값으로 저장한다`() {
         every { useCase.place(any()) } returns
             TodayParfaitTextResult(
                 parfaitTextId = 301L,
@@ -166,8 +171,9 @@ class PlaceParfaitTextControllerTest {
                 status { isCreated() }
                 jsonPath("$.data.isFill") { value(false) }
                 jsonPath("$.data.isStroke") { value(false) }
+                jsonPath("$.data.textAlign") { value("CENTER") }
             }
-        verify { useCase.place(match { !it.isFill && !it.isStroke }) }
+        verify { useCase.place(match { !it.isFill && !it.isStroke && it.textAlign == TextAlign.CENTER }) }
     }
 
     @Test
@@ -212,6 +218,19 @@ class PlaceParfaitTextControllerTest {
                 principal = authentication
                 contentType = MediaType.APPLICATION_JSON
                 content = """{"text":"안녕"}"""
+            }.andExpect {
+                status { isBadRequest() }
+            }
+        verify(exactly = 0) { useCase.place(any()) }
+    }
+
+    @Test
+    fun `허용하지 않는 정렬 값은 400으로 응답한다`() {
+        mockMvc
+            .post("/api/v1/groups/1/parfaits/5/texts") {
+                principal = authentication
+                contentType = MediaType.APPLICATION_JSON
+                content = body.replace("\"RIGHT\"", "\"JUSTIFY\"")
             }.andExpect {
                 status { isBadRequest() }
             }

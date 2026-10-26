@@ -2,6 +2,7 @@ package parfait.persistence.parfaittext
 
 import org.springframework.stereotype.Component
 import parfait.core.parfaittext.domain.ParfaitText
+import parfait.core.parfaittext.domain.TextAlign
 import parfait.core.parfaittext.port.out.ParfaitTextDeletePort
 import parfait.core.parfaittext.port.out.ParfaitTextQueryPort
 import parfait.core.parfaittext.port.out.ParfaitTextSavePort
@@ -49,6 +50,7 @@ class ParfaitTextAdapter(
             fontSize = fontSize,
             isFill = isFill,
             isStroke = isStroke,
+            textAlign = textAlign.name,
             createdAt = createdAt,
             updatedAt = updatedAt,
             id = id,
@@ -69,6 +71,7 @@ class ParfaitTextAdapter(
             fontSize = fontSize,
             isFill = isFill,
             isStroke = isStroke,
+            textAlign = TextAlign.valueOf(textAlign),
             createdAt = createdAt,
             updatedAt = updatedAt,
         )

@@ -18,6 +18,7 @@ class ParfaitText private constructor(
     val fontSize: Double,
     val isFill: Boolean,
     val isStroke: Boolean,
+    val textAlign: TextAlign,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 ) {
@@ -33,6 +34,7 @@ class ParfaitText private constructor(
         fontSize: Double? = null,
         isFill: Boolean? = null,
         isStroke: Boolean? = null,
+        textAlign: TextAlign? = null,
         now: LocalDateTime = LocalDateTime.now(),
     ): ParfaitText {
         val updatedPositionX = positionX ?: this.positionX
@@ -64,6 +66,7 @@ class ParfaitText private constructor(
             fontSize = updatedFontSize,
             isFill = isFill ?: this.isFill,
             isStroke = isStroke ?: this.isStroke,
+            textAlign = textAlign ?: this.textAlign,
             createdAt = createdAt,
             updatedAt = now,
         )
@@ -83,6 +86,7 @@ class ParfaitText private constructor(
             fontSize: Double,
             isFill: Boolean = false,
             isStroke: Boolean = false,
+            textAlign: TextAlign = TextAlign.CENTER,
             now: LocalDateTime = LocalDateTime.now(),
         ): ParfaitText {
             validate(text, positionX, positionY, scale, rotation, color, fontSize)
@@ -100,6 +104,7 @@ class ParfaitText private constructor(
                 fontSize = fontSize,
                 isFill = isFill,
                 isStroke = isStroke,
+                textAlign = textAlign,
                 createdAt = now,
                 updatedAt = now,
             )
@@ -119,6 +124,7 @@ class ParfaitText private constructor(
             fontSize: Double,
             isFill: Boolean = false,
             isStroke: Boolean = false,
+            textAlign: TextAlign = TextAlign.CENTER,
             createdAt: LocalDateTime,
             updatedAt: LocalDateTime,
         ): ParfaitText =
@@ -136,6 +142,7 @@ class ParfaitText private constructor(
                 fontSize = fontSize,
                 isFill = isFill,
                 isStroke = isStroke,
+                textAlign = textAlign,
                 createdAt = createdAt,
                 updatedAt = updatedAt,
             )

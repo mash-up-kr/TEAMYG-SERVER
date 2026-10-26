@@ -2,6 +2,8 @@
 
 package parfait.core.parfaittext.port.`in`
 
+import parfait.core.parfaittext.domain.TextAlign
+
 interface UpdateParfaitTextUseCase {
     fun update(command: UpdateParfaitTextCommand): UpdateParfaitTextResult
 }
@@ -20,6 +22,7 @@ data class UpdateParfaitTextCommand(
     val fontSize: Double? = null,
     val isFill: Boolean? = null,
     val isStroke: Boolean? = null,
+    val textAlign: TextAlign? = null,
 )
 
 data class UpdateParfaitTextResult(
@@ -34,4 +37,5 @@ data class UpdateParfaitTextResult(
     val fontSize: Double,
     val isFill: Boolean = false,
     val isStroke: Boolean = false,
+    val textAlign: TextAlign = TextAlign.CENTER,
 )
