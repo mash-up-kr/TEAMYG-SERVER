@@ -36,6 +36,8 @@ class ParfaitText(
     var isFill: Boolean = false,
     @Column(name = "is_stroke", nullable = false)
     var isStroke: Boolean = false,
+    @Column(name = "text_align", nullable = false, length = 20)
+    var textAlign: String = "CENTER",
     @Column(name = "created_at", nullable = false)
     var createdAt: LocalDateTime = LocalDateTime.now(),
     @Column(name = "updated_at", nullable = false)

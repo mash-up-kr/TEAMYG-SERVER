@@ -131,6 +131,7 @@ class UpdateParfaitImagesService(
                         fontSize = saved.fontSize,
                         isFill = saved.isFill,
                         isStroke = saved.isStroke,
+                        textAlign = saved.textAlign,
                     )
                 },
         )

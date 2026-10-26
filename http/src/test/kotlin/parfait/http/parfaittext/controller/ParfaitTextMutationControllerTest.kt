@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.patch
 import parfait.core.exception.BusinessException
 import parfait.core.parfait.exception.ParfaitErrorCode
+import parfait.core.parfaittext.domain.TextAlign
 import parfait.core.parfaittext.exception.ParfaitTextErrorCode
 import parfait.core.parfaittext.port.`in`.DeleteParfaitTextCommand
 import parfait.core.parfaittext.port.`in`.DeleteParfaitTextUseCase
@@ -63,6 +64,7 @@ class ParfaitTextMutationControllerTest {
             fontSize = 24.0,
             isFill = false,
             isStroke = true,
+            textAlign = TextAlign.LEFT,
         )
 
     @BeforeEach
@@ -89,7 +91,8 @@ class ParfaitTextMutationControllerTest {
                       "color": "#FFFFFF",
                       "fontSize": 24.0,
                       "isFill": false,
-                      "isStroke": true
+                      "isStroke": true,
+                      "textAlign": "LEFT"
                     }
                     """.trimIndent()
             }.andExpect {
@@ -107,6 +110,7 @@ class ParfaitTextMutationControllerTest {
                 jsonPath("$.data.fontSize") { value(24.0) }
                 jsonPath("$.data.isFill") { value(false) }
                 jsonPath("$.data.isStroke") { value(true) }
+                jsonPath("$.data.textAlign") { value("LEFT") }
                 jsonPath("$.data.fill") { doesNotExist() }
                 jsonPath("$.data.stroke") { doesNotExist() }
             }
@@ -126,6 +130,7 @@ class ParfaitTextMutationControllerTest {
                     fontSize = 24.0,
                     isFill = false,
                     isStroke = true,
+                    textAlign = TextAlign.LEFT,
                 ),
             )
         }
@@ -137,7 +142,7 @@ class ParfaitTextMutationControllerTest {
             .patch(url) {
                 principal = authentication
                 contentType = MediaType.APPLICATION_JSON
-                content = """{"positionX":null,"isFill":null,"isStroke":null}"""
+                content = """{"positionX":null,"isFill":null,"isStroke":null,"textAlign":null}"""
             }.andExpect { status { isOk() } }
 
         verify {
@@ -202,13 +207,14 @@ class ParfaitTextMutationControllerTest {
         }
     }
 
-    @Test
-    fun `필드 타입이 잘못되면 유스케이스 호출 없이 400을 반환한다`() {
+    @ParameterizedTest
+    @ValueSource(strings = ["""{"fontSize":"invalid"}""", """{"textAlign":"JUSTIFY"}"""])
+    fun `필드 타입이 잘못되면 유스케이스 호출 없이 400을 반환한다`(content: String) {
         mockMvc
             .patch(url) {
                 principal = authentication
                 contentType = MediaType.APPLICATION_JSON
-                content = """{"fontSize":"invalid"}"""
+                this.content = content
             }.andExpect { status { isBadRequest() } }
         verify(exactly = 0) { updateUseCase.update(any()) }
     }

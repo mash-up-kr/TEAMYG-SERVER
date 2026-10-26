@@ -1,6 +1,7 @@
 package parfait.http.parfaittext.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import parfait.core.parfaittext.domain.TextAlign
 import parfait.core.parfaittext.port.`in`.UpdateParfaitTextResult
 
 data class UpdateParfaitTextResponse(
@@ -17,6 +18,7 @@ data class UpdateParfaitTextResponse(
     val isFill: Boolean,
     @get:JsonProperty("isStroke")
     val isStroke: Boolean,
+    val textAlign: TextAlign,
 ) {
     companion object {
         fun from(result: UpdateParfaitTextResult): UpdateParfaitTextResponse =
@@ -32,6 +34,7 @@ data class UpdateParfaitTextResponse(
                 fontSize = result.fontSize,
                 isFill = result.isFill,
                 isStroke = result.isStroke,
+                textAlign = result.textAlign,
             )
     }
 }

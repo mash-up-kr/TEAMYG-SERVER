@@ -2,6 +2,7 @@ package parfait.http.parfaittext.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
+import parfait.core.parfaittext.domain.TextAlign
 import parfait.core.parfaittext.port.`in`.PlaceParfaitTextCommand
 
 data class PlaceParfaitTextRequest(
@@ -25,6 +26,8 @@ data class PlaceParfaitTextRequest(
     @get:JsonProperty("isStroke")
     @field:Schema(description = "텍스트 외곽선 표시 여부 (생략 시 false)")
     val isStroke: Boolean = false,
+    @field:Schema(description = "텍스트 정렬 (LEFT, CENTER, RIGHT. 생략 시 CENTER)", example = "CENTER")
+    val textAlign: TextAlign = TextAlign.CENTER,
 ) {
     fun toCommand(
         memberId: Long,
@@ -45,5 +48,6 @@ data class PlaceParfaitTextRequest(
             fontSize = fontSize,
             isFill = isFill,
             isStroke = isStroke,
+            textAlign = textAlign,
         )
 }

@@ -10,6 +10,7 @@ import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import parfait.core.parfaittext.domain.ParfaitText
+import parfait.core.parfaittext.domain.TextAlign
 import parfait.persistence.TestApplication
 import parfait.persistence.entity.LoginProvider
 import parfait.persistence.entity.Member
@@ -100,6 +101,7 @@ class ParfaitTextAdapterTest {
             fontSize = 16.5,
             isFill = false,
             isStroke = true,
+            textAlign = TextAlign.RIGHT,
             now = LocalDateTime.of(2026, 10, 20, 14, 30),
         )
 
@@ -123,6 +125,7 @@ class ParfaitTextAdapterTest {
         found.fontSize shouldBe 16.5
         found.isFill shouldBe false
         found.isStroke shouldBe true
+        found.textAlign shouldBe TextAlign.RIGHT
         found.createdAt shouldBe saved.createdAt
         found.updatedAt shouldBe saved.updatedAt
         adapter.existsByParfaitId(parfaitId) shouldBe true
@@ -165,6 +168,7 @@ class ParfaitTextAdapterTest {
                 fontSize = 24.0,
                 isFill = true,
                 isStroke = false,
+                textAlign = TextAlign.LEFT,
                 now = modifiedAt,
             ),
         )
@@ -180,6 +184,7 @@ class ParfaitTextAdapterTest {
         found.fontSize shouldBe 24.0
         found.isFill shouldBe true
         found.isStroke shouldBe false
+        found.textAlign shouldBe TextAlign.LEFT
         found.placedByGroupMemberId shouldBe saved.placedByGroupMemberId
         found.createdAt shouldBe saved.createdAt
         found.updatedAt shouldBe modifiedAt

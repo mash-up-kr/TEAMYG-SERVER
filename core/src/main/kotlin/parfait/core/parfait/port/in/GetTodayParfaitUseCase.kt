@@ -8,6 +8,7 @@ import parfait.core.parfait.domain.ParfaitStatus
 import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitimage.domain.BorderType
 import parfait.core.parfaittext.domain.ParfaitText
+import parfait.core.parfaittext.domain.TextAlign
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -80,6 +81,7 @@ data class TodayParfaitTextResult(
     val createdAt: LocalDateTime,
     val isFill: Boolean = false,
     val isStroke: Boolean = false,
+    val textAlign: TextAlign = TextAlign.CENTER,
 ) {
     companion object {
         fun from(
@@ -98,6 +100,7 @@ data class TodayParfaitTextResult(
                 fontSize = text.fontSize,
                 isFill = text.isFill,
                 isStroke = text.isStroke,
+                textAlign = text.textAlign,
                 placedBy = placedBy,
                 createdAt = text.createdAt,
             )
