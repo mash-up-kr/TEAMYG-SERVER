@@ -175,6 +175,7 @@ class UpdateParfaitImagesControllerTest {
                 jsonPath("$.data.texts[0].text") { value("오늘도 행복한 하루!") }
                 jsonPath("$.data.texts[0].isFill") { value(true) }
                 jsonPath("$.data.texts[0].isStroke") { value(false) }
+                jsonPath("$.data.texts[0].textAlign") { value("CENTER") }
             }
 
         verify {

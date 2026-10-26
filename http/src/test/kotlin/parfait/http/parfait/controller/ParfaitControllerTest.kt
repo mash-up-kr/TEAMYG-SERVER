@@ -34,6 +34,7 @@ import parfait.core.parfaitgroup.domain.NameTagChipType
 import parfait.core.parfaitgroup.domain.ParfaitGroupError
 import parfait.core.parfaitgroup.domain.ParfaitGroupException
 import parfait.core.parfaitimage.domain.BorderType
+import parfait.core.parfaittext.domain.TextAlign
 import parfait.http.global.exception.GlobalExceptionHandler
 import parfait.http.global.security.TestMemberQueryPortConfig
 import parfait.http.global.security.TestTokenValidatePortConfig
@@ -72,6 +73,7 @@ class ParfaitControllerTest {
             text = "오늘도 행복한 하루!",
             isFill = false,
             isStroke = true,
+            textAlign = TextAlign.RIGHT,
             positionX = 10.0,
             positionY = 20.0,
             positionZ = 2,
@@ -237,6 +239,7 @@ class ParfaitControllerTest {
                 jsonPath("$.data.texts[0].fontSize") { value(16.0) }
                 jsonPath("$.data.texts[0].isFill") { value(false) }
                 jsonPath("$.data.texts[0].isStroke") { value(true) }
+                jsonPath("$.data.texts[0].textAlign") { value("RIGHT") }
                 jsonPath("$.data.texts[0].placedBy.ownerType") { value("ME") }
             }
     }

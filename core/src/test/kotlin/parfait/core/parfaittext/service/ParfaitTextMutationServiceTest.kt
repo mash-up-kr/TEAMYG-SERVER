@@ -19,6 +19,7 @@ import parfait.core.parfait.service.ParfaitVersionService
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.domain.ParfaitGroupMember
 import parfait.core.parfaittext.domain.ParfaitText
+import parfait.core.parfaittext.domain.TextAlign
 import parfait.core.parfaittext.exception.ParfaitTextErrorCode
 import parfait.core.parfaittext.port.`in`.DeleteParfaitTextCommand
 import parfait.core.parfaittext.port.`in`.UpdateParfaitTextCommand
@@ -114,6 +115,7 @@ class ParfaitTextMutationServiceTest {
                     fontSize = 24.0,
                     isFill = false,
                     isStroke = true,
+                    textAlign = TextAlign.LEFT,
                 ),
             )
 
@@ -128,6 +130,7 @@ class ParfaitTextMutationServiceTest {
         result.fontSize shouldBe 24.0
         result.isFill shouldBe false
         result.isStroke shouldBe true
+        result.textAlign shouldBe TextAlign.LEFT
         verify {
             saves.save(
                 match {
@@ -160,6 +163,7 @@ class ParfaitTextMutationServiceTest {
         result.fontSize shouldBe existing.fontSize
         result.isFill shouldBe existing.isFill
         result.isStroke shouldBe existing.isStroke
+        result.textAlign shouldBe existing.textAlign
     }
 
     @Test
@@ -268,6 +272,15 @@ class ParfaitTextMutationServiceTest {
         result.isFill shouldBe isFill
         result.isStroke shouldBe isStroke
         result.text shouldBe existing.text
+    }
+
+    @ParameterizedTest
+    @EnumSource(TextAlign::class)
+    fun `정렬을 변경할 수 있다`(textAlign: TextAlign) {
+        val result = updateService.update(command.copy(textAlign = textAlign))
+
+        result.textAlign shouldBe textAlign
+        verify { saves.save(match { it.textAlign == textAlign }) }
     }
 
     @Test
