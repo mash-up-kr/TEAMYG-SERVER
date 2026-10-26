@@ -1,4 +1,5 @@
-// 원본 레포 src/admin/pages/devtools/ua-tester/config.ts의 복사본이다. 어드민은 가져오지 않아서 테스트가 이 파일을 쓴다.
+// 데이터만 둔다. 어드민 UA 테스터와 src/landing/inlineScript.test.ts가 같이 쓴다. UA는 대표 값이다.
+// 랜딩만 복사해 가는 TEAMYG-SERVER web/landing에서도 테스트가 같은 프리셋을 쓰도록 랜딩 폴더에 둔다.
 export type UaPreset = { id: string; label: string; ua: string; touch: boolean }
 
 export const UA_PRESETS: readonly UaPreset[] = [
