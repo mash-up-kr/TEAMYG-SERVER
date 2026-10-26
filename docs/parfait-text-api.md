@@ -19,23 +19,24 @@
   "scale": 1.5,
   "fontSize": 16.0,
   "isFill": true,
-  "isStroke": false
+  "isStroke": false,
+  "textAlign": "CENTER"
 }
 ```
 
-`isFill`은 텍스트 내부 채움 여부, `isStroke`는 외곽선 표시 여부를 나타내는 Boolean이다. 각각 독립적으로 저장하며 둘 다 true 또는 둘 다 false인 값도 허용한다. 생략 시 기본값은 `isFill=false`, `isStroke=false`이며 나머지 필드는 필수다.
+`isFill`은 텍스트 내부 채움 여부, `isStroke`는 외곽선 표시 여부를 나타내는 Boolean이다. 각각 독립적으로 저장하며 둘 다 true 또는 둘 다 false인 값도 허용한다. `textAlign`은 텍스트 정렬로 `LEFT`, `CENTER`, `RIGHT` 중 하나다. 생략 시 기본값은 `isFill=false`, `isStroke=false`, `textAlign=CENTER`이며 나머지 필드는 필수다. 허용하지 않는 `textAlign` 값은 400 `INVALID_REQUEST`로 거절한다.
 
 위치·각도는 이미지 배치와 같은 좌표계를 사용한다. `positionZ`는 이미지와 텍스트 사이의 겹침 순서를 표현한다. `fontSize`는 확대 전 기준 폰트 크기이고 `scale`은 그 크기에 적용하는 배율이다. 위 예시의 표시 크기는 `16 × 1.5 = 24`다. 두 값은 각각 저장·반환하며 서버에서 합치지 않는다.
 
 텍스트는 공백만으로 구성할 수 없고 최대 2000자이며 줄바꿈을 보존한다. 색상은 기존 이미지 테두리 색상처럼 최대 20자의 문자열로 저장한다. `fontSize`와 `scale`은 유한한 양수, 좌표와 각도는 유한한 숫자여야 한다.
 
-성공하면 201과 기존 `ApiResponse` 형식으로 `parfaitTextId`, 요청한 텍스트·스타일(`isFill`, `isStroke` 포함), `placedBy`, `createdAt`을 반환한다. 같은 텍스트를 여러 번 요청해도 각각 독립된 배치로 저장한다.
+성공하면 201과 기존 `ApiResponse` 형식으로 `parfaitTextId`, 요청한 텍스트·스타일(`isFill`, `isStroke`, `textAlign` 포함), `placedBy`, `createdAt`을 반환한다. 같은 텍스트를 여러 번 요청해도 각각 독립된 배치로 저장한다.
 
 ## 텍스트 수정
 
 `PATCH /api/v1/groups/{groupId}/parfaits/{parfaitId}/texts/{parfaitTextId}`
 
-이미지 수정과 동일하게 작성자 본인만 ACTIVE 파르페의 텍스트 스타일을 수정할 수 있다. `text`는 수정 요청에서 제거되어 저장 후 내용을 변경할 수 없다. 요청에 `text`를 넣어도 무시된다. 위치·각도·색상·배율·폰트 크기·`isFill`·`isStroke`를 부분 수정할 수 있다. 생략하거나 `null`로 보낸 필드는 기존 값을 유지하며, false를 전달하면 실제로 false로 변경한다. 스타일은 저장 시와 동일하게 검증한다.
+이미지 수정과 동일하게 작성자 본인만 ACTIVE 파르페의 텍스트 스타일을 수정할 수 있다. `text`는 수정 요청에서 제거되어 저장 후 내용을 변경할 수 없다. 요청에 `text`를 넣어도 무시된다. 위치·각도·색상·배율·폰트 크기·`isFill`·`isStroke`·`textAlign`을 부분 수정할 수 있다. 생략하거나 `null`로 보낸 필드는 기존 값을 유지하며, false를 전달하면 실제로 false로 변경한다. 스타일은 저장 시와 동일하게 검증한다.
 
 ```json
 {
@@ -43,7 +44,8 @@
   "color": "#FFFFFF",
   "scale": 2.0,
   "isFill": false,
-  "isStroke": true
+  "isStroke": true,
+  "textAlign": "LEFT"
 }
 ```
 
@@ -61,7 +63,8 @@
   "color": "#FFFFFF",
   "fontSize": 16.0,
   "isFill": false,
-  "isStroke": true
+  "isStroke": true,
+  "textAlign": "LEFT"
 }
 ```
 
@@ -93,7 +96,7 @@
 
 `images`와 `texts`를 함께 사용하여 캔버스를 그린다. `texts`의 각 원소는 저장 응답과 같은 필드를 포함한다. `placedBy`는 이미지와 동일하게 `groupMemberId`, `nickname`, `nameTagChip`, `ownerType`을 포함한다. 텍스트가 없으면 기존 `images` 규칙과 동일하게 `texts: null`을 반환한다.
 
-오늘 조회(v1·v2)와 상세 조회 모두 `data.texts[]`에 `isFill`, `isStroke`를 반환한다. 응답 원소 예시는 다음과 같다.
+오늘 조회(v1·v2)와 상세 조회 모두 `data.texts[]`에 `isFill`, `isStroke`, `textAlign`을 반환한다. 일괄 위치 수정(`PATCH .../images`)은 `textAlign`을 바꾸지 않고 응답 `texts[]`에 현재 값만 담는다. 응답 원소 예시는 다음과 같다.
 
 ```json
 {
@@ -108,6 +111,7 @@
   "fontSize": 16.0,
   "isFill": false,
   "isStroke": true,
+  "textAlign": "LEFT",
   "placedBy": {
     "groupMemberId": 10,
     "nickname": "연경이",
@@ -122,7 +126,7 @@
 
 ## DDL
 
-`persistence/src/main/resources/db/migration/V21__create_parfait_text.sql`에 `parfait_text` 테이블 생성 DDL이 있다. 배포 시 기존 Flyway 설정으로 적용된다. 파르페·배치자 ID와 파르페 조회 인덱스를 포함한다.
+`persistence/src/main/resources/db/migration/V21__create_parfait_text.sql`에 `parfait_text` 테이블 생성 DDL이 있다. 배포 시 기존 Flyway 설정으로 적용된다. 파르페·배치자 ID와 파르페 조회 인덱스를 포함한다. `V23__add_text_align_to_parfait_text.sql`이 `text_align` 컬럼을 추가하며 기존 행은 `CENTER`로 채운다.
 
 채움·외곽선 컬럼 추가 DDL은 `persistence/src/main/resources/db/migration/V22__add_fill_and_stroke_to_parfait_text.sql`이다. 기존 V21은 수정하지 않으며, 기존 행에는 `is_fill=0`, `is_stroke=0`이 적용된다.
 
