@@ -122,6 +122,8 @@
 }
 ```
 
+v2 오늘 조회(`GET /api/v2/groups/{groupId}/parfaits/today`)는 위 필드에 더해 토핑 원소마다 `toppingType`을 내려준다. `images[]` 원소는 `"toppingType": "IMAGE"`이고 `imageUrl`에 이미지 주소가 담긴다. `texts[]` 원소는 `"toppingType": "TEXT"`이고 `"imageUrl": null`이 함께 내려간다. v1 오늘 조회와 상세 조회 응답은 바뀌지 않는다.
+
 텍스트 저장·수정·삭제는 파르페 버전을 올리므로 v2 조회의 ETag가 갱신된다. 텍스트만 있는 파르페도 마감 시 CLOSED로 남는다. 과거 목록의 `imageCount`는 기존 의미대로 이미지 수만 센다.
 
 ## DDL
