@@ -13,6 +13,7 @@ import org.testcontainers.junit.jupiter.Testcontainers
 import parfait.core.parfait.domain.ParfaitDay
 import parfait.core.parfaitimage.domain.BorderType
 import parfait.core.parfaitimage.domain.ParfaitImage
+import parfait.core.parfaittext.domain.ParfaitText
 import parfait.persistence.TestApplication
 import parfait.persistence.entity.ImageMeta
 import parfait.persistence.entity.LoginProvider
@@ -21,6 +22,7 @@ import parfait.persistence.entity.Parfait
 import parfait.persistence.entity.ParfaitGroup
 import parfait.persistence.entity.ParfaitGroupMember
 import parfait.persistence.parfaitimage.ParfaitImageAdapter
+import parfait.persistence.parfaittext.ParfaitTextAdapter
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -58,6 +60,9 @@ class ParfaitGroupMemberRepositoryQueryTest {
 
     @Autowired
     private lateinit var parfaitImageAdapter: ParfaitImageAdapter
+
+    @Autowired
+    private lateinit var parfaitTextAdapter: ParfaitTextAdapter
 
     private val today: LocalDate = ParfaitDay.current()
 
@@ -354,6 +359,166 @@ class ParfaitGroupMemberRepositoryQueryTest {
     }
 
     @Test
+    fun `텍스트 포함 요약은 오늘 가장 최근 토핑이 텍스트면 TEXT 와 null 이미지 정보를, 시각과 chip 은 텍스트 기준으로 반환한다`() {
+        val creator = saveMember("v2-text-creator", "생성자")
+        val writer = saveMember("v2-text-writer", "작성자")
+        val group = parfaitGroupRepository.save(ParfaitGroup(name = "텍스트최근", inviteCode = "V2T001", memberLimit = 12))
+        val creatorGm = saveGroupMember(requireNotNull(group.id), requireNotNull(creator.id), "생성자닉", "TYPE3")
+        val writerGm = saveGroupMember(requireNotNull(group.id), requireNotNull(writer.id), "작성자닉", "TYPE9")
+        val todayParfait = saveParfait(requireNotNull(group.id), today, "ACTIVE")
+        val base = LocalDateTime.now().minusHours(2)
+        placeTopping(
+            parfaitId = requireNotNull(todayParfait.id),
+            placerGroupMemberId = requireNotNull(creatorGm.id),
+            uploaderMemberId = requireNotNull(creator.id),
+            imageUrl = "https://s3.example/v2/image.png",
+            createdAt = base,
+        )
+        placeText(requireNotNull(todayParfait.id), requireNotNull(writerGm.id), base.plusMinutes(1))
+
+        val summary =
+            parfaitGroupMemberRepository
+                .findMyGroupToppingSummaries(requireNotNull(creator.id), today)
+                .single { it.groupId == group.id }
+
+        summary.recentToppingType shouldBe "TEXT"
+        summary.recentImageUrl shouldBe null
+        summary.recentImageBorderType shouldBe null
+        summary.recentImageBorderColor shouldBe null
+        summary.recentImageBorderWidth shouldBe null
+        summary.lastPlacedByNametagChip shouldBe "TYPE9"
+        secondsBetween(base.plusMinutes(1), summary.recentImageUploadedAt) shouldBe 0L
+
+        // v1 요약은 텍스트를 보지 않고 기존처럼 이미지만 기준으로 한다.
+        val v1 =
+            parfaitGroupMemberRepository
+                .findMyGroupSummaries(requireNotNull(creator.id), today)
+                .single { it.groupId == group.id }
+        v1.recentImageUrl shouldBe "https://s3.example/v2/image.png"
+        v1.lastPlacedByNametagChip shouldBe "TYPE3"
+    }
+
+    @Test
+    fun `텍스트 포함 요약은 오늘 가장 최근 토핑이 이미지면 IMAGE 와 이미지 정보를 반환한다`() {
+        val creator = saveMember("v2-image-creator", "생성자")
+        val group = parfaitGroupRepository.save(ParfaitGroup(name = "이미지최근", inviteCode = "V2I001", memberLimit = 12))
+        val creatorGm = saveGroupMember(requireNotNull(group.id), requireNotNull(creator.id), "생성자닉", "TYPE4")
+        val todayParfait = saveParfait(requireNotNull(group.id), today, "ACTIVE")
+        val base = LocalDateTime.now().minusHours(2)
+        placeText(requireNotNull(todayParfait.id), requireNotNull(creatorGm.id), base)
+        placeTopping(
+            parfaitId = requireNotNull(todayParfait.id),
+            placerGroupMemberId = requireNotNull(creatorGm.id),
+            uploaderMemberId = requireNotNull(creator.id),
+            imageUrl = "https://s3.example/v2/latest.png",
+            createdAt = base.plusMinutes(1),
+        )
+
+        val summary =
+            parfaitGroupMemberRepository
+                .findMyGroupToppingSummaries(requireNotNull(creator.id), today)
+                .single { it.groupId == group.id }
+
+        summary.recentToppingType shouldBe "IMAGE"
+        summary.recentImageUrl shouldBe "https://s3.example/v2/latest.png"
+        summary.recentImageBorderType shouldBe "NONE"
+        secondsBetween(base.plusMinutes(1), summary.recentImageUploadedAt) shouldBe 0L
+    }
+
+    @Test
+    fun `텍스트 포함 요약은 토핑이 없으면 타입과 이미지가 null 이고 생성자 chip 과 그룹 생성 시각을 쓴다`() {
+        val creator = saveMember("v2-empty-creator", "생성자")
+        val group = parfaitGroupRepository.save(ParfaitGroup(name = "빈그룹", inviteCode = "V2E001", memberLimit = 12))
+        saveGroupMember(requireNotNull(group.id), requireNotNull(creator.id), "생성자닉", "TYPE5")
+        saveParfait(requireNotNull(group.id), today, "ACTIVE")
+
+        val summary =
+            parfaitGroupMemberRepository
+                .findMyGroupToppingSummaries(requireNotNull(creator.id), today)
+                .single { it.groupId == group.id }
+
+        summary.recentToppingType shouldBe null
+        summary.recentImageUrl shouldBe null
+        summary.lastPlacedByNametagChip shouldBe "TYPE5"
+        secondsBetween(group.createdAt, summary.recentImageUploadedAt) shouldBe 0L
+    }
+
+    @Test
+    fun `텍스트 포함 요약은 전날 텍스트만 있으면 타입과 이미지는 null 이고 시각과 chip 은 그 텍스트 기준이다`() {
+        val creator = saveMember("v2-yesterday-creator", "생성자")
+        val group = parfaitGroupRepository.save(ParfaitGroup(name = "어제텍스트", inviteCode = "V2Y001", memberLimit = 12))
+        val creatorGm = saveGroupMember(requireNotNull(group.id), requireNotNull(creator.id), "생성자닉", "TYPE6")
+        val yesterdayParfait = saveParfait(requireNotNull(group.id), today.minusDays(1), "CLOSED")
+        saveParfait(requireNotNull(group.id), today, "ACTIVE")
+        val textAt = LocalDateTime.now().minusDays(1)
+        placeText(requireNotNull(yesterdayParfait.id), requireNotNull(creatorGm.id), textAt)
+
+        val summary =
+            parfaitGroupMemberRepository
+                .findMyGroupToppingSummaries(requireNotNull(creator.id), today)
+                .single { it.groupId == group.id }
+
+        summary.recentToppingType shouldBe null
+        summary.recentImageUrl shouldBe null
+        summary.lastPlacedByNametagChip shouldBe "TYPE6"
+        secondsBetween(textAt, summary.recentImageUploadedAt) shouldBe 0L
+    }
+
+    @Test
+    fun `텍스트 포함 요약은 방금 텍스트를 올린 그룹을 이전에 이미지를 올린 그룹보다 앞에 정렬한다`() {
+        val me = saveMember("v2-order-me", "나")
+        // 두 그룹 모두 3일 전에 생성해, 텍스트를 무시하면 텍스트 그룹의 정렬 키가 생성 시각(3일 전)으로 밀려나게 한다.
+        val createdAt = LocalDateTime.now().minusDays(3)
+        val imageGroup =
+            parfaitGroupRepository.save(
+                ParfaitGroup(
+                    name = "이미지그룹",
+                    inviteCode = "V2O001",
+                    memberLimit = 12,
+                    createdAt = createdAt,
+                    updatedAt = createdAt,
+                ),
+            )
+        val textGroup =
+            parfaitGroupRepository.save(
+                ParfaitGroup(
+                    name = "텍스트그룹",
+                    inviteCode = "V2O002",
+                    memberLimit = 12,
+                    createdAt = createdAt,
+                    updatedAt = createdAt,
+                ),
+            )
+        val imageGm = saveGroupMember(requireNotNull(imageGroup.id), requireNotNull(me.id), "나", "TYPE1")
+        val textGm = saveGroupMember(requireNotNull(textGroup.id), requireNotNull(me.id), "나", "TYPE2")
+        val base = LocalDateTime.now().minusHours(2)
+        placeTopping(
+            parfaitId = requireNotNull(saveParfait(requireNotNull(imageGroup.id), today, "ACTIVE").id),
+            placerGroupMemberId = requireNotNull(imageGm.id),
+            uploaderMemberId = requireNotNull(me.id),
+            imageUrl = "https://s3.example/v2/order.png",
+            createdAt = base,
+        )
+        placeText(
+            requireNotNull(saveParfait(requireNotNull(textGroup.id), today, "ACTIVE").id),
+            requireNotNull(textGm.id),
+            base.plusMinutes(1),
+        )
+
+        val ids =
+            parfaitGroupMemberRepository
+                .findMyGroupToppingSummaries(
+                    requireNotNull(me.id),
+                    today,
+                ).map { it.groupId }
+
+        ids shouldBe listOf(textGroup.id, imageGroup.id)
+        // v1은 텍스트를 무시하므로 텍스트 그룹은 그룹 생성 시각(3일 전) 기준으로 뒤에 정렬된다.
+        parfaitGroupMemberRepository.findMyGroupSummaries(requireNotNull(me.id), today).map { it.groupId } shouldBe
+            listOf(imageGroup.id, textGroup.id)
+    }
+
+    @Test
     fun `탈퇴한 멤버는 existsByParfaitGroupIdAndMemberIdAndLeftAtIsNull이 false를 반환한다`() {
         val member = saveMember("exists-left-member", "탈퇴자")
         val group = parfaitGroupRepository.save(ParfaitGroup(name = "탈퇴테스트그룹", inviteCode = "LEFT01", memberLimit = 12))
@@ -447,4 +612,35 @@ class ParfaitGroupMemberRepositoryQueryTest {
             ),
         )
     }
+
+    private fun placeText(
+        parfaitId: Long,
+        placerGroupMemberId: Long,
+        createdAt: LocalDateTime,
+    ): ParfaitText =
+        parfaitTextAdapter.save(
+            ParfaitText.place(
+                parfaitId = parfaitId,
+                placedByGroupMemberId = placerGroupMemberId,
+                text = "텍스트",
+                positionX = 0.0,
+                positionY = 0.0,
+                positionZ = 0,
+                scale = 1.0,
+                rotation = 0.0,
+                color = "#000000",
+                fontSize = 16.0,
+                now = createdAt,
+            ),
+        )
+
+    private fun secondsBetween(
+        expected: LocalDateTime,
+        actual: LocalDateTime,
+    ): Long =
+        java.time.Duration
+            .between(expected, actual)
+            .abs()
+            .seconds
+            .let { if (it <= 1) 0L else it }
 }

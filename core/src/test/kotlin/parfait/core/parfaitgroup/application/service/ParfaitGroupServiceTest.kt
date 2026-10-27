@@ -10,6 +10,7 @@ import io.mockk.verifySequence
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import parfait.core.member.port.out.MemberQueryPort
+import parfait.core.parfait.domain.ToppingType
 import parfait.core.parfait.port.`in`.EnsureActiveCanvasUseCase
 import parfait.core.parfaitgroup.application.port.`in`.ChangeMyParfaitGroupNicknameCommand
 import parfait.core.parfaitgroup.application.port.`in`.CreateParfaitGroupCommand
@@ -223,6 +224,45 @@ class ParfaitGroupServiceTest {
         )
 
         verify { ensureActiveCanvasUseCase.ensure(20L, any()) }
+    }
+
+    @Test
+    fun `텍스트 포함 그룹 목록은 텍스트 포함 조회 포트의 결과와 최근 토핑 타입을 반환한다`() {
+        every { myGroupQueryPort.findAllIncludingTextsByMemberId(10L) } returns
+            listOf(
+                MyParfaitGroupSummary(
+                    groupId = 2L,
+                    groupName = "텍스트 그룹",
+                    recentImageUrl = null,
+                    recentImageBorderType = null,
+                    recentImageBorderColor = null,
+                    recentImageBorderWidth = null,
+                    recentImageUploadedAt = LocalDateTime.MAX,
+                    lastPlacedByNametagChip = NameTagChipType.TYPE7,
+                    recentToppingType = ToppingType.TEXT,
+                ),
+                MyParfaitGroupSummary(
+                    groupId = 1L,
+                    groupName = "이미지 그룹",
+                    recentImageUrl = "https://image.example/1",
+                    recentImageBorderType = BorderType.SOLID,
+                    recentImageBorderColor = "#FFD54F",
+                    recentImageBorderWidth = 6.0,
+                    recentImageUploadedAt = LocalDateTime.MIN,
+                    lastPlacedByNametagChip = NameTagChipType.TYPE3,
+                    recentToppingType = ToppingType.IMAGE,
+                ),
+            )
+
+        val result = service.getAllIncludingTexts(10L)
+
+        result.map { it.groupId } shouldBe listOf(2L, 1L)
+        result[0].recentToppingType shouldBe ToppingType.TEXT
+        result[0].recentImageUrl shouldBe null
+        result[1].recentToppingType shouldBe ToppingType.IMAGE
+        result[1].recentImageUrl shouldBe "https://image.example/1"
+        result[1].recentImageBorderWidth shouldBe 2.0
+        verify(exactly = 0) { myGroupQueryPort.findAllByMemberId(any()) }
     }
 
     @Test
