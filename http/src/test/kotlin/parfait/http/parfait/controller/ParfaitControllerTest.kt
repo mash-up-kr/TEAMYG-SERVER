@@ -240,6 +240,8 @@ class ParfaitControllerTest {
                 jsonPath("$.data.texts[0].isFill") { value(false) }
                 jsonPath("$.data.texts[0].isStroke") { value(true) }
                 jsonPath("$.data.texts[0].textAlign") { value("RIGHT") }
+                jsonPath("$.data.texts[0].toppingType") { doesNotExist() }
+                jsonPath("$.data.texts[0].imageUrl") { doesNotExist() }
                 jsonPath("$.data.texts[0].placedBy.ownerType") { value("ME") }
             }
     }
