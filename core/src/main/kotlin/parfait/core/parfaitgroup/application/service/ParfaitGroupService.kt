@@ -28,6 +28,7 @@ import parfait.core.parfaitgroup.application.port.`in`.ReportParfaitGroupCommand
 import parfait.core.parfaitgroup.application.port.`in`.ReportParfaitGroupResult
 import parfait.core.parfaitgroup.application.port.`in`.ReportParfaitGroupUseCase
 import parfait.core.parfaitgroup.application.port.out.MyParfaitGroupQueryPort
+import parfait.core.parfaitgroup.application.port.out.MyParfaitGroupSummary
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberLeavePort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberSavePort
@@ -139,18 +140,24 @@ class ParfaitGroupService(
 
     @Transactional(readOnly = true)
     override fun getAll(memberId: Long): List<MyParfaitGroupResult> =
-        myParfaitGroupQueryPort.findAllByMemberId(memberId).map {
-            MyParfaitGroupResult(
-                groupId = it.groupId,
-                groupName = it.groupName,
-                recentImageUrl = it.recentImageUrl,
-                recentImageBorderType = it.recentImageBorderType,
-                recentImageBorderColor = it.recentImageBorderColor,
-                recentImageBorderWidth = it.recentImageBorderWidth?.let { 2.0 },
-                recentImageUploadedAt = it.recentImageUploadedAt,
-                lastPlacedByNametagChip = it.lastPlacedByNametagChip,
-            )
-        }
+        myParfaitGroupQueryPort.findAllByMemberId(memberId).map { it.toResult() }
+
+    @Transactional(readOnly = true)
+    override fun getAllIncludingTexts(memberId: Long): List<MyParfaitGroupResult> =
+        myParfaitGroupQueryPort.findAllIncludingTextsByMemberId(memberId).map { it.toResult() }
+
+    private fun MyParfaitGroupSummary.toResult(): MyParfaitGroupResult =
+        MyParfaitGroupResult(
+            groupId = groupId,
+            groupName = groupName,
+            recentImageUrl = recentImageUrl,
+            recentImageBorderType = recentImageBorderType,
+            recentImageBorderColor = recentImageBorderColor,
+            recentImageBorderWidth = recentImageBorderWidth?.let { 2.0 },
+            recentImageUploadedAt = recentImageUploadedAt,
+            lastPlacedByNametagChip = lastPlacedByNametagChip,
+            recentToppingType = recentToppingType,
+        )
 
     @Transactional(readOnly = true)
     override fun get(

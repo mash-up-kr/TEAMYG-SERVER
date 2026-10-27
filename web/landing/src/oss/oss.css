@@ -1,0 +1,214 @@
+/*
+ * 오픈소스 라이선스 페이지. 토큰과 기본값은 my-explain-web-system design-system/src
+ * (tokens.css, base.css, components.css의 헤더·details.dev)에서 이 페이지가 쓰는 것만 옮겼다.
+ * 원 토큰은 ko-design-md toss.md (CC BY 4.0). 파란색은 링크와 포커스 링에만 쓴다.
+ */
+
+:root {
+  --color-bg: #FFFFFF;
+  --color-bg-subtle: #F9FAFB;
+  --color-border: #E5E8EB;
+  --color-text: #191F28;
+  --color-text-secondary: #4E5968;
+  --color-text-tertiary: #6B7684;
+  --color-brand: #3182F6;
+  --color-brand-text: #1065CC;
+  --color-code-inline-bg: #F2F4F6;
+  --color-code-inline-text: #602B19;
+
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --fs-h1: 28px;
+  --fs-h2: 24px;
+  --fs-body: 17px;
+  --fs-body-2: 15px;
+  --fs-caption: 13px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --radius-m: 12px;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ring: 0 0 0 1px var(--color-border);
+
+  --page-gutter: clamp(16px, 4vw, 48px);
+  --page-max: 720px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #202027;
+    --color-bg-subtle: #2C2C35;
+    --color-border: #3C3C47;
+    --color-text: #FFFFFF;
+    --color-text-secondary: #C3C3C6;
+    --color-text-tertiary: #9E9EA4;
+    --color-brand: #3485FA;
+    --color-brand-text: #E8F3FF;
+    --color-code-inline-bg: #3C3C47;
+    --color-code-inline-text: #FFC6A6;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-bg: #202027;
+  --color-bg-subtle: #2C2C35;
+  --color-border: #3C3C47;
+  --color-text: #FFFFFF;
+  --color-text-secondary: #C3C3C6;
+  --color-text-tertiary: #9E9EA4;
+  --color-brand: #3485FA;
+  --color-brand-text: #E8F3FF;
+  --color-code-inline-bg: #3C3C47;
+  --color-code-inline-text: #FFC6A6;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  color-scheme: light dark;
+  -webkit-text-size-adjust: 100%;
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+
+body {
+  margin: 0;
+  padding: var(--space-8) max(var(--page-gutter), env(safe-area-inset-right)) var(--space-16) max(var(--page-gutter), env(safe-area-inset-left));
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  max-width: var(--page-max);
+  margin: 0 auto;
+}
+
+h1, h2 { font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; }
+h1 { font-size: var(--fs-h1); margin: 0 0 var(--space-3); }
+h2 { font-size: var(--fs-h2); margin: 0 0 var(--space-3); }
+
+a { color: var(--color-brand-text); text-decoration: underline; text-underline-offset: 0.18em; }
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--color-code-inline-bg);
+  color: var(--color-code-inline-text);
+  padding: 0.1em 0.35em;
+  border-radius: 6px;
+}
+
+.eyebrow { color: var(--color-text-tertiary); font-size: var(--fs-caption); font-weight: 600; margin: 0 0 var(--space-2); }
+.meta { color: var(--color-text-tertiary); font-size: var(--fs-caption); margin: 0; }
+.page-header { margin-bottom: var(--space-6); }
+.page-footer { margin-top: var(--space-16); color: var(--color-text-tertiary); font-size: var(--fs-caption); }
+
+.content > section { margin-top: var(--space-12); }
+
+.oss-list { list-style: none; margin: 0; padding: 0; }
+.oss-list > li + li { margin-top: var(--space-2); }
+
+/* details.dev와 같은 생김새. 이름이 summary다. */
+.oss-item {
+  border-radius: var(--radius-m);
+  background: var(--color-bg);
+  box-shadow: var(--ring);
+}
+.oss-item > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  list-style: none;
+  color: var(--color-text);
+  font-size: var(--fs-body-2);
+  font-weight: 600;
+  border-radius: var(--radius-m);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 120ms var(--ease);
+}
+.oss-item > summary:active { background: var(--color-bg-subtle); }
+.oss-item > summary::-webkit-details-marker { display: none; }
+.oss-item > summary::after {
+  content: "";
+  flex: none;
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--color-text-tertiary);
+  border-bottom: 2px solid var(--color-text-tertiary);
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 180ms var(--ease);
+}
+.oss-item[open] > summary::after { transform: translateY(2px) rotate(225deg); }
+.oss-item[open] > summary {
+  border-radius: var(--radius-m) var(--radius-m) 0 0;
+  box-shadow: inset 0 -1px 0 var(--color-border);
+}
+
+.oss-item dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding: var(--space-4);
+  font-size: var(--fs-body-2);
+}
+.oss-item dt { color: var(--color-text-secondary); font-weight: 600; }
+.oss-item dd { margin: 0; min-width: 0; }
+.oss-item dd code { display: inline-block; margin: 0 var(--space-1) var(--space-1) 0; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; }
+}
+
+/* 라이선스 전문. 원문 줄바꿈을 지키되 좁은 화면에서는 줄을 접는다. 상자 안 스크롤은 두지 않는다(rules.md R-4-16). */
+.oss-text {
+  margin: 0 var(--space-4) var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-m);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+.oss-note {
+  margin: 0 var(--space-4) var(--space-4);
+  color: var(--color-text-tertiary);
+  font-size: var(--fs-caption);
+}

@@ -3,6 +3,8 @@ package parfait.http.api.page.root
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
@@ -38,6 +40,40 @@ class RootLandingControllerTest {
         response.status shouldBe 200
         response.contentType shouldBe "${MediaType.TEXT_HTML_VALUE};charset=UTF-8"
         response.contentAsString shouldContain "landing-test-fixture"
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["/oss", "/oss/"])
+    fun `parfait-app-store의 oss로 요청하면 오픈소스 라이선스 페이지 HTML을 응답한다`(path: String) {
+        val response =
+            mockMvc
+                .get(path) {
+                    with {
+                        it.serverName = "parfait-app.store"
+                        it
+                    }
+                }.andReturn()
+                .response
+
+        response.status shouldBe 200
+        response.contentType shouldBe "${MediaType.TEXT_HTML_VALUE};charset=UTF-8"
+        response.contentAsString shouldContain "oss-test-fixture"
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["/oss", "/oss/"])
+    fun `다른 호스트로 oss를 요청하면 404를 응답한다`(path: String) {
+        val response =
+            mockMvc
+                .get(path) {
+                    with {
+                        it.serverName = "api.parfait-app.store"
+                        it
+                    }
+                }.andReturn()
+                .response
+
+        response.status shouldBe 404
     }
 
     @Test

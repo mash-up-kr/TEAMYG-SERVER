@@ -32,8 +32,8 @@
 parfait-app.store {
 	encode zstd gzip
 
-	# /icon-512.png 는 루트 랜딩 페이지 정적 리소스용.
-	@public path / /link /.well-known/* /assets/* /icon-512.png
+	# /icon-512.png 는 루트 랜딩 페이지 정적 리소스용. /oss 는 오픈소스 라이선스 페이지.
+	@public path / /oss /oss/ /link /.well-known/* /assets/* /icon-512.png
 	handle @public {
 		reverse_proxy 127.0.0.1:8080
 	}

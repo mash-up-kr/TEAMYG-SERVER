@@ -129,6 +129,7 @@ class ParfaitGroupControllerTest {
                 jsonPath("$.data[0].recentImageBorderWidth") { value(6.0) }
                 jsonPath("$.data[0].recentImageUploadedAt") { value("2026-08-01T12:00:00") }
                 jsonPath("$.data[0].lastPlacedByNameTagChip") { value("TYPE7") }
+                jsonPath("$.data[0].recentToppingType") { doesNotExist() }
             }
     }
 

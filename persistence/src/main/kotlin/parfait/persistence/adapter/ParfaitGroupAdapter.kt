@@ -2,6 +2,7 @@ package parfait.persistence.adapter
 
 import org.springframework.stereotype.Component
 import parfait.core.parfait.domain.ParfaitDay
+import parfait.core.parfait.domain.ToppingType
 import parfait.core.parfaitgroup.application.port.out.MyParfaitGroupQueryPort
 import parfait.core.parfaitgroup.application.port.out.MyParfaitGroupSummary
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberLeavePort
@@ -98,6 +99,21 @@ class ParfaitGroupAdapter(
                 recentImageBorderWidth = it.recentImageBorderWidth,
                 recentImageUploadedAt = it.recentImageUploadedAt,
                 lastPlacedByNametagChip = NameTagChipType.valueOf(it.lastPlacedByNametagChip),
+            )
+        }
+
+    override fun findAllIncludingTextsByMemberId(memberId: Long): List<MyParfaitGroupSummary> =
+        parfaitGroupMemberRepository.findMyGroupToppingSummaries(memberId, ParfaitDay.current()).map {
+            MyParfaitGroupSummary(
+                groupId = it.groupId,
+                groupName = it.groupName,
+                recentImageUrl = it.recentImageUrl,
+                recentImageBorderType = it.recentImageBorderType?.let(BorderType::valueOf),
+                recentImageBorderColor = it.recentImageBorderColor,
+                recentImageBorderWidth = it.recentImageBorderWidth,
+                recentImageUploadedAt = it.recentImageUploadedAt,
+                lastPlacedByNametagChip = NameTagChipType.valueOf(it.lastPlacedByNametagChip),
+                recentToppingType = it.recentToppingType?.let(ToppingType::valueOf),
             )
         }
 
