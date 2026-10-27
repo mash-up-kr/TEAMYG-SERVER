@@ -13,10 +13,11 @@ import parfait.common.response.ApiResponse
 import parfait.core.parfait.port.`in`.GetTodayParfaitIfChangedCommand
 import parfait.core.parfait.port.`in`.GetTodayParfaitIfChangedResult
 import parfait.core.parfait.port.`in`.GetTodayParfaitIfChangedUseCase
-import parfait.http.parfait.dto.GetTodayParfaitResponse
+import parfait.http.parfait.dto.GetTodayParfaitV2Response
 
 /**
- * v1 today 는 그대로 두고, ETag/304 를 지원하는 v2 를 따로 둔다. 응답 본문은 v1 과 같은 구조(`GetTodayParfaitResponse`).
+ * v1 today 는 그대로 두고, ETag/304 를 지원하는 v2 를 따로 둔다. 응답 본문은 v1 과 같은 구조에 토핑마다
+ * `toppingType`을 더한 `GetTodayParfaitV2Response`다.
  * 304 는 본문과 공통 응답 래퍼 없이 헤더(ETag, Cache-Control)만 내려간다.
  */
 @RestController
@@ -29,7 +30,7 @@ class ParfaitV2Controller(
         authentication: Authentication,
         @PathVariable groupId: Long,
         @RequestHeader(HttpHeaders.IF_NONE_MATCH, required = false) ifNoneMatch: String?,
-    ): ResponseEntity<ApiResponse<GetTodayParfaitResponse>> {
+    ): ResponseEntity<ApiResponse<GetTodayParfaitV2Response>> {
         val result =
             getTodayParfaitIfChangedUseCase.get(
                 GetTodayParfaitIfChangedCommand(
@@ -51,7 +52,7 @@ class ParfaitV2Controller(
                     .ok()
                     .header(HttpHeaders.ETAG, result.etag)
                     .header(HttpHeaders.CACHE_CONTROL, CACHE_CONTROL)
-                    .body(ApiResponse.ok(GetTodayParfaitResponse.from(result.body)))
+                    .body(ApiResponse.ok(GetTodayParfaitV2Response.from(result.body)))
         }
     }
 
