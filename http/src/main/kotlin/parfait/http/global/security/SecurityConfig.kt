@@ -23,6 +23,8 @@ class SecurityConfig(
         private val WHITELIST_PATHS =
             arrayOf(
                 "/",
+                "/oss",
+                "/oss/",
                 "/assets/**",
                 "/health",
                 "/actuator/health",
