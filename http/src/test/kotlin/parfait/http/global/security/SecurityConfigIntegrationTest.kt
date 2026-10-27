@@ -1,5 +1,7 @@
 package parfait.http.global.security
 
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
@@ -147,6 +149,20 @@ class SecurityConfigIntegrationTest {
         mockMvc.get("/assets/icon-512.png").andExpect {
             status { isOk() }
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["/oss", "/oss/"])
+    fun `오픈소스 라이선스 페이지(oss)는 화이트리스트에 포함되어 토큰 없이 통과한다`(path: String) {
+        mockMvc
+            .get(path) {
+                with {
+                    it.serverName = "parfait-app.store"
+                    it
+                }
+            }.andExpect {
+                status { isOk() }
+            }
     }
 
     @Test
