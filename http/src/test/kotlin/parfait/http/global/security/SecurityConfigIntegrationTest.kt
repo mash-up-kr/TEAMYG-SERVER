@@ -150,6 +150,21 @@ class SecurityConfigIntegrationTest {
     }
 
     @Test
+    fun `오픈소스 라이선스 페이지(oss)는 화이트리스트에 포함되어 토큰 없이 통과한다`() {
+        for (path in listOf("/oss", "/oss/")) {
+            mockMvc
+                .get(path) {
+                    with {
+                        it.serverName = "parfait-app.store"
+                        it
+                    }
+                }.andExpect {
+                    status { isOk() }
+                }
+        }
+    }
+
+    @Test
     fun `Authorization 헤더가 없으면 401과 UNAUTHORIZED로 응답한다`() {
         mockMvc.get("/test/protected").andExpect {
             status { isUnauthorized() }
