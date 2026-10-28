@@ -36,6 +36,7 @@ class DeepLinkWellKnownControllerTest {
                 status { isOk() }
                 content { contentType(MediaType.APPLICATION_JSON) }
                 jsonPath("$[0].relation[0]") { value("delegate_permission/common.handle_all_urls") }
+                jsonPath("$[0].relation[1]") { value("delegate_permission/common.get_login_creds") }
                 jsonPath("$[0].target.namespace") { value("android_app") }
                 jsonPath("$[0].target.package_name") { value("com.teamyg.parfait") }
                 jsonPath("$[0].target.sha256_cert_fingerprints[0]") { value("AA:BB") }
