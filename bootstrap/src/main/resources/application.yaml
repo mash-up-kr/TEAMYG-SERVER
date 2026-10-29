@@ -88,9 +88,9 @@ landing:
 deeplink:
   android:
     package-name: com.teamyg.parfait
-    # debug 키스토어 지문 + release(Play 앱 서명 키) 지문. 둘 다 등록해야 debug/release 빌드 모두
-    # App Links 검증(Digital Asset Links)을 통과한다.
-    sha256-cert-fingerprints: "4F:7D:A7:E9:92:71:2E:1E:D3:AF:3F:CF:64:85:08:05:25:9D:E7:7A:5B:E4:80:96:B0:40:1D:1E:09:44:79:4F,46:77:8E:EC:B8:36:90:86:B1:33:29:00:96:15:35:75:AE:13:14:B6:3D:DA:FC:19:0C:B7:78:9E:ED:B3:50:73"
+    # 앱 서명 키 지문 목록(콤마 구분). 설치되는 빌드의 서명 키가 하나라도 빠지면 해당 빌드는
+    # App Links 검증(Digital Asset Links)을 통과하지 못한다.
+    sha256-cert-fingerprints: "4F:7D:A7:E9:92:71:2E:1E:D3:AF:3F:CF:64:85:08:05:25:9D:E7:7A:5B:E4:80:96:B0:40:1D:1E:09:44:79:4F,46:77:8E:EC:B8:36:90:86:B1:33:29:00:96:15:35:75:AE:13:14:B6:3D:DA:FC:19:0C:B7:78:9E:ED:B3:50:73,FD:3E:37:FD:50:7B:7D:CE:50:C3:77:99:43:97:84:31:F9:AF:60:3F:C9:92:92:37:E1:D0:CE:24:A5:90:45:0B,13:78:D0:A1:92:1E:47:00:64:2A:3D:DA:FF:37:69:38:CB:BC:92:78:27:E6:2E:0E:82:C9:1E:57:DA:DC:45:5F,CD:21:2F:49:61:F8:90:77:1F:F6:CE:FC:F5:80:5C:87:B1:59:70:21:6D:FC:65:94:DD:1B:66:A6:D6:06:9A:CD"
   ios:
     team-id: "64JN25L784"
     bundle-id: "com.teamyg.parfait"
