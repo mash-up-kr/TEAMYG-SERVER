@@ -7,10 +7,10 @@ import kotlin.test.assertEquals
 
 class ActuatorProfileConfigurationTest {
     @Test
-    fun `공통 설정은 actuator health 엔드포인트만 노출한다`() {
+    fun `공통 설정은 actuator health와 metrics 엔드포인트만 노출한다`() {
         val properties = loadProperties("application.yaml")
 
-        assertEquals("health", properties.getProperty("management.endpoints.web.exposure.include"))
+        assertEquals("health,metrics", properties.getProperty("management.endpoints.web.exposure.include"))
     }
 
     @Test
