@@ -22,6 +22,7 @@ import parfait.core.member.port.out.MemberQueryPort
 import parfait.http.TestApplication
 import parfait.http.api.deeplink.controller.TestGetDownloadStoreLinkUseCaseConfig
 import parfait.http.api.notification.controller.TestDeviceTokenUseCaseConfig
+import parfait.http.api.stats.controller.TestGetSignupStatsUseCaseConfig
 import parfait.http.auth.controller.TestAppleLoginUseCaseConfig
 import parfait.http.auth.controller.TestKakaoLoginUseCaseConfig
 import parfait.http.auth.controller.TestLogoutUseCaseConfig
@@ -83,6 +84,7 @@ import kotlin.test.Test
     TestDeviceTokenUseCaseConfig::class,
     TestRotateParfaitCanvasesUseCaseConfig::class,
     TestChangeParfaitBackgroundUseCaseConfig::class,
+    TestGetSignupStatsUseCaseConfig::class,
 )
 class SecurityConfigIntegrationTest {
     @Autowired
@@ -139,6 +141,34 @@ class SecurityConfigIntegrationTest {
         mockMvc.get("/health").andExpect {
             status { isOk() }
         }
+    }
+
+    @Test
+    fun `통계 API 경로는 JWT 없이 화이트리스트를 통과하고 통계 토큰으로 인증한다`() {
+        mockMvc.get("/admin/stats?from=2026-10-27&to=2026-10-30").andExpect {
+            status { isUnauthorized() }
+            // JWT 필터의 UNAUTHORIZED 가 아니라 컨트롤러의 StatsTokenVerifier 가 거절했다는 뜻이다.
+            jsonPath("$.code") { value("INVALID_STATS_TOKEN") }
+        }
+    }
+
+    @Test
+    fun `통계 토큰 설정이 비어 있으면 어떤 토큰 헤더로도 401이다`() {
+        mockMvc
+            .get("/admin/stats?from=2026-10-27&to=2026-10-30") {
+                header("X-Stats-Token", "anything")
+            }.andExpect {
+                status { isUnauthorized() }
+                jsonPath("$.code") { value("INVALID_STATS_TOKEN") }
+            }
+
+        mockMvc
+            .get("/admin/stats?from=2026-10-27&to=2026-10-30") {
+                header("X-Stats-Token", "")
+            }.andExpect {
+                status { isUnauthorized() }
+                jsonPath("$.code") { value("INVALID_STATS_TOKEN") }
+            }
     }
 
     @Test
