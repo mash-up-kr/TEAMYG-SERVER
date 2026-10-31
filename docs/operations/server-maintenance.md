@@ -167,7 +167,7 @@ GitHub Actions의 **Rollback App** 워크플로(`.github/workflows/rollback.yml`
 옵션은 `deploy.yml`의 `docker run`과 같다.
 
 ```sh
-docker image ls                                   # 되돌릴 이미지 ID 확인
+docker image ls -a                                # 되돌릴 이미지 ID 확인 (-a가 없으면 태그 없는 이전 이미지가 숨겨진다)
 docker image inspect <ID> --format '{{json .Config.Entrypoint}}'   # ["java","-jar","app.jar"]가 나와야 앱 이미지다
 sudo docker stop parfait && sudo docker rm parfait
 sudo docker run -d --name parfait --network host \
