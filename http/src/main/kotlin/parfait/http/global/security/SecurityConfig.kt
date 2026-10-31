@@ -44,6 +44,8 @@ class SecurityConfig(
                 "/.well-known/assetlinks.json",
                 "/.well-known/apple-app-site-association",
                 "/link",
+                // 통계 API — JWT 가 아니라 StatsTokenVerifier(X-Stats-Token)가 컨트롤러에서 인증한다.
+                "/admin/stats",
             )
     }
 

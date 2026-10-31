@@ -81,6 +81,32 @@ notification:
     morning-cron: "0 0 10 * * *"
     evening-cron: "0 0 20 * * *"
 
+# 가입자 리포트 디스코드 봇 (#205). 값은 서버 .env 의 환경변수로 주입한다.
+report:
+  # true 일 때만 정기 리포트 스케줄러가 켜진다(로컬·테스트는 꺼 둔다).
+  enabled: ${REPORT_ENABLED:false}
+  # 정기 리포트 전송 시각(KST, 0~23시). cron 과 /광고모드의 "다음 리포트" 계산이 같은 값을 쓴다.
+  # 범위를 벗어나거나 빈 값이면 기동에 실패한다.
+  hour: ${REPORT_HOUR:21}
+  cron: "0 0 ${report.hour} * * *"
+  stats:
+    # 가입자 집계에서 뺄 테스트·운영진 member id (콤마 구분)
+    excluded-member-ids: ${REPORT_EXCLUDED_MEMBER_IDS:}
+
+discord:
+  bot:
+    # 비어 있으면 봇을 켜지 않는다.
+    token: ${DISCORD_BOT_TOKEN:}
+    report-channel-id: ${DISCORD_REPORT_CHANNEL_ID:}
+    # 슬래시 명령어를 등록할 우리 디스코드 서버 ID. 비어 있으면 명령어를 등록하지 않는다.
+    guild-id: ${DISCORD_GUILD_ID:}
+    # /광고모드 같은 운영진 전용 명령어를 쓸 수 있는 역할 ID. 비어 있으면 아무도 쓸 수 없다.
+    admin-role-id: ${DISCORD_ADMIN_ROLE_ID:}
+
+stats:
+  # 비어 있으면 GET /admin/stats 는 모든 요청을 거절한다.
+  api-token: ${STATS_API_TOKEN:}
+
 landing:
   domain: parfait-app.store
 
