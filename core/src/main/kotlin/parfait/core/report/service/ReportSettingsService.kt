@@ -18,7 +18,7 @@ class ReportSettingsService(
     private val settingsSavePort: ReportSettingsSavePort,
     private val planner: ReportPlanner,
     // report.hour(0~23)를 정시 LocalTime으로 바꾼다. 범위를 벗어나면 기동 시 예외가 난다.
-    @Value("#{T(java.time.LocalTime).of(\${report.hour:21}, 0)}") private val sendTime: LocalTime,
+    @Value("#{T(java.time.LocalTime).of(\${report.hour:7}, 0)}") private val sendTime: LocalTime,
 ) : ChangeAdModeUseCase,
     GetReportStatusUseCase {
     override fun getStatus(now: LocalDateTime): ReportStatus = toStatus(settingsQueryPort.find(), now)

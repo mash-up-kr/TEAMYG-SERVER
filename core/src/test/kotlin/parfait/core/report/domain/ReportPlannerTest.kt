@@ -9,8 +9,9 @@ import java.time.LocalTime
 class ReportPlannerTest {
     private val planner = ReportPlanner()
 
-    // 10/30 21:00 에 스케줄러가 돈다.
-    private val now = LocalDateTime.of(2026, 10, 30, 21, 0, 0)
+    // 10/30 07:00 에 스케줄러가 돈다. 구간은 전날까지(오늘 0시 미포함)다.
+    private val now = LocalDateTime.of(2026, 10, 30, 7, 0, 0)
+    private val midnight = LocalDateTime.of(2026, 10, 30, 0, 0, 0)
 
     private fun settings(
         adMode: Boolean = false,
@@ -18,43 +19,45 @@ class ReportPlannerTest {
     ) = ReportSettings(adMode = adMode, intervalDays = 3, lastSentAt = lastSentAt)
 
     @Test
-    fun `평소 모드에서 처음 실행하면 최근 3일을 보낸다`() {
-        planner.plan(settings(), now) shouldBe ReportPeriod(now.minusDays(3), now)
+    fun `평소 모드에서 처음 실행하면 오늘 0시 직전 3일을 보낸다`() {
+        planner.plan(settings(), now) shouldBe ReportPeriod(midnight.minusDays(3), midnight)
     }
 
     @Test
-    fun `평소 모드에서 마지막 전송이 3일 전이면 마지막 전송부터 지금까지를 보낸다`() {
-        // 전송이 21:00:03 에 끝났어도 날짜 차이로 비교하므로 3일 뒤 21:00:00 에 대상이 된다.
-        val last = LocalDateTime.of(2026, 10, 27, 21, 0, 3)
+    fun `평소 모드에서 마지막 전송이 3일 전이면 마지막 전송일 0시부터 오늘 0시까지를 보낸다`() {
+        // 전송이 07:00:03 에 끝났어도 날짜 차이로 비교하므로 3일 뒤 07:00:00 에 대상이 된다.
+        val last = LocalDateTime.of(2026, 10, 27, 7, 0, 3)
 
-        planner.plan(settings(lastSentAt = last), now) shouldBe ReportPeriod(last, now)
+        planner.plan(settings(lastSentAt = last), now) shouldBe
+            ReportPeriod(LocalDateTime.of(2026, 10, 27, 0, 0, 0), midnight)
     }
 
     @Test
     fun `평소 모드에서 마지막 전송이 2일 전이면 건너뛴다`() {
-        val last = LocalDateTime.of(2026, 10, 28, 21, 0, 3)
+        val last = LocalDateTime.of(2026, 10, 28, 7, 0, 3)
 
         planner.plan(settings(lastSentAt = last), now) shouldBe null
     }
 
     @Test
     fun `오늘 이미 전송했으면 건너뛴다`() {
-        val last = LocalDateTime.of(2026, 10, 30, 9, 0, 0)
+        val last = LocalDateTime.of(2026, 10, 30, 5, 0, 0)
 
         planner.plan(settings(lastSentAt = last), now) shouldBe null
         planner.plan(settings(adMode = true, lastSentAt = last), now) shouldBe null
     }
 
     @Test
-    fun `광고모드에서 처음 실행하면 직전 24시간을 보낸다`() {
-        planner.plan(settings(adMode = true), now) shouldBe ReportPeriod(now.minusDays(1), now)
+    fun `광고모드에서 처음 실행하면 어제 하루를 보낸다`() {
+        planner.plan(settings(adMode = true), now) shouldBe ReportPeriod(midnight.minusDays(1), midnight)
     }
 
     @Test
-    fun `광고모드에서는 마지막 전송이 어제여도 대상이다`() {
-        val last = LocalDateTime.of(2026, 10, 29, 21, 0, 3)
+    fun `광고모드에서는 마지막 전송이 어제여도 대상이고 마지막 전송일 0시부터 보낸다`() {
+        val last = LocalDateTime.of(2026, 10, 29, 7, 0, 3)
 
-        planner.plan(settings(adMode = true, lastSentAt = last), now) shouldBe ReportPeriod(last, now)
+        planner.plan(settings(adMode = true, lastSentAt = last), now) shouldBe
+            ReportPeriod(LocalDateTime.of(2026, 10, 29, 0, 0, 0), midnight)
     }
 
     private val sendTime = LocalTime.of(21, 0)
@@ -143,19 +146,5 @@ class ReportPlannerTest {
         val at = LocalDateTime.of(2026, 10, 31, 10, 0, 0)
 
         nextDate(settings(lastSentAt = last), at) shouldBe LocalDate.of(2026, 11, 2)
-    }
-
-    @Test
-    fun `지금 리포트 기간 - 광고모드는 직전 24시간, 평소 모드는 직전 주기 일수다`() {
-        planner.planNow(settings(adMode = true), now) shouldBe ReportPeriod(now.minusDays(1), now)
-        planner.planNow(settings(), now) shouldBe ReportPeriod(now.minusDays(3), now)
-    }
-
-    @Test
-    fun `지금 리포트 기간 - 마지막 전송 시각은 무시한다`() {
-        val last = LocalDateTime.of(2026, 10, 29, 21, 0, 3)
-
-        planner.planNow(settings(lastSentAt = last), now) shouldBe ReportPeriod(now.minusDays(3), now)
-        planner.planNow(settings(adMode = true, lastSentAt = last), now) shouldBe ReportPeriod(now.minusDays(1), now)
     }
 }
