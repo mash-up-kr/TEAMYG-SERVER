@@ -4,8 +4,10 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import parfait.core.report.domain.ReportContent
 import parfait.core.report.domain.ReportPeriod
+import parfait.core.stats.domain.DailySignupStats
 import parfait.core.stats.domain.SignupGrowth
 import parfait.core.stats.domain.SignupStats
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class ReportEmbedRendererTest {
@@ -74,5 +76,70 @@ class ReportEmbedRendererTest {
             "신규 가입 42명 (▲15%) · 탈퇴 3명 (신규 중 1명) · 순증 +39명\n누적 가입자 1,284명 (+3.1%)"
         value(SignupGrowth(15.0, -0.4)).endsWith("누적 가입자 1,284명 (-0.4%)") shouldBe true
         value(SignupGrowth(15.0, 0.0)).endsWith("누적 가입자 1,284명 (0.0%)") shouldBe true
+    }
+
+    private val dailyPeriod =
+        ReportPeriod(LocalDateTime.of(2026, 11, 3, 0, 0), LocalDateTime.of(2026, 11, 5, 21, 30))
+    private val dailyStats = SignupStats(10, 2, 0, 100)
+
+    @Test
+    fun `신규 그룹 수가 있으면 서비스 필드 마지막 줄에 표시한다`() {
+        val embed = renderer.render(ReportContent(period, SignupStats(42, 3, 1, 1284), newGroups = 5))
+
+        embed.fields.single().value shouldBe
+            "신규 가입 42명 · 탈퇴 3명 (신규 중 1명) · 순증 +39명\n누적 가입자 1,284명\n신규 그룹 5개"
+    }
+
+    @Test
+    fun `일별 상세가 있으면 일별 필드를 추가하고 오늘 줄에 진행 중을 붙인다`() {
+        val daily =
+            listOf(
+                DailySignupStats(LocalDate.of(2026, 11, 3), newSignups = 3, withdrawals = 1),
+                DailySignupStats(LocalDate.of(2026, 11, 4), newSignups = 5, withdrawals = 0),
+                DailySignupStats(LocalDate.of(2026, 11, 5), newSignups = 2, withdrawals = 1),
+            )
+
+        val embed = renderer.render(ReportContent(dailyPeriod, dailyStats, daily = daily))
+
+        embed.fields.map { it.name } shouldBe listOf("서비스", "일별 11/03~11/05")
+        embed.fields[1].value shouldBe
+            "11/03 (화) : 가입 +3명 / 탈퇴 -1명\n" +
+            "11/04 (수) : 가입 +5명 / 탈퇴 -0명\n" +
+            "11/05 (목) : 가입 +2명 / 탈퇴 -1명 (진행 중)"
+    }
+
+    @Test
+    fun `구간 끝이 자정이면 진행 중을 붙이지 않는다`() {
+        val closedPeriod =
+            ReportPeriod(LocalDateTime.of(2026, 11, 3, 0, 0), LocalDateTime.of(2026, 11, 5, 0, 0))
+        val daily =
+            listOf(
+                DailySignupStats(LocalDate.of(2026, 11, 3), newSignups = 3, withdrawals = 1),
+                DailySignupStats(LocalDate.of(2026, 11, 4), newSignups = 5, withdrawals = 0),
+            )
+
+        val embed = renderer.render(ReportContent(closedPeriod, dailyStats, daily = daily))
+
+        embed.fields[1].value!!.contains("진행 중") shouldBe false
+    }
+
+    @Test
+    fun `일별 상세는 7일 단위로 나눠 필드에 담는다`() {
+        val firstDay = LocalDate.of(2026, 11, 1)
+        val daily = (0L until 8L).map { DailySignupStats(firstDay.plusDays(it), newSignups = 1, withdrawals = 0) }
+        val longPeriod =
+            ReportPeriod(LocalDateTime.of(2026, 11, 1, 0, 0), LocalDateTime.of(2026, 11, 9, 0, 0))
+
+        val embed = renderer.render(ReportContent(longPeriod, dailyStats, daily = daily))
+
+        embed.fields.map { it.name } shouldBe listOf("서비스", "일별 11/01~11/07", "일별 11/08~11/08")
+        embed.fields[1]
+            .value!!
+            .lines()
+            .size shouldBe 7
+        embed.fields[2]
+            .value!!
+            .lines()
+            .size shouldBe 1
     }
 }
