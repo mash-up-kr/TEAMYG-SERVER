@@ -7,16 +7,20 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import parfait.core.exception.BusinessException
+import parfait.core.stats.domain.DailySignupStats
 import parfait.core.stats.domain.SignupGrowth
 import parfait.core.stats.domain.SignupStats
 import parfait.core.stats.domain.SignupStatsComparison
 import parfait.core.stats.exception.StatsErrorCode
+import parfait.core.stats.port.out.GroupStatsQueryPort
 import parfait.core.stats.port.out.SignupStatsQueryPort
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class StatsServiceTest {
     private val queryPort = mockk<SignupStatsQueryPort>()
-    private val service = StatsService(queryPort)
+    private val groupQueryPort = mockk<GroupStatsQueryPort>()
+    private val service = StatsService(queryPort, groupQueryPort)
 
     private val from = LocalDateTime.of(2026, 10, 27, 0, 0)
     private val to = LocalDateTime.of(2026, 10, 30, 0, 0)
@@ -101,5 +105,56 @@ class StatsServiceTest {
 
         ex.errorCode shouldBe StatsErrorCode.INVALID_STATS_PERIOD
         verify(exactly = 0) { queryPort.aggregate(any(), any()) }
+    }
+
+    @Test
+    fun `일별 조회는 활동이 없는 날도 0으로 채워 날짜 순서대로 돌려준다`() {
+        val dailyFrom = LocalDateTime.of(2026, 11, 3, 0, 0)
+        val dailyTo = LocalDateTime.of(2026, 11, 5, 21, 30)
+        every { queryPort.aggregateDaily(dailyFrom, dailyTo) } returns
+            listOf(
+                DailySignupStats(LocalDate.of(2026, 11, 3), newSignups = 3, withdrawals = 1),
+                DailySignupStats(LocalDate.of(2026, 11, 5), newSignups = 2, withdrawals = 1),
+            )
+
+        service.getDailySignupStats(dailyFrom, dailyTo) shouldBe
+            listOf(
+                DailySignupStats(LocalDate.of(2026, 11, 3), newSignups = 3, withdrawals = 1),
+                DailySignupStats(LocalDate.of(2026, 11, 4), newSignups = 0, withdrawals = 0),
+                DailySignupStats(LocalDate.of(2026, 11, 5), newSignups = 2, withdrawals = 1),
+            )
+    }
+
+    @Test
+    fun `일별 조회의 끝이 자정이면 그 날짜는 포함하지 않는다`() {
+        val dailyFrom = LocalDateTime.of(2026, 11, 3, 0, 0)
+        val dailyTo = LocalDateTime.of(2026, 11, 5, 0, 0)
+        every { queryPort.aggregateDaily(dailyFrom, dailyTo) } returns emptyList()
+
+        service.getDailySignupStats(dailyFrom, dailyTo).map { it.date } shouldBe
+            listOf(LocalDate.of(2026, 11, 3), LocalDate.of(2026, 11, 4))
+    }
+
+    @Test
+    fun `일별 조회도 기간이 잘못되면 INVALID_STATS_PERIOD 예외가 나고 포트를 호출하지 않는다`() {
+        val ex = shouldThrow<BusinessException> { service.getDailySignupStats(to, from) }
+
+        ex.errorCode shouldBe StatsErrorCode.INVALID_STATS_PERIOD
+        verify(exactly = 0) { queryPort.aggregateDaily(any(), any()) }
+    }
+
+    @Test
+    fun `신규 그룹 수는 포트 결과를 그대로 돌려준다`() {
+        every { groupQueryPort.countCreated(from, to) } returns 4
+
+        service.countNewGroups(from, to) shouldBe 4L
+    }
+
+    @Test
+    fun `신규 그룹 수 조회도 기간이 잘못되면 INVALID_STATS_PERIOD 예외가 난다`() {
+        val ex = shouldThrow<BusinessException> { service.countNewGroups(to, from) }
+
+        ex.errorCode shouldBe StatsErrorCode.INVALID_STATS_PERIOD
+        verify(exactly = 0) { groupQueryPort.countCreated(any(), any()) }
     }
 }
