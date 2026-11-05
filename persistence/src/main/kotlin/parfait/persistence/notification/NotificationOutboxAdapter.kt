@@ -6,6 +6,7 @@ import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import parfait.core.notification.domain.ActivityDigestPayload
 import parfait.core.notification.domain.BackgroundChangedPayload
 import parfait.core.notification.domain.NotificationOutbox
 import parfait.core.notification.domain.NotificationPayload
@@ -13,10 +14,12 @@ import parfait.core.notification.domain.OutboxStatus
 import parfait.core.notification.domain.TextPlacedPayload
 import parfait.core.notification.domain.ToppingPlacedPayload
 import parfait.core.notification.port.out.NotificationOutboxAppendPort
+import parfait.core.notification.port.out.NotificationOutboxDigestPort
 import parfait.core.notification.port.out.NotificationOutboxPollPort
 import parfait.core.notification.port.out.NotificationOutboxPurgePort
 import parfait.persistence.entity.NotificationOutboxEntity
 import parfait.persistence.repository.NotificationOutboxRepository
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Component
@@ -25,7 +28,8 @@ class NotificationOutboxAdapter(
     private val repository: NotificationOutboxRepository,
 ) : NotificationOutboxAppendPort,
     NotificationOutboxPollPort,
-    NotificationOutboxPurgePort {
+    NotificationOutboxPurgePort,
+    NotificationOutboxDigestPort {
     private companion object {
         const val PURGE_CHUNK = 5_000
     }
@@ -107,6 +111,41 @@ class NotificationOutboxAdapter(
         return total
     }
 
+    override fun findOpenDigestKey(
+        receiverMemberId: Long,
+        groupId: Long,
+        parfaitDate: LocalDate,
+    ): String? =
+        repository
+            .findFirstByDedupKeyStartingWithAndStatus(
+                NotificationOutbox.activityDigestKeyPrefix(receiverMemberId, groupId, parfaitDate),
+                OutboxStatus.PENDING,
+            )?.dedupKey
+
+    override fun markDeferred(
+        id: Long,
+        digestRef: String,
+    ) {
+        val e = repository.findById(id).orElseThrow()
+        e.status = OutboxStatus.DEFERRED
+        e.digestRef = digestRef
+    }
+
+    override fun findDeferred(digestRef: String): List<NotificationOutbox> =
+        repository.findAllByDigestRefAndStatus(digestRef, OutboxStatus.DEFERRED).map { it.toDomain() }
+
+    override fun resolveDeferred(
+        digestRef: String,
+        now: LocalDateTime,
+        note: String,
+    ) {
+        repository.findAllByDigestRefAndStatus(digestRef, OutboxStatus.DEFERRED).forEach {
+            it.status = OutboxStatus.SENT
+            it.sentAt = now
+            it.lastError = note
+        }
+    }
+
     private fun NotificationOutbox.toEntity() =
         NotificationOutboxEntity(
             aggregateType = aggregateType,
@@ -121,6 +160,7 @@ class NotificationOutboxAdapter(
             lastError = lastError,
             createdAt = createdAt,
             sentAt = sentAt,
+            digestRef = digestRef,
             id = id,
         )
 
@@ -133,6 +173,8 @@ class NotificationOutboxAdapter(
                     objectMapper.readValue<BackgroundChangedPayload>(payload)
                 NotificationOutbox.EVENT_TYPE_TEXT_PLACED ->
                     objectMapper.readValue<TextPlacedPayload>(payload)
+                NotificationOutbox.EVENT_TYPE_ACTIVITY_DIGEST ->
+                    objectMapper.readValue<ActivityDigestPayload>(payload)
                 else -> error("알 수 없는 eventType: $eventType")
             }
         return NotificationOutbox.reconstitute(
@@ -149,6 +191,7 @@ class NotificationOutboxAdapter(
             lastError = lastError,
             createdAt = createdAt,
             sentAt = sentAt,
+            digestRef = digestRef,
         )
     }
 }

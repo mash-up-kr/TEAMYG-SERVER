@@ -11,10 +11,12 @@ import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import parfait.core.notification.domain.ActivityDigestPayload
 import parfait.core.notification.domain.NotificationOutbox
 import parfait.core.notification.domain.OutboxStatus
 import parfait.core.notification.domain.TextPlacedPayload
 import parfait.core.notification.domain.ToppingPlacedPayload
+import parfait.core.notification.port.out.NotificationOutboxDigestPort
 import parfait.persistence.TestApplication
 import parfait.persistence.repository.NotificationOutboxRepository
 import java.time.LocalDate
@@ -41,6 +43,9 @@ class NotificationOutboxAdapterTest {
     // 어댑터를 직접 생성하지 않고 스프링 빈을 주입받는다.
     @Autowired
     private lateinit var adapter: NotificationOutboxAdapter
+
+    @Autowired
+    private lateinit var digestPort: NotificationOutboxDigestPort
 
     @Autowired
     private lateinit var repository: NotificationOutboxRepository
@@ -168,5 +173,69 @@ class NotificationOutboxAdapterTest {
         deleted shouldBe 2
         repository.count() shouldBe 1L
         repository.findAll().single().status shouldBe OutboxStatus.PENDING
+    }
+
+    private val digestPayload =
+        ActivityDigestPayload(groupId = 1L, parfaitId = 5L, parfaitDate = LocalDate.of(2026, 9, 2), actorMemberId = 7L)
+
+    @Test
+    fun `P-06 예약 행이 PENDING 이면 윈도우가 열려 있다고 조회된다`() {
+        val digest =
+            NotificationOutbox.activityDigest(42L, digestPayload, base, base.plusMinutes(10))
+        adapter.saveAll(listOf(digest))
+
+        digestPort.findOpenDigestKey(42L, 1L, LocalDate.of(2026, 9, 2)) shouldBe digest.dedupKey
+        digestPort.findOpenDigestKey(43L, 1L, LocalDate.of(2026, 9, 2)) shouldBe null // 다른 수신자
+        digestPort.findOpenDigestKey(42L, 2L, LocalDate.of(2026, 9, 2)) shouldBe null // 다른 그룹
+        digestPort.findOpenDigestKey(42L, 1L, LocalDate.of(2026, 9, 3)) shouldBe null // 다른 날짜
+    }
+
+    @Test
+    fun `수신자와 그룹 id 의 접두어가 겹쳐도 서로의 윈도우로 조회되지 않는다`() {
+        val date = LocalDate.of(2026, 9, 2)
+        adapter.saveAll(
+            listOf(
+                NotificationOutbox.activityDigest(12L, digestPayload, base, base.plusMinutes(10)), // 수신자 12, 그룹 1
+                NotificationOutbox.activityDigest(
+                    1L,
+                    ActivityDigestPayload(12L, 5L, date, 7L),
+                    base,
+                    base.plusMinutes(10),
+                ), // 수신자 1, 그룹 12
+            ),
+        )
+
+        digestPort.findOpenDigestKey(1L, 1L, date) shouldBe null
+        digestPort.findOpenDigestKey(12L, 12L, date) shouldBe null
+        digestPort.findOpenDigestKey(12L, 1L, date) shouldBe
+            repository.findAll().single { it.receiverMemberId == 12L }.dedupKey
+        digestPort.findOpenDigestKey(1L, 12L, date) shouldBe
+            repository.findAll().single { it.receiverMemberId == 1L }.dedupKey
+    }
+
+    @Test
+    fun `P-06 예약 행이 발송 완료되면 윈도우는 닫힌 것이다`() {
+        val digest = NotificationOutbox.activityDigest(42L, digestPayload, base, base.plusMinutes(10))
+        adapter.saveAll(listOf(digest))
+        val id = repository.findAll().single().id!!
+
+        adapter.markSent(id, base.plusMinutes(10), null)
+
+        digestPort.findOpenDigestKey(42L, 1L, LocalDate.of(2026, 9, 2)) shouldBe null
+    }
+
+    @Test
+    fun `대기 행을 예약 행에 연결하면 findDeferred 로 조회되고 resolveDeferred 로 정리된다`() {
+        adapter.saveAll(listOf(pending(100L, 42L, base), pending(101L, 42L, base)))
+        val ids = repository.findAll().map { it.id!! }
+        ids.forEach { digestPort.markDeferred(it, "activity-digest:42:1:2026-09-02:20260902100000") }
+
+        digestPort.findDeferred("activity-digest:42:1:2026-09-02:20260902100000") shouldHaveSize 2
+        adapter.claimBatch(10, base.plusHours(1)) shouldHaveSize 0 // DEFERRED 는 폴링되지 않는다
+
+        digestPort.resolveDeferred("activity-digest:42:1:2026-09-02:20260902100000", base.plusMinutes(10), "DIGESTED")
+
+        digestPort.findDeferred("activity-digest:42:1:2026-09-02:20260902100000") shouldHaveSize 0
+        repository.findAll().all { it.status == OutboxStatus.SENT && it.lastError == "DIGESTED" } shouldBe true
     }
 }
