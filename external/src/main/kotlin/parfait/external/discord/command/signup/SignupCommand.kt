@@ -47,14 +47,16 @@ class SignupCommand(
         val now = LocalDateTime.now(clock)
         // 오늘을 포함한 달력 N일: (오늘 − (N−1)일) 0시 ~ 지금. 요약과 일별 상세가 같은 구간을 쓴다.
         val from = now.toLocalDate().minusDays(days - 1L).atStartOfDay()
-        val comparison = getSignupStatsComparisonUseCase.getComparison(from, now)
+        // 자정 정각에는 from == now 라 기간 검증에 걸리므로 최소 1초 구간을 보장한다.
+        val to = maxOf(now, from.plusSeconds(1))
+        val comparison = getSignupStatsComparisonUseCase.getComparison(from, to)
         val content =
             ReportContent(
-                period = ReportPeriod(from, now),
+                period = ReportPeriod(from, to),
                 signupStats = comparison.current,
                 growth = comparison.growth,
-                newGroups = getGroupStatsUseCase.countNewGroups(from, now),
-                daily = getDailySignupStatsUseCase.getDailySignupStats(from, now),
+                newGroups = getGroupStatsUseCase.countNewGroups(from, to),
+                daily = getDailySignupStatsUseCase.getDailySignupStats(from, to),
             )
         return CommandReply.embed(renderer.render(content), ephemeral = false)
     }

@@ -110,4 +110,22 @@ class SignupCommandTest {
         verify(exactly = 0) { dailyUseCase.getDailySignupStats(any(), any()) }
         verify(exactly = 0) { groupUseCase.countNewGroups(any(), any()) }
     }
+
+    @Test
+    fun `자정 정각에 1일을 조회해도 최소 1초 구간으로 조회한다`() {
+        val midnight = LocalDateTime.of(2026, 11, 7, 0, 0, 0)
+        val midnightCommand =
+            SignupCommand(comparisonUseCase, dailyUseCase, groupUseCase, ReportEmbedRenderer(), fixedClock(midnight))
+        val to = midnight.plusSeconds(1)
+        every { comparisonUseCase.getComparison(midnight, to) } returns SignupStatsComparison(stats, previous)
+        every { dailyUseCase.getDailySignupStats(midnight, to) } returns emptyList()
+        every { groupUseCase.countNewGroups(midnight, to) } returns 0
+
+        val reply = midnightCommand.execute(request(mapOf("기간" to "1")))
+
+        reply.ephemeral shouldBe false
+        verify(exactly = 1) { comparisonUseCase.getComparison(midnight, to) }
+        verify(exactly = 1) { dailyUseCase.getDailySignupStats(midnight, to) }
+        verify(exactly = 1) { groupUseCase.countNewGroups(midnight, to) }
+    }
 }
