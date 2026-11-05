@@ -126,4 +126,18 @@ class ReminderTargetAdapterTest {
 
         adapter.findActiveGroupMemberDeviceTokens() shouldContainExactlyInAnyOrder listOf("tok-1", "tok-2")
     }
+
+    @Test
+    fun `오늘의 캔버스 알림을 끈 회원의 토큰은 제외된다`() {
+        val off = newMember("off")
+        join(newGroup("RTG020"), off)
+        addToken(off, "tok-off")
+        memberRepository.save(memberRepository.findById(off).get().apply { dailyReminderEnabled = false })
+
+        val on = newMember("on")
+        join(newGroup("RTG021"), on)
+        addToken(on, "tok-on")
+
+        adapter.findActiveGroupMemberDeviceTokens() shouldContainExactlyInAnyOrder listOf("tok-on")
+    }
 }

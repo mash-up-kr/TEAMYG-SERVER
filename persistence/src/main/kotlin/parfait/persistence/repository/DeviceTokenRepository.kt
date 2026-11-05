@@ -24,10 +24,12 @@ interface DeviceTokenRepository : JpaRepository<DeviceToken, Long> {
         value = """
             SELECT dt.token
             FROM device_token dt
-            WHERE EXISTS (
+            JOIN member m ON m.id = dt.member_id
+            WHERE m.daily_reminder_enabled = 1
+              AND EXISTS (
                 SELECT 1 FROM parfait_group_member pgm
                 WHERE pgm.member_id = dt.member_id AND pgm.left_at IS NULL
-            )
+              )
         """,
         nativeQuery = true,
     )
