@@ -15,7 +15,7 @@ class ReportScheduler(
 ) {
     private val log = LoggerFactory.getLogger(ReportScheduler::class.java)
 
-    @Scheduled(cron = "\${report.cron:0 0 21 * * *}", zone = "Asia/Seoul")
+    @Scheduled(cron = "\${report.cron:0 0 7 * * *}", zone = "Asia/Seoul")
     fun run() {
         runCatching { sendScheduledReportUseCase.sendIfDue(LocalDateTime.now(KST)) }
             .onSuccess { log.info("정기 리포트 실행 결과: {}", it) }
