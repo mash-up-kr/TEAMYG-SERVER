@@ -6,11 +6,11 @@ import parfait.core.report.domain.ReportContent
 import parfait.core.report.domain.ReportPeriod
 import parfait.core.report.domain.ReportPlanner
 import parfait.core.report.domain.ReportSendOutcome
-import parfait.core.report.port.`in`.BuildReportNowUseCase
 import parfait.core.report.port.`in`.SendScheduledReportUseCase
 import parfait.core.report.port.out.ReportSendPort
 import parfait.core.report.port.out.ReportSettingsQueryPort
 import parfait.core.report.port.out.ReportSettingsSavePort
+import parfait.core.stats.port.`in`.GetGroupStatsUseCase
 import parfait.core.stats.port.`in`.GetSignupStatsComparisonUseCase
 import java.time.LocalDateTime
 
@@ -19,16 +19,13 @@ class ReportService(
     private val settingsQueryPort: ReportSettingsQueryPort,
     private val settingsSavePort: ReportSettingsSavePort,
     private val getSignupStatsComparisonUseCase: GetSignupStatsComparisonUseCase,
+    private val getGroupStatsUseCase: GetGroupStatsUseCase,
     private val reportSendPort: ReportSendPort,
     private val planner: ReportPlanner,
     // 테스트에서 0 을 넘겨 슬립을 건너뛴다. @Value 아님 — 기본값 상수.
     private val retryDelayMillis: Long = RETRY_DELAY_MS,
-) : SendScheduledReportUseCase,
-    BuildReportNowUseCase {
+) : SendScheduledReportUseCase {
     private val log = LoggerFactory.getLogger(javaClass)
-
-    override fun buildNow(now: LocalDateTime): ReportContent =
-        buildContent(planner.planNow(settingsQueryPort.find(), now))
 
     override fun sendIfDue(now: LocalDateTime): ReportSendOutcome {
         val period = planner.plan(settingsQueryPort.find(), now) ?: return ReportSendOutcome.SKIPPED
@@ -42,7 +39,8 @@ class ReportService(
 
     private fun buildContent(period: ReportPeriod): ReportContent {
         val comparison = getSignupStatsComparisonUseCase.getComparison(period.from, period.to)
-        return ReportContent(period, comparison.current, comparison.growth)
+        val newGroups = getGroupStatsUseCase.countNewGroups(period.from, period.to)
+        return ReportContent(period, comparison.current, comparison.growth, newGroups)
     }
 
     private fun sendWithOneRetry(content: ReportContent): Boolean {
