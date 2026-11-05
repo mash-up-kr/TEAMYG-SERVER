@@ -55,11 +55,13 @@ cmd_list() {
   echo "${short:-없음}"
   echo
   echo "== 서버의 이미지 목록 (최신순, [앱 이미지]만 롤백 대상) =="
-  docker image ls --format '{{.ID}}\t{{.Repository}}:{{.Tag}}\t{{.CreatedSince}}\t{{.Size}}' |
+  # -a가 없으면 태그 없는(<none>) 이전 앱 이미지가 목록에서 빠져 롤백 대상을 못 찾는다.
+  # -a는 중간 레이어도 <none>으로 보여줄 수 있으므로, 앱 이미지가 아닌 태그 없는 항목은 출력하지 않는다.
+  docker image ls -a --format '{{.ID}}\t{{.Repository}}:{{.Tag}}\t{{.CreatedSince}}\t{{.Size}}' |
     while IFS=$'\t' read -r id rest; do
       if is_app_image "$id"; then
         printf '%s\t%s\t[앱 이미지]\n' "$id" "$rest"
-      else
+      elif [[ "$rest" != '<none>:'* ]]; then
         printf '%s\t%s\n' "$id" "$rest"
       fi
     done

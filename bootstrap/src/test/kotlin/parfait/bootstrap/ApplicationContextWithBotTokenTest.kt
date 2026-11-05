@@ -23,7 +23,6 @@ import parfait.external.discord.bot.JdaFactory
 import parfait.external.discord.command.CommandDispatcher
 import parfait.external.discord.command.admode.AdModeCommand
 import parfait.external.discord.command.help.HelpCommand
-import parfait.external.discord.command.reportnow.ReportNowCommand
 import parfait.external.discord.command.signup.SignupCommand
 import parfait.external.discord.report.DisabledReportSender
 import java.util.concurrent.CopyOnWriteArrayList
@@ -85,7 +84,7 @@ class ApplicationContextWithBotTokenTest {
         context.getBeansOfType(CommandRouter::class.java).size shouldBe 1
         context.getBeansOfType(CommandRegistrar::class.java).size shouldBe 1
         context.getBeansOfType(DisabledReportSender::class.java).size shouldBe 0
-        listOf(AdModeCommand::class, HelpCommand::class, ReportNowCommand::class, SignupCommand::class)
+        listOf(AdModeCommand::class, HelpCommand::class, SignupCommand::class)
             .forEach { context.getBeansOfType(it.java).size shouldBe 1 }
         context.getBeansOfType(CommandDispatcher::class.java).size shouldBe 1
     }

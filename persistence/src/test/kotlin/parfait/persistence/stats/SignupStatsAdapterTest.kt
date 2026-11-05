@@ -13,8 +13,10 @@ import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import parfait.core.stats.domain.DailySignupStats
 import parfait.core.stats.domain.SignupStats
 import parfait.persistence.TestApplication
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Testcontainers
@@ -132,5 +134,44 @@ class SignupStatsAdapterTest {
         shouldThrow<IllegalStateException> {
             SignupStatsAdapter(entityManager, excludedMemberIdsRaw = "1,abc")
         }
+    }
+
+    @Test
+    fun `일별 집계는 가입과 탈퇴를 날짜별로 묶고 활동이 있는 날만 날짜순으로 돌려준다`() {
+        val adapter = SignupStatsAdapter(entityManager, excludedMemberIdsRaw = "")
+
+        // 10/28: a, c 가입 / 10/29: b, c 탈퇴
+        adapter.aggregateDaily(from, to) shouldBe
+            listOf(
+                DailySignupStats(LocalDate.of(2026, 10, 28), newSignups = 2, withdrawals = 0),
+                DailySignupStats(LocalDate.of(2026, 10, 29), newSignups = 0, withdrawals = 2),
+            )
+    }
+
+    @Test
+    fun `일별 집계도 제외 목록의 회원을 뺀다`() {
+        val adapter =
+            SignupStatsAdapter(
+                entityManager,
+                excludedMemberIdsRaw = "${newActive.toLong()}, ${oldWithdrawn.toLong()}",
+            )
+
+        // a(가입), b(탈퇴)를 제외 → 10/28 가입 1(c), 10/29 탈퇴 1(c)
+        adapter.aggregateDaily(from, to) shouldBe
+            listOf(
+                DailySignupStats(LocalDate.of(2026, 10, 28), newSignups = 1, withdrawals = 0),
+                DailySignupStats(LocalDate.of(2026, 10, 29), newSignups = 0, withdrawals = 1),
+            )
+    }
+
+    @Test
+    fun `일별 집계도 반열린 구간이라 to 시각은 제외한다`() {
+        jdbcTemplate.update("DELETE FROM member")
+        insert("at-from", created = "2026-10-27 00:00:00", deleted = null)
+        insert("at-to", created = "2026-10-30 00:00:00", deleted = null)
+        val adapter = SignupStatsAdapter(entityManager, excludedMemberIdsRaw = "")
+
+        adapter.aggregateDaily(from, to) shouldBe
+            listOf(DailySignupStats(LocalDate.of(2026, 10, 27), newSignups = 1, withdrawals = 0))
     }
 }

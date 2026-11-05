@@ -4,8 +4,10 @@ import jakarta.persistence.EntityManager
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import parfait.core.stats.domain.DailySignupStats
 import parfait.core.stats.domain.SignupStats
 import parfait.core.stats.port.out.SignupStatsQueryPort
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 /**
@@ -57,4 +59,51 @@ class SignupStatsAdapter(
             totalUsers = (row[3] as Number).toLong(),
         )
     }
+
+    @Transactional(readOnly = true)
+    override fun aggregateDaily(
+        from: LocalDateTime,
+        to: LocalDateTime,
+    ): List<DailySignupStats> {
+        val exclusion = if (excludedMemberIds.isEmpty()) "" else "AND id NOT IN (:excludedIds)"
+        val sql =
+            """
+            SELECT t.d, SUM(t.signups), SUM(t.withdrawals)
+            FROM (
+              SELECT DATE(created_at) AS d, 1 AS signups, 0 AS withdrawals
+              FROM member
+              WHERE created_at >= :from AND created_at < :to $exclusion
+              UNION ALL
+              SELECT DATE(deleted_at) AS d, 0 AS signups, 1 AS withdrawals
+              FROM member
+              WHERE deleted_at >= :from AND deleted_at < :to $exclusion
+            ) t
+            GROUP BY t.d
+            ORDER BY t.d
+            """.trimIndent()
+
+        val query =
+            entityManager
+                .createNativeQuery(sql)
+                .setParameter("from", from)
+                .setParameter("to", to)
+        if (excludedMemberIds.isNotEmpty()) query.setParameter("excludedIds", excludedMemberIds)
+
+        return query.resultList.map { raw ->
+            val row = raw as Array<*>
+            DailySignupStats(
+                date = toLocalDate(row[0]),
+                newSignups = (row[1] as Number).toLong(),
+                withdrawals = (row[2] as Number).toLong(),
+            )
+        }
+    }
+
+    // 드라이버·Hibernate 버전에 따라 DATE 가 java.sql.Date 또는 LocalDate 로 온다.
+    private fun toLocalDate(value: Any?): LocalDate =
+        when (value) {
+            is LocalDate -> value
+            is java.sql.Date -> value.toLocalDate()
+            else -> LocalDate.parse(value.toString())
+        }
 }

@@ -87,7 +87,7 @@ report:
   enabled: ${REPORT_ENABLED:false}
   # 정기 리포트 전송 시각(KST, 0~23시). cron 과 /광고모드의 "다음 리포트" 계산이 같은 값을 쓴다.
   # 범위를 벗어나거나 빈 값이면 기동에 실패한다.
-  hour: ${REPORT_HOUR:21}
+  hour: ${REPORT_HOUR:7}
   cron: "0 0 ${report.hour} * * *"
   stats:
     # 가입자 집계에서 뺄 테스트·운영진 member id (콤마 구분)
@@ -135,4 +135,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,metrics

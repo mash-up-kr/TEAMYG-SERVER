@@ -3,11 +3,15 @@ package parfait.core.stats.service
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import parfait.core.exception.BusinessException
+import parfait.core.stats.domain.DailySignupStats
 import parfait.core.stats.domain.SignupStats
 import parfait.core.stats.domain.SignupStatsComparison
 import parfait.core.stats.exception.StatsErrorCode
+import parfait.core.stats.port.`in`.GetDailySignupStatsUseCase
+import parfait.core.stats.port.`in`.GetGroupStatsUseCase
 import parfait.core.stats.port.`in`.GetSignupStatsComparisonUseCase
 import parfait.core.stats.port.`in`.GetSignupStatsUseCase
+import parfait.core.stats.port.out.GroupStatsQueryPort
 import parfait.core.stats.port.out.SignupStatsQueryPort
 import java.time.Duration
 import java.time.LocalDateTime
@@ -15,19 +19,18 @@ import java.time.LocalDateTime
 @Service
 class StatsService(
     private val signupStatsQueryPort: SignupStatsQueryPort,
+    private val groupStatsQueryPort: GroupStatsQueryPort,
 ) : GetSignupStatsUseCase,
-    GetSignupStatsComparisonUseCase {
+    GetSignupStatsComparisonUseCase,
+    GetDailySignupStatsUseCase,
+    GetGroupStatsUseCase {
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun getSignupStats(
         from: LocalDateTime,
         to: LocalDateTime,
     ): SignupStats {
-        if (!from.isBefore(to) ||
-            to.isAfter(from.plusDays(MAX_RANGE_DAYS))
-        ) {
-            throw BusinessException(StatsErrorCode.INVALID_STATS_PERIOD)
-        }
+        requireValidPeriod(from, to)
         return signupStatsQueryPort.aggregate(from, to)
     }
 
@@ -45,6 +48,36 @@ class StatsService(
                 null
             }
         return SignupStatsComparison(current, previous)
+    }
+
+    override fun getDailySignupStats(
+        from: LocalDateTime,
+        to: LocalDateTime,
+    ): List<DailySignupStats> {
+        requireValidPeriod(from, to)
+        val byDate = signupStatsQueryPort.aggregateDaily(from, to).associateBy { it.date }
+        val lastDate = to.minusNanos(1).toLocalDate()
+        return generateSequence(from.toLocalDate()) { it.plusDays(1) }
+            .takeWhile { !it.isAfter(lastDate) }
+            .map { byDate[it] ?: DailySignupStats(it, newSignups = 0, withdrawals = 0) }
+            .toList()
+    }
+
+    override fun countNewGroups(
+        from: LocalDateTime,
+        to: LocalDateTime,
+    ): Long {
+        requireValidPeriod(from, to)
+        return groupStatsQueryPort.countCreated(from, to)
+    }
+
+    private fun requireValidPeriod(
+        from: LocalDateTime,
+        to: LocalDateTime,
+    ) {
+        if (!from.isBefore(to) || to.isAfter(from.plusDays(MAX_RANGE_DAYS))) {
+            throw BusinessException(StatsErrorCode.INVALID_STATS_PERIOD)
+        }
     }
 
     private companion object {

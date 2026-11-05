@@ -13,7 +13,18 @@
 {$DOMAIN} {
 	encode zstd gzip
 
-	reverse_proxy 127.0.0.1:8080
+	# metrics 등 내부용 actuator는 외부에 노출하지 않는다. 업타임 모니터가 쓰는 health만 통과시킨다.
+	# 서버 안에서는 127.0.0.1:8080/actuator/metrics로 직접 조회한다.
+	@actuatorInternal {
+		path /actuator/*
+		not path /actuator/health /actuator/health/*
+	}
+	handle @actuatorInternal {
+		respond 404
+	}
+	handle {
+		reverse_proxy 127.0.0.1:8080
+	}
 
 	log {
 		output file /data/access.log {
