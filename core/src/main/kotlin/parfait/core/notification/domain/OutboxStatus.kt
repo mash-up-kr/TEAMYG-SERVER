@@ -1,4 +1,4 @@
 package parfait.core.notification.domain
 
-enum class OutboxStatus { PENDING, SENT, FAILED }
-// SUPPRESSED, CAPPED 는 후속 스로틀 정책 스펙에서 추가 (status VARCHAR(20) 이라 마이그레이션 불필요)
+enum class OutboxStatus { PENDING, SENT, FAILED, DEFERRED }
+// DEFERRED: 알림 모아 받기 윈도우 안에서 발송을 미룬 활동 행. digest_ref 로 P-06 예약 행에 연결된다.

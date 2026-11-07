@@ -220,4 +220,31 @@ class NotificationMessageFactoryTest {
         factory.generateTextPreview("\n\n") shouldBe null
         factory.generateTextPreview(" \r\n ") shouldBe null
     }
+
+    @Test
+    fun `활동 묶음 알림 문구는 개수를 담고 제목에 그룹명을 쓴다`() {
+        val message = factory.activityDigest("우리팀", 3, 1L, LocalDate.of(2026, 11, 3))
+
+        message.title shouldBe "우리팀 파르페에 체리가 또 톡!"
+        message.body shouldBe "그사이 새 소식이 3개 쌓였어요"
+        message.ttl shouldBe Duration.ofHours(1)
+        message.data shouldBe
+            mapOf(
+                "type" to "ACTIVITY_DIGEST",
+                "route" to "canvas",
+                "groupId" to "1",
+                "date" to "2026-11-03",
+            )
+    }
+
+    @Test
+    fun `개수가 99개까지는 숫자 그대로 쓴다`() {
+        factory.activityDigest("g", 99, 1L, LocalDate.of(2026, 11, 3)).body shouldBe "그사이 새 소식이 99개 쌓였어요"
+    }
+
+    @Test
+    fun `개수가 100개 이상이면 99+로 쓴다`() {
+        factory.activityDigest("g", 100, 1L, LocalDate.of(2026, 11, 3)).body shouldBe "그사이 새 소식이 99+개 쌓였어요"
+        factory.activityDigest("g", 250, 1L, LocalDate.of(2026, 11, 3)).body shouldBe "그사이 새 소식이 99+개 쌓였어요"
+    }
 }
