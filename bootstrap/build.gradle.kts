@@ -29,6 +29,7 @@ tasks.withType<Test> {
         "DISCORD_REPORT_CHANNEL_ID",
         "DISCORD_ADMIN_ROLE_ID",
         "STATS_API_TOKEN",
+        "NOTICE_ADMIN_TOKEN",
     ).forEach { environment(it, "") }
     // 빈 문자열이면 report.hour 가 비어 기동에 실패하므로 값을 비우지 않고 제거해 yaml 기본값을 쓰게 한다.
     listOf("REPORT_ENABLED", "REPORT_HOUR", "REPORT_EXCLUDED_MEMBER_IDS").forEach { environment.remove(it) }
