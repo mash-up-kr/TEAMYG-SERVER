@@ -46,6 +46,9 @@ class SecurityConfig(
                 "/link",
                 // 통계 API — JWT 가 아니라 StatsTokenVerifier(X-Stats-Token)가 컨트롤러에서 인증한다.
                 "/admin/stats",
+                // 공지 어드민 API — JWT 가 아니라 NoticeAdminTokenVerifier(X-Notice-Token)가 컨트롤러에서 인증한다.
+                "/admin/notices",
+                "/admin/notices/**",
             )
     }
 
