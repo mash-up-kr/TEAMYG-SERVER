@@ -88,6 +88,28 @@ class NotificationMessageFactory {
             ttl = Duration.ofHours(6),
         )
 
+    fun activityDigest(
+        groupName: String,
+        count: Int,
+        groupId: Long,
+        parfaitDate: LocalDate,
+    ): PushMessage =
+        PushMessage(
+            title = "$groupName 파르페에 체리가 또 톡!",
+            body = "그사이 새 소식이 ${formatDigestCount(count)}개 쌓였어요",
+            data =
+                mapOf(
+                    "type" to "ACTIVITY_DIGEST",
+                    "route" to "canvas",
+                    "groupId" to groupId.toString(),
+                    "date" to parfaitDate.toString(),
+                ),
+            ttl = Duration.ofHours(1),
+        )
+
+    private fun formatDigestCount(count: Int): String =
+        if (count > DIGEST_COUNT_MAX) "$DIGEST_COUNT_MAX+" else count.toString()
+
     fun generateTextPreview(text: String): String? {
         val normalized =
             text
@@ -120,5 +142,6 @@ class NotificationMessageFactory {
         const val NICKNAME_DISPLAY_MAX = 8
         const val PREVIEW_MAX_GRAPHEMES = 11
         const val PREVIEW_CUT_GRAPHEMES = 10
+        const val DIGEST_COUNT_MAX = 99
     }
 }

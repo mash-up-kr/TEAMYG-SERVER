@@ -106,4 +106,49 @@ class NotificationOutboxTest {
         row.sentAt shouldBe null
         row.lastError shouldBe null
     }
+
+    @Test
+    fun `활동 묶음 예약 행은 윈도우 시작 시각이 dedupKey에 들어가고 종료 시각에 예약된다`() {
+        val start = LocalDateTime.of(2026, 11, 3, 10, 0, 5)
+        val end = LocalDateTime.of(2026, 11, 3, 10, 10, 5)
+        val digestPayload =
+            ActivityDigestPayload(
+                groupId = 1L,
+                parfaitId = 5L,
+                parfaitDate = LocalDate.of(2026, 11, 3),
+                actorMemberId = 7L,
+            )
+
+        val digest =
+            NotificationOutbox.activityDigest(
+                receiverMemberId = 42L,
+                payload = digestPayload,
+                windowStart = start,
+                windowEnd = end,
+            )
+
+        digest.eventType shouldBe NotificationOutbox.EVENT_TYPE_ACTIVITY_DIGEST
+        digest.aggregateType shouldBe NotificationOutbox.AGGREGATE_TYPE_GROUP
+        digest.aggregateId shouldBe 1L
+        digest.receiverMemberId shouldBe 42L
+        digest.dedupKey shouldBe "activity-digest:42:1:2026-11-03:20261103100005"
+        digest.scheduledAt shouldBe end
+        digest.createdAt shouldBe start
+    }
+
+    @Test
+    fun `윈도우 열림 조회용 접두어는 dedupKey의 앞부분과 같다`() {
+        NotificationOutbox.activityDigestKeyPrefix(42L, 1L, LocalDate.of(2026, 11, 3)) shouldBe
+            "activity-digest:42:1:2026-11-03:"
+    }
+
+    @Test
+    fun `윈도우 종료 시각은 10분 뒤이고 해당 날짜 캔버스 마감 03시를 넘지 않는다`() {
+        val date = LocalDate.of(2026, 11, 3)
+
+        NotificationOutbox.digestWindowEnd(LocalDateTime.of(2026, 11, 3, 10, 0), date) shouldBe
+            LocalDateTime.of(2026, 11, 3, 10, 10)
+        NotificationOutbox.digestWindowEnd(LocalDateTime.of(2026, 11, 4, 2, 55), date) shouldBe
+            LocalDateTime.of(2026, 11, 4, 3, 0)
+    }
 }

@@ -37,6 +37,10 @@ class Member(
     var createdAt: LocalDateTime = LocalDateTime.now(),
     @Column(name = "updated_at", nullable = false)
     var updatedAt: LocalDateTime = LocalDateTime.now(),
+    @Column(name = "daily_reminder_enabled", nullable = false)
+    var dailyReminderEnabled: Boolean = true,
+    @Column(name = "activity_digest_enabled", nullable = false)
+    var activityDigestEnabled: Boolean = false,
     @Column(name = "deleted_at")
     var deletedAt: LocalDateTime? = null,
     @Id
