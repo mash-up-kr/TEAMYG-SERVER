@@ -4,19 +4,24 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import parfait.core.notification.domain.ActivityDigestPayload
 import parfait.core.notification.domain.DevicePlatform
 import parfait.core.notification.domain.DeviceToken
 import parfait.core.notification.domain.NotificationMessageFactory
 import parfait.core.notification.domain.NotificationOutbox
+import parfait.core.notification.domain.NotificationSettings
 import parfait.core.notification.domain.OutboxStatus
 import parfait.core.notification.domain.TextPlacedPayload
 import parfait.core.notification.domain.ToppingPlacedPayload
 import parfait.core.notification.exception.NotificationSendException
 import parfait.core.notification.port.out.DeviceTokenDeletePort
 import parfait.core.notification.port.out.DeviceTokenQueryPort
+import parfait.core.notification.port.out.NotificationOutboxDigestPort
 import parfait.core.notification.port.out.NotificationOutboxPollPort
 import parfait.core.notification.port.out.NotificationSenderPort
+import parfait.core.notification.port.out.NotificationSettingsQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupQueryPort
 import parfait.core.parfaitgroup.domain.ParfaitGroup
@@ -31,6 +36,9 @@ class NotificationOutboxDispatcherTest {
     private val deviceTokenQueryPort = mockk<DeviceTokenQueryPort>()
     private val deviceTokenDeletePort = mockk<DeviceTokenDeletePort>(relaxed = true)
     private val senderPort = mockk<NotificationSenderPort>(relaxed = true)
+    private val settingsQueryPort = mockk<NotificationSettingsQueryPort>()
+    private val digestPort = mockk<NotificationOutboxDigestPort>(relaxed = true)
+    private val coordinator = mockk<ActivityDigestCoordinator>()
     private val dispatcher =
         NotificationOutboxDispatcher(
             pollPort,
@@ -40,7 +48,15 @@ class NotificationOutboxDispatcherTest {
             deviceTokenDeletePort,
             senderPort,
             NotificationMessageFactory(),
+            coordinator,
+            settingsQueryPort,
+            digestPort,
         )
+
+    @BeforeEach
+    fun defaultDecision() {
+        every { coordinator.decide(any(), any()) } returns DigestDecision.SEND_NOW
+    }
 
     private val now = LocalDateTime.of(2026, 9, 2, 10, 0)
     private val payload =
@@ -354,5 +370,209 @@ class NotificationOutboxDispatcherTest {
 
         verify(exactly = 0) { senderPort.send(any(), any()) }
         verify { pollPort.markSent(2L, now, "CANCELLED_EMPTY_PREVIEW") }
+    }
+
+    @Test
+    fun `빈 텍스트 행은 coordinator decide 를 호출하지 않고 CANCELLED_EMPTY_PREVIEW 로 취소된다`() {
+        val emptyRow =
+            NotificationOutbox.reconstitute(
+                id = 2L,
+                aggregateType = "TEXT",
+                aggregateId = 5L,
+                eventType = "TEXT_PLACED",
+                receiverMemberId = 42L,
+                payload = textPayload.copy(text = "  \n  "),
+                dedupKey = "text-placed:5:42",
+                status = OutboxStatus.PENDING,
+                attempts = 0,
+                scheduledAt = now,
+                lastError = null,
+                createdAt = now,
+                sentAt = null,
+            )
+        every { pollPort.claimBatch(any(), now) } returns listOf(emptyRow)
+        arrangeValidReceiver()
+
+        dispatcher.processDueBatch(now)
+
+        verify(exactly = 0) { coordinator.decide(any(), any()) }
+        verify(exactly = 0) { senderPort.send(any(), any()) }
+        verify { pollPort.markSent(2L, now, "CANCELLED_EMPTY_PREVIEW") }
+    }
+
+    private fun digestRow(id: Long = 9L) =
+        NotificationOutbox.reconstitute(
+            id = id,
+            aggregateType = "GROUP",
+            aggregateId = 1L,
+            eventType = "ACTIVITY_DIGEST",
+            receiverMemberId = 42L,
+            payload = ActivityDigestPayload(1L, 5L, LocalDate.of(2026, 9, 2), 7L),
+            dedupKey = "activity-digest:42:1:2026-09-02:20260902100000",
+            status = OutboxStatus.PENDING,
+            attempts = 0,
+            scheduledAt = now,
+            lastError = null,
+            createdAt = now,
+            sentAt = null,
+        )
+
+    private fun arrangeValidReceiver() {
+        every { groupQueryPort.findById(1L) } returns group()
+        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns member(42L)
+        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 7L) } returns member(7L)
+        every { deviceTokenQueryPort.findByMemberId(42L) } returns listOf(token("tok-1"))
+    }
+
+    @Test
+    fun `묶음 모드에서 윈도우가 열려 있으면 발송하지 않고 미룬다`() {
+        every { pollPort.claimBatch(any(), now) } returns listOf(row())
+        arrangeValidReceiver()
+        every { coordinator.decide(any(), now) } returns DigestDecision.DEFER
+
+        dispatcher.processDueBatch(now)
+
+        verify(exactly = 0) { senderPort.send(any(), any()) }
+        verify(exactly = 0) { pollPort.markSent(any(), any(), any()) }
+    }
+
+    @Test
+    fun `P-06 예약 행은 재집계한 개수로 발송하고 대기 행을 정리한다`() {
+        every { pollPort.claimBatch(any(), now) } returns listOf(digestRow())
+        arrangeValidReceiver()
+        every { settingsQueryPort.findByMemberId(42L) } returns NotificationSettings(true, true)
+        every { coordinator.countAlive("activity-digest:42:1:2026-09-02:20260902100000") } returns 3
+
+        dispatcher.processDueBatch(now)
+
+        verify { senderPort.send("tok-1", match { it.body == "그사이 새 소식이 3개 쌓였어요" }) }
+        verify { pollPort.markSent(9L, now, null) }
+        verify { digestPort.resolveDeferred("activity-digest:42:1:2026-09-02:20260902100000", now, "DIGESTED") }
+    }
+
+    @Test
+    fun `P-06 예약 행은 개수가 100 이상이면 99+로 발송한다`() {
+        every { pollPort.claimBatch(any(), now) } returns listOf(digestRow())
+        arrangeValidReceiver()
+        every { settingsQueryPort.findByMemberId(42L) } returns NotificationSettings(true, true)
+        every { coordinator.countAlive(any()) } returns 150
+
+        dispatcher.processDueBatch(now)
+
+        verify { senderPort.send("tok-1", match { it.body == "그사이 새 소식이 99+개 쌓였어요" }) }
+    }
+
+    @Test
+    fun `E-26 재집계 결과가 0이면 발송 없이 취소하고 대기 행을 정리한다`() {
+        every { pollPort.claimBatch(any(), now) } returns listOf(digestRow())
+        arrangeValidReceiver()
+        every { settingsQueryPort.findByMemberId(42L) } returns NotificationSettings(true, true)
+        every { coordinator.countAlive(any()) } returns 0
+
+        dispatcher.processDueBatch(now)
+
+        verify(exactly = 0) { senderPort.send(any(), any()) }
+        verify { pollPort.markSent(9L, now, "CANCELLED_EMPTY_DIGEST") }
+        verify {
+            digestPort.resolveDeferred(
+                "activity-digest:42:1:2026-09-02:20260902100000",
+                now,
+                "CANCELLED_EMPTY_DIGEST",
+            )
+        }
+    }
+
+    @Test
+    fun `E-27 모아 받기를 껐으면 발송 없이 취소하고 대기 행을 정리한다`() {
+        every { pollPort.claimBatch(any(), now) } returns listOf(digestRow())
+        arrangeValidReceiver()
+        every { settingsQueryPort.findByMemberId(42L) } returns NotificationSettings(true, false)
+
+        dispatcher.processDueBatch(now)
+
+        verify(exactly = 0) { senderPort.send(any(), any()) }
+        verify { pollPort.markSent(9L, now, "CANCELLED_DIGEST_DISABLED") }
+        verify {
+            digestPort.resolveDeferred(
+                "activity-digest:42:1:2026-09-02:20260902100000",
+                now,
+                "CANCELLED_DIGEST_DISABLED",
+            )
+        }
+    }
+
+    @Test
+    fun `E-25 수신자가 그룹을 나갔으면 예약 행을 취소하고 대기 행도 정리한다`() {
+        every { pollPort.claimBatch(any(), now) } returns listOf(digestRow())
+        every { groupQueryPort.findById(1L) } returns group()
+        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns member(42L, left = now)
+
+        dispatcher.processDueBatch(now)
+
+        verify { pollPort.markSent(9L, now, "CANCELLED_RECEIVER_LEFT") }
+        verify {
+            digestPort.resolveDeferred(
+                "activity-digest:42:1:2026-09-02:20260902100000",
+                now,
+                "CANCELLED_RECEIVER_LEFT",
+            )
+        }
+    }
+
+    private val digestKey = "activity-digest:42:1:2026-09-02:20260902100000"
+
+    @Test
+    fun `P-06 예약 행이 비재시도 실패로 끝나면 markFailed 하고 대기 행을 DIGEST_FAILED 로 정리한다`() {
+        every { pollPort.claimBatch(any(), now) } returns listOf(digestRow())
+        arrangeValidReceiver()
+        every { settingsQueryPort.findByMemberId(42L) } returns NotificationSettings(true, true)
+        every { coordinator.countAlive(any()) } returns 3
+        every { senderPort.send("tok-1", any()) } throws
+            NotificationSendException(retryable = false, errorCode = "INVALID_ARGUMENT", message = "x")
+
+        dispatcher.processDueBatch(now)
+
+        verify { pollPort.markFailed(9L, any()) }
+        verify { digestPort.resolveDeferred(digestKey, now, "DIGEST_FAILED") }
+    }
+
+    @Test
+    fun `P-06 예약 행의 수신자에게 토큰이 없으면 대기 행을 NO_DEVICE_TOKEN 으로 정리한다`() {
+        every { pollPort.claimBatch(any(), now) } returns listOf(digestRow())
+        every { groupQueryPort.findById(1L) } returns group()
+        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 42L) } returns member(42L)
+        every { groupMemberQueryPort.findByGroupIdAndMemberId(1L, 7L) } returns member(7L)
+        every { deviceTokenQueryPort.findByMemberId(42L) } returns emptyList()
+
+        dispatcher.processDueBatch(now)
+
+        verify { pollPort.markSent(9L, now, "NO_DEVICE_TOKEN") }
+        verify { digestPort.resolveDeferred(digestKey, now, "NO_DEVICE_TOKEN") }
+    }
+
+    @Test
+    fun `P-06 예약 행의 그룹이 삭제됐으면 대기 행을 CANCELLED_GROUP_DELETED 로 정리한다`() {
+        every { pollPort.claimBatch(any(), now) } returns listOf(digestRow())
+        every { groupQueryPort.findById(1L) } returns null
+
+        dispatcher.processDueBatch(now)
+
+        verify { pollPort.markSent(9L, now, "CANCELLED_GROUP_DELETED") }
+        verify { digestPort.resolveDeferred(digestKey, now, "CANCELLED_GROUP_DELETED") }
+    }
+
+    @Test
+    fun `P-06 예약 행이 재시도 가능한 실패이면 markRetry 만 하고 대기 행은 정리하지 않는다`() {
+        every { pollPort.claimBatch(any(), now) } returns listOf(digestRow())
+        arrangeValidReceiver()
+        every { settingsQueryPort.findByMemberId(42L) } returns NotificationSettings(true, true)
+        every { coordinator.countAlive(any()) } returns 3
+        every { senderPort.send("tok-1", any()) } throws
+            NotificationSendException(retryable = true, errorCode = "UNAVAILABLE", message = "x")
+
+        dispatcher.processDueBatch(now)
+
+        verify { pollPort.markRetry(9L, 1, now.plusMinutes(1), any()) }
+        verify(exactly = 0) { digestPort.resolveDeferred(any(), any(), any()) }
     }
 }

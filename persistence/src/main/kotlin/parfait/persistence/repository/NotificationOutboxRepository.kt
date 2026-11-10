@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import parfait.core.notification.domain.OutboxStatus
 import parfait.persistence.entity.NotificationOutboxEntity
 import java.time.LocalDateTime
 
@@ -25,6 +26,17 @@ interface NotificationOutboxRepository : JpaRepository<NotificationOutboxEntity,
 
     /** 넘어온 dedup_key 중 이미 큐잉된 행만 조회한다 (saveAll 의 생산자 멱등 pre-filter 용). */
     fun findAllByDedupKeyIn(dedupKeys: Collection<String>): List<NotificationOutboxEntity>
+
+    /** dedup_key 접두어(UNIQUE 인덱스를 탄다)와 상태로 열려 있는 P-06 예약 행을 찾는다. */
+    fun findFirstByDedupKeyStartingWithAndStatus(
+        dedupKeyPrefix: String,
+        status: OutboxStatus,
+    ): NotificationOutboxEntity?
+
+    fun findAllByDigestRefAndStatus(
+        digestRef: String,
+        status: OutboxStatus,
+    ): List<NotificationOutboxEntity>
 
     @Modifying
     @Query(

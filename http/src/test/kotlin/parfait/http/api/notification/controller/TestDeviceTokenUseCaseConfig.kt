@@ -2,8 +2,12 @@ package parfait.http.api.notification.controller
 
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
+import parfait.core.notification.domain.NotificationSettings
+import parfait.core.notification.port.`in`.GetNotificationSettingsUseCase
 import parfait.core.notification.port.`in`.RegisterDeviceTokenCommand
 import parfait.core.notification.port.`in`.RegisterDeviceTokenUseCase
+import parfait.core.notification.port.`in`.UpdateNotificationSettingsCommand
+import parfait.core.notification.port.`in`.UpdateNotificationSettingsUseCase
 
 /**
  * `RegisterDeviceTokenUseCase`의 실제 구현체는 `core` 모듈에 있고, `http`의 `TestApplication`은
@@ -16,5 +20,17 @@ class TestDeviceTokenUseCaseConfig {
     fun registerDeviceTokenUseCase(): RegisterDeviceTokenUseCase =
         object : RegisterDeviceTokenUseCase {
             override fun register(command: RegisterDeviceTokenCommand) {}
+        }
+
+    @Bean
+    fun getNotificationSettingsUseCase(): GetNotificationSettingsUseCase =
+        object : GetNotificationSettingsUseCase {
+            override fun get(memberId: Long) = NotificationSettings.DEFAULT
+        }
+
+    @Bean
+    fun updateNotificationSettingsUseCase(): UpdateNotificationSettingsUseCase =
+        object : UpdateNotificationSettingsUseCase {
+            override fun update(command: UpdateNotificationSettingsCommand) = NotificationSettings.DEFAULT
         }
 }

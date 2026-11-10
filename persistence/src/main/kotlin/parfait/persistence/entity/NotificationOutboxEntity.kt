@@ -43,6 +43,8 @@ class NotificationOutboxEntity(
     var createdAt: LocalDateTime,
     @Column(name = "sent_at")
     var sentAt: LocalDateTime? = null,
+    @Column(name = "digest_ref", length = 150)
+    var digestRef: String? = null,
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")

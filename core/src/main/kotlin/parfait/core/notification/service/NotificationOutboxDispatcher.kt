@@ -13,8 +13,10 @@ import parfait.core.notification.port.`in`.OutboxBatchOutcome
 import parfait.core.notification.port.`in`.ProcessNotificationOutboxUseCase
 import parfait.core.notification.port.out.DeviceTokenDeletePort
 import parfait.core.notification.port.out.DeviceTokenQueryPort
+import parfait.core.notification.port.out.NotificationOutboxDigestPort
 import parfait.core.notification.port.out.NotificationOutboxPollPort
 import parfait.core.notification.port.out.NotificationSenderPort
+import parfait.core.notification.port.out.NotificationSettingsQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupMemberQueryPort
 import parfait.core.parfaitgroup.application.port.out.ParfaitGroupQueryPort
 import java.time.LocalDateTime
@@ -38,6 +40,9 @@ class NotificationOutboxDispatcher(
     private val deviceTokenDeletePort: DeviceTokenDeletePort,
     private val senderPort: NotificationSenderPort,
     private val messageFactory: NotificationMessageFactory,
+    private val coordinator: ActivityDigestCoordinator,
+    private val settingsQueryPort: NotificationSettingsQueryPort,
+    private val digestPort: NotificationOutboxDigestPort,
 ) : ProcessNotificationOutboxUseCase {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -47,6 +52,10 @@ class NotificationOutboxDispatcher(
         const val CANCELLED_RECEIVER_LEFT = "CANCELLED_RECEIVER_LEFT"
         const val NO_DEVICE_TOKEN = "NO_DEVICE_TOKEN"
         const val CANCELLED_EMPTY_PREVIEW = "CANCELLED_EMPTY_PREVIEW"
+        const val CANCELLED_DIGEST_DISABLED = "CANCELLED_DIGEST_DISABLED"
+        const val CANCELLED_EMPTY_DIGEST = "CANCELLED_EMPTY_DIGEST"
+        const val DIGESTED = "DIGESTED"
+        const val DIGEST_FAILED = "DIGEST_FAILED"
     }
 
     @Transactional
@@ -56,13 +65,17 @@ class NotificationOutboxDispatcher(
         var cancelled = 0
         var retried = 0
         var failed = 0
+        var deferred = 0
         val cancelledByReason = mutableMapOf<String, Int>()
 
         fun cancel(
-            id: Long,
+            row: NotificationOutbox,
             reason: String,
         ) {
-            pollPort.markSent(id, now, reason)
+            pollPort.markSent(requireNotNull(row.id), now, reason)
+            if (row.eventType == NotificationOutbox.EVENT_TYPE_ACTIVITY_DIGEST) {
+                digestPort.resolveDeferred(row.dedupKey, now, reason)
+            }
             cancelled++
             cancelledByReason.merge(reason, 1, Int::plus)
         }
@@ -73,13 +86,13 @@ class NotificationOutboxDispatcher(
 
             val group = groupQueryPort.findById(p.groupId)
             if (group == null) { // E-04
-                cancel(id, CANCELLED_GROUP_DELETED)
+                cancel(row, CANCELLED_GROUP_DELETED)
                 continue
             }
 
             val receiver = groupMemberQueryPort.findByGroupIdAndMemberId(p.groupId, row.receiverMemberId)
             if (receiver == null || receiver.leftAt != null) { // E-03
-                cancel(id, CANCELLED_RECEIVER_LEFT)
+                cancel(row, CANCELLED_RECEIVER_LEFT)
                 continue
             }
 
@@ -88,7 +101,26 @@ class NotificationOutboxDispatcher(
 
             val tokens = deviceTokenQueryPort.findByMemberId(row.receiverMemberId)
             if (tokens.isEmpty()) { // E-02
-                cancel(id, NO_DEVICE_TOKEN)
+                cancel(row, NO_DEVICE_TOKEN)
+                continue
+            }
+
+            // 빈 미리보기는 알림이 나가지 않으므로 decide(P-06 윈도우 생성) 보다 먼저 취소한다.
+            val textPreview =
+                if (row.eventType == NotificationOutbox.EVENT_TYPE_TEXT_PLACED) {
+                    messageFactory.generateTextPreview((p as TextPlacedPayload).text)
+                } else {
+                    null
+                }
+            if (row.eventType == NotificationOutbox.EVENT_TYPE_TEXT_PLACED && textPreview == null) {
+                cancel(row, CANCELLED_EMPTY_PREVIEW)
+                continue
+            }
+
+            if (row.eventType != NotificationOutbox.EVENT_TYPE_ACTIVITY_DIGEST &&
+                coordinator.decide(row, now) == DigestDecision.DEFER
+            ) {
+                deferred++
                 continue
             }
 
@@ -98,14 +130,25 @@ class NotificationOutboxDispatcher(
                         messageFactory.toppingPlaced(group.name.value, actorNickname, p.groupId, p.parfaitDate)
                     NotificationOutbox.EVENT_TYPE_BACKGROUND_CHANGED ->
                         messageFactory.backgroundChanged(group.name.value, actorNickname, p.groupId, p.parfaitDate)
-                    NotificationOutbox.EVENT_TYPE_TEXT_PLACED -> {
-                        val tp = p as TextPlacedPayload
-                        val preview = messageFactory.generateTextPreview(tp.text)
-                        if (preview == null) {
-                            cancel(id, CANCELLED_EMPTY_PREVIEW)
+                    NotificationOutbox.EVENT_TYPE_TEXT_PLACED ->
+                        messageFactory.textPlaced(
+                            group.name.value,
+                            actorNickname,
+                            p.groupId,
+                            p.parfaitDate,
+                            requireNotNull(textPreview),
+                        )
+                    NotificationOutbox.EVENT_TYPE_ACTIVITY_DIGEST -> {
+                        if (!settingsQueryPort.findByMemberId(row.receiverMemberId).activityDigestEnabled) {
+                            cancel(row, CANCELLED_DIGEST_DISABLED) // E-27
                             continue
                         }
-                        messageFactory.textPlaced(group.name.value, actorNickname, p.groupId, p.parfaitDate, preview)
+                        val count = coordinator.countAlive(row.dedupKey)
+                        if (count == 0) {
+                            cancel(row, CANCELLED_EMPTY_DIGEST) // E-26
+                            continue
+                        }
+                        messageFactory.activityDigest(group.name.value, count, p.groupId, p.parfaitDate) // E-28
                     }
                     else -> {
                         // 예외를 던지면 배치 트랜잭션 전체가 롤백되므로 해당 행만 종료 처리하고 계속한다.
@@ -136,6 +179,9 @@ class NotificationOutboxDispatcher(
             when {
                 anySuccess -> {
                     pollPort.markSent(id, now, null)
+                    if (row.eventType == NotificationOutbox.EVENT_TYPE_ACTIVITY_DIGEST) {
+                        digestPort.resolveDeferred(row.dedupKey, now, DIGESTED)
+                    }
                     sent++
                 }
                 anyRetryable && row.attempts + 1 < OutboxBackoff.MAX_ATTEMPTS -> {
@@ -151,6 +197,9 @@ class NotificationOutboxDispatcher(
                 }
                 else -> {
                     pollPort.markFailed(id, lastError ?: "all tokens failed")
+                    if (row.eventType == NotificationOutbox.EVENT_TYPE_ACTIVITY_DIGEST) {
+                        digestPort.resolveDeferred(row.dedupKey, now, DIGEST_FAILED)
+                    }
                     log.warn("outbox 발송 실패(종료) id={} error={}", id, lastError)
                     failed++
                 }
@@ -159,9 +208,10 @@ class NotificationOutboxDispatcher(
 
         if (batch.isNotEmpty()) {
             log.info(
-                "outbox 배치 처리 - claimed={} sent={} cancelled={} retried={} failed={} byReason={}",
+                "outbox 배치 처리 - claimed={} sent={} deferred={} cancelled={} retried={} failed={} byReason={}",
                 batch.size,
                 sent,
+                deferred,
                 cancelled,
                 retried,
                 failed,

@@ -8,6 +8,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import parfait.http.TestApplication
 import parfait.http.api.deeplink.controller.TestGetDownloadStoreLinkUseCaseConfig
+import parfait.http.api.notice.controller.TestNoticeUseCaseConfig
 import parfait.http.api.notification.controller.TestDeviceTokenUseCaseConfig
 import parfait.http.api.stats.controller.TestGetSignupStatsUseCaseConfig
 import parfait.http.auth.controller.TestAppleLoginUseCaseConfig
@@ -64,6 +65,7 @@ import kotlin.test.Test
     TestRotateParfaitCanvasesUseCaseConfig::class,
     TestChangeParfaitBackgroundUseCaseConfig::class,
     TestGetSignupStatsUseCaseConfig::class,
+    TestNoticeUseCaseConfig::class,
 )
 class ActuatorHealthEndpointTest {
     @Autowired
