@@ -21,6 +21,7 @@ import parfait.core.member.port.out.MemberAccount
 import parfait.core.member.port.out.MemberQueryPort
 import parfait.http.TestApplication
 import parfait.http.api.deeplink.controller.TestGetDownloadStoreLinkUseCaseConfig
+import parfait.http.api.notice.controller.TestNoticeUseCaseConfig
 import parfait.http.api.notification.controller.TestDeviceTokenUseCaseConfig
 import parfait.http.api.stats.controller.TestGetSignupStatsUseCaseConfig
 import parfait.http.auth.controller.TestAppleLoginUseCaseConfig
@@ -85,6 +86,7 @@ import kotlin.test.Test
     TestRotateParfaitCanvasesUseCaseConfig::class,
     TestChangeParfaitBackgroundUseCaseConfig::class,
     TestGetSignupStatsUseCaseConfig::class,
+    TestNoticeUseCaseConfig::class,
 )
 class SecurityConfigIntegrationTest {
     @Autowired
@@ -169,6 +171,27 @@ class SecurityConfigIntegrationTest {
                 status { isUnauthorized() }
                 jsonPath("$.code") { value("INVALID_STATS_TOKEN") }
             }
+    }
+
+    @Test
+    fun `공지 어드민 API 경로는 JWT 없이 화이트리스트를 통과하고 공지 토큰으로 인증한다`() {
+        mockMvc
+            .post("/admin/notices") {
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"type":"UPDATE","platform":"COMMON","version":"1.2.0","content":"내용"}"""
+            }.andExpect {
+                status { isUnauthorized() }
+                // JWT 필터의 UNAUTHORIZED 가 아니라 컨트롤러의 NoticeAdminTokenVerifier 가 거절했다는 뜻이다.
+                jsonPath("$.code") { value("INVALID_NOTICE_TOKEN") }
+            }
+    }
+
+    @Test
+    fun `공지 조회 API 는 JWT 가 필요하다`() {
+        mockMvc.get("/api/v1/notices?platform=IOS").andExpect {
+            status { isUnauthorized() }
+            jsonPath("$.code") { value("UNAUTHORIZED") }
+        }
     }
 
     @Test

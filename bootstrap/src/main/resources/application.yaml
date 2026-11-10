@@ -107,6 +107,10 @@ stats:
   # 비어 있으면 GET /admin/stats 는 모든 요청을 거절한다.
   api-token: ${STATS_API_TOKEN:}
 
+notice:
+  # 비어 있으면 POST·PATCH /admin/notices 는 모든 요청을 거절한다.
+  admin-token: ${NOTICE_ADMIN_TOKEN:}
+
 landing:
   domain: parfait-app.store
 
