@@ -37,6 +37,7 @@ class SecurityConfig(
                 "/api/v1/auth/signup",
                 "/api/v1/auth/reissue",
                 "/api/v1/policies",
+                "/api/v1/app-versions/check",
                 // TODO: 테스트 전용 — 프로덕션 오픈 전 제거 (ParfaitCanvasRotationTestController와 함께)
                 "/api/v1/test/parfait-canvas/rotate",
                 // App Links/Universal Links 도메인 검증 파일 + 웹 폴백 페이지 — 앱 미설치 상태의
