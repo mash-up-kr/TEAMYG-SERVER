@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import parfait.http.TestApplication
+import parfait.http.api.appversion.controller.TestCheckAppVersionUseCaseConfig
 import parfait.http.api.deeplink.controller.TestGetDownloadStoreLinkUseCaseConfig
 import parfait.http.api.notice.controller.TestNoticeUseCaseConfig
 import parfait.http.api.notification.controller.TestDeviceTokenUseCaseConfig
@@ -66,6 +67,7 @@ import kotlin.test.Test
     TestChangeParfaitBackgroundUseCaseConfig::class,
     TestGetSignupStatsUseCaseConfig::class,
     TestNoticeUseCaseConfig::class,
+    TestCheckAppVersionUseCaseConfig::class,
 )
 class OpenApiEndpointTest {
     @Autowired
