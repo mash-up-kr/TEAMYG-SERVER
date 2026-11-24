@@ -20,6 +20,7 @@ import parfait.core.auth.port.out.TokenIssuePort
 import parfait.core.member.port.out.MemberAccount
 import parfait.core.member.port.out.MemberQueryPort
 import parfait.http.TestApplication
+import parfait.http.api.appversion.controller.TestCheckAppVersionUseCaseConfig
 import parfait.http.api.deeplink.controller.TestGetDownloadStoreLinkUseCaseConfig
 import parfait.http.api.notice.controller.TestNoticeUseCaseConfig
 import parfait.http.api.notification.controller.TestDeviceTokenUseCaseConfig
@@ -87,6 +88,7 @@ import kotlin.test.Test
     TestChangeParfaitBackgroundUseCaseConfig::class,
     TestGetSignupStatsUseCaseConfig::class,
     TestNoticeUseCaseConfig::class,
+    TestCheckAppVersionUseCaseConfig::class,
 )
 class SecurityConfigIntegrationTest {
     @Autowired
